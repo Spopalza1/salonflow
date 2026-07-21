@@ -140,7 +140,7 @@ export default function DailyReport() {
   const captureReport = async () => {
     return await html2canvas(reportRef.current, {
       scale: 2,
-      backgroundColor: '#ffffff',
+      backgroundColor: 'hsl(var(--background))',
       useCORS: true,
       onclone: (doc) => {
         doc.querySelectorAll('.no-export').forEach(el => el.style.display = 'none');
