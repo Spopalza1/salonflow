@@ -1,6 +1,24 @@
 import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 
+function playBeep() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.5);
+  } catch (e) { /* ignore */ }
+}
+
 export function useMessageNotifications(mode, user) {
   const knownIds = useRef(new Set());
 
@@ -32,9 +50,13 @@ export function useMessageNotifications(mode, user) {
         (mode === 'admin' && msg.sender_role === 'stylist') ||
         (mode === 'stylist' && msg.sender_role === 'admin' && msg.thread_partner_id === user.id);
 
-      if (shouldNotify && 'Notification' in window && Notification.permission === 'granted') {
-        const title = mode === 'admin' ? 'New message from stylist' : 'New message from front desk';
-        new Notification(title, { body: `${msg.sender_name}: ${msg.body}` });
+      if (shouldNotify) {
+        playBeep();
+
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const title = mode === 'admin' ? 'New message from stylist' : 'New message from front desk';
+          new Notification(title, { body: `${msg.sender_name}: ${msg.body}` });
+        }
       }
     });
 
