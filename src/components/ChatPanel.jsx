@@ -101,7 +101,11 @@ export default function ChatPanel({ mode, user }) {
   };
 
   const handleDeleteMessage = async (messageId) => {
-    await base44.entities.Message.delete(messageId);
+    try {
+      await base44.entities.Message.delete(messageId);
+    } catch (err) {
+      // Message may have already been deleted via real-time sync — ignore
+    }
   };
 
   const handleDeleteConversation = async () => {
