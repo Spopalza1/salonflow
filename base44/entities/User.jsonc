@@ -12,6 +12,12 @@
     },
     "title": {
       "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "chair_number": {
+      "type": "string"
     }
   }
 }

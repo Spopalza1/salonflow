@@ -61,6 +61,9 @@ export default function MenuBrowser({ mode, user, guestInfo }) {
         orderData.requested_by_type = 'stylist';
         orderData.requested_by_name = user?.full_name || user?.email || 'Stylist';
         orderData.requested_by_user_id = user?.id;
+        if (user?.chair_number) {
+          orderData.chair_table = user.chair_number;
+        }
       } else {
         orderData.requested_by_type = 'guest';
         orderData.requested_by_name = guestInfo?.name || 'Guest';

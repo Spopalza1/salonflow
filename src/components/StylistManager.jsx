@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Users, Mail, Briefcase, Trash2, Copy, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import { UserPlus, Users, Mail, Briefcase, Trash2, Copy, Link as LinkIcon, MessageSquare, Pencil } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/AuthContext';
 import StylistMessageDialog from '@/components/StylistMessageDialog';
+import StylistEditDialog from '@/components/StylistEditDialog';
 
 export default function StylistManager() {
   const [stylists, setStylists] = useState([]);
@@ -19,6 +20,7 @@ export default function StylistManager() {
   const [error, setError] = useState(null);
   const [inviteLink, setInviteLink] = useState(null);
   const [messageTarget, setMessageTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -169,12 +171,17 @@ export default function StylistManager() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{s.full_name || s.email}</div>
+                    {s.username && <div className="text-sm text-muted-foreground truncate">@{s.username}</div>}
                     <div className="text-sm text-muted-foreground truncate">{s.email}</div>
                     <div className="flex items-center gap-1.5 mt-1">
                       {s.title && <Badge variant="outline" className="text-xs">{s.title}</Badge>}
+                      {s.chair_number && <Badge variant="secondary" className="text-xs">{s.chair_number}</Badge>}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" title="Edit profile" onClick={() => setEditTarget(s)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" title="Send message" onClick={() => setMessageTarget(s)}>
                       <MessageSquare className="w-4 h-4" />
                     </Button>
@@ -190,6 +197,14 @@ export default function StylistManager() {
             </Card>
           ))}
         </div>
+      )}
+
+      {editTarget && (
+        <StylistEditDialog
+          stylist={editTarget}
+          open={!!editTarget}
+          onOpenChange={(v) => !v && setEditTarget(null)}
+        />
       )}
 
       {messageTarget && user && (
