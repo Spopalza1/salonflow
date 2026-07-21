@@ -116,7 +116,7 @@ export default function ChatPanel({ mode, user }) {
               <div className="space-y-3">
                 {conversationMessages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'}`}>
-                    <MessageBubble msg={msg} isOwn={msg.sender_id === user.id} />
+                    <MessageBubble msg={msg} isOwn={msg.sender_id === user.id} canDownload={mode === 'admin'} />
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
@@ -187,7 +187,7 @@ export default function ChatPanel({ mode, user }) {
                     <div className="space-y-3">
                       {conversationMessages.map(msg => (
                         <div key={msg.id} className={`flex ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                          <MessageBubble msg={msg} isOwn={msg.sender_role === 'admin'} />
+                          <MessageBubble msg={msg} isOwn={msg.sender_role === 'admin'} canDownload={mode === 'admin'} />
                         </div>
                       ))}
                       <div ref={messagesEndRef} />
