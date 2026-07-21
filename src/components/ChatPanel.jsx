@@ -40,11 +40,6 @@ export default function ChatPanel({ mode, user }) {
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         setMessages(prev => [...prev, event.data]);
-        if (mode === 'admin' && event.data.sender_role === 'stylist') {
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('New message', { body: `${event.data.sender_name}: ${event.data.body}` });
-          }
-        }
       } else if (event.type === 'update') {
         setMessages(prev => prev.map(m => m.id === event.data.id ? event.data : m));
       } else if (event.type === 'delete') {

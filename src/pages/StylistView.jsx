@@ -4,9 +4,11 @@ import MenuBrowser from '@/components/MenuBrowser';
 import ChatPanel from '@/components/ChatPanel';
 import ServicesPanel from '@/components/ServicesPanel';
 import { Coffee, MessageSquare, Scissors } from 'lucide-react';
+import { useMessageNotifications } from '@/hooks/useMessageNotifications';
 
 export default function StylistView() {
   const { user } = useAuth();
+  useMessageNotifications('stylist', user);
 
   return (
     <div className="p-6">

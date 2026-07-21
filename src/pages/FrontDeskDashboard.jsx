@@ -9,9 +9,11 @@ import StylistManager from '@/components/StylistManager';
 import GuestMessagesPanel from '@/components/GuestMessagesPanel';
 import DailyReport from '@/components/DailyReport';
 import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail, BarChart3 } from 'lucide-react';
+import { useMessageNotifications } from '@/hooks/useMessageNotifications';
 
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
+  useMessageNotifications('admin', user);
 
   return (
     <div className="p-6">
