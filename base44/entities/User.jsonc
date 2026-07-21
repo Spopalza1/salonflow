@@ -13,6 +13,9 @@
     "title": {
       "type": "string"
     },
+    "display_name": {
+      "type": "string"
+    },
     "username": {
       "type": "string"
     },

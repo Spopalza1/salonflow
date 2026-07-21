@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function StylistEditDialog({ stylist, open, onOpenChange }) {
+  const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [chairNumber, setChairNumber] = useState('');
   const [saving, setSaving] = useState(false);
@@ -14,6 +15,7 @@ export default function StylistEditDialog({ stylist, open, onOpenChange }) {
 
   useEffect(() => {
     if (stylist) {
+      setDisplayName(stylist.display_name || '');
       setUsername(stylist.username || '');
       setChairNumber(stylist.chair_number || '');
     }
@@ -25,10 +27,11 @@ export default function StylistEditDialog({ stylist, open, onOpenChange }) {
     setSaving(true);
     try {
       await base44.entities.User.update(stylist.id, {
+        display_name: displayName.trim(),
         username: username.trim(),
         chair_number: chairNumber.trim(),
       });
-      toast({ title: 'Profile updated!', description: `${stylist.full_name || stylist.email}'s profile has been updated.` });
+      toast({ title: 'Profile updated!', description: `${displayName || stylist.full_name || stylist.email}'s profile has been updated.` });
       onOpenChange(false);
     } catch (err) {
       toast({ title: 'Failed to save', description: err.message, variant: 'destructive' });
@@ -41,9 +44,18 @@ export default function StylistEditDialog({ stylist, open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit {stylist?.full_name || stylist?.email}</DialogTitle>
+          <DialogTitle>Edit {stylist?.display_name || stylist?.full_name || stylist?.email}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSave} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-name">Display Name</Label>
+            <Input
+              id="edit-name"
+              value={displayName}
+              onChange={e => setDisplayName(e.target.value)}
+              placeholder="Stylist's name"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="edit-username">Username</Label>
             <Input

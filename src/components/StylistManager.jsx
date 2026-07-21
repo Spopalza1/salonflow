@@ -170,7 +170,7 @@ export default function StylistManager() {
                     <Users className="w-5 h-5 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{s.full_name || s.email}</div>
+                    <div className="font-medium truncate">{s.display_name || s.full_name || s.email}</div>
                     {s.username && <div className="text-sm text-muted-foreground truncate">@{s.username}</div>}
                     <div className="text-sm text-muted-foreground truncate">{s.email}</div>
                     <div className="flex items-center gap-1.5 mt-1">
