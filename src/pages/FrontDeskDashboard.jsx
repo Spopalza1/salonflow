@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/AuthContext';
 import OrdersPanel from '@/components/OrdersPanel';
@@ -16,7 +17,16 @@ import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('orders');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
 
   useMessageNotifications('admin', user);
   useAdminNotifications();

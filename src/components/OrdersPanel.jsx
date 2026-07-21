@@ -68,7 +68,7 @@ export default function OrdersPanel() {
           {pendingCount > 0 && <Badge variant="destructive">{pendingCount} new</Badge>}
         </div>
         <div className="flex items-center gap-2">
-          <Switch id="show-chair" checked={showChairTable} onCheckedChange={(checked) => { setShowChairTable(checked); localStorage.setItem('salonflow_show_chair_table', checked); }} />
+          <Switch id="show-chair" checked={showChairTable} onCheckedChange={(checked) => { setShowChairTable(checked); localStorage.setItem('salonflow_show_chair_table', String(checked)); }} />
           <Label htmlFor="show-chair" className="text-sm text-muted-foreground cursor-pointer">Chair/Table</Label>
         </div>
       </div>

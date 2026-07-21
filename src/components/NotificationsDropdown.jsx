@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { useAuth } from '@/lib/AuthContext';
 
 export default function NotificationsDropdown() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
 
@@ -40,6 +42,25 @@ export default function NotificationsDropdown() {
 
   const clearRead = async () => {
     await base44.entities.Notification.deleteMany({ read: true });
+    setNotifications(prev => prev.filter(n => !n.read));
+  };
+
+  const TAB_MAP = {
+    order: 'orders',
+    service: 'services',
+    service_note: 'services',
+    guest_message: 'messages',
+  };
+
+  const handleNotificationClick = (n) => {
+    const tab = TAB_MAP[n.type];
+    if (tab) {
+      navigate(`/front-desk?tab=${tab}`);
+    }
+    if (!n.read) {
+      base44.entities.Notification.update(n.id, { read: true });
+    }
+    setOpen(false);
   };
 
   const formatTime = (dateStr) => {
@@ -92,7 +113,11 @@ export default function NotificationsDropdown() {
             </div>
           ) : (
             notifications.map(n => (
-              <div key={n.id} className={`px-4 py-3 border-b last:border-0 ${!n.read ? 'bg-primary/5' : ''}`}>
+              <div
+                key={n.id}
+                onClick={() => handleNotificationClick(n)}
+                className={`px-4 py-3 border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+              >
                 <div className="flex items-start gap-2">
                   <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.read ? 'bg-primary' : 'bg-transparent'}`} />
                   <div className="flex-1 min-w-0">
