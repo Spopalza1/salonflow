@@ -2,9 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, User, Search } from 'lucide-react';
+import { MessageSquare, User, Search, Trash2 } from 'lucide-react';
 import MessageBubble from '@/components/chat/MessageBubble';
 import ChatInput from '@/components/chat/ChatInput';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 
 export default function ChatPanel({ mode, user }) {
   const [messages, setMessages] = useState([]);
@@ -12,6 +17,7 @@ export default function ChatPanel({ mode, user }) {
   const [selectedPartnerId, setSelectedPartnerId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -92,6 +98,15 @@ export default function ChatPanel({ mode, user }) {
       media_url,
       media_type,
     });
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    await base44.entities.Message.delete(messageId);
+  };
+
+  const handleDeleteConversation = async () => {
+    await base44.entities.Message.deleteMany({ thread_partner_id: selectedPartnerId });
+    setShowDeleteConvConfirm(false);
   };
 
   if (loading) {
@@ -178,6 +193,15 @@ export default function ChatPanel({ mode, user }) {
           <Card className="flex flex-col overflow-hidden">
             {selectedPartnerId ? (
               <>
+                <div className="flex items-center justify-between px-4 py-2 border-b">
+                  <span className="text-sm font-medium truncate">
+                    {stylists.find(s => s.id === selectedPartnerId)?.full_name || stylists.find(s => s.id === selectedPartnerId)?.email || 'Stylist'}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConvConfirm(true)} className="text-destructive hover:text-destructive h-8">
+                    <Trash2 className="w-3.5 h-3.5 mr-1" />
+                    Delete Chat
+                  </Button>
+                </div>
                 <div className="flex-1 overflow-y-auto p-4">
                   {conversationMessages.length === 0 ? (
                     <div className="text-center py-10 text-muted-foreground">
@@ -186,8 +210,14 @@ export default function ChatPanel({ mode, user }) {
                   ) : (
                     <div className="space-y-3">
                       {conversationMessages.map(msg => (
-                        <div key={msg.id} className={`flex ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                        <div key={msg.id} className={`group flex items-center gap-1.5 ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}>
                           <MessageBubble msg={msg} isOwn={msg.sender_role === 'admin'} canDownload={mode === 'admin'} />
+                          <button
+                            onClick={() => handleDeleteMessage(msg.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0 p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       ))}
                       <div ref={messagesEndRef} />
@@ -202,6 +232,22 @@ export default function ChatPanel({ mode, user }) {
           </Card>
         </div>
       )}
+      <AlertDialog open={showDeleteConvConfirm} onOpenChange={setShowDeleteConvConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete entire conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all messages in this chat. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConversation} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
