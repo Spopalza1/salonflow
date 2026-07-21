@@ -32,6 +32,17 @@
       ],
       "default": "chat"
     },
+    "media_url": {
+      "type": "string"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video",
+        "audio"
+      ]
+    },
     "read": {
       "type": "boolean",
       "default": false

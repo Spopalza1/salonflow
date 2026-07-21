@@ -1,16 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Send, MessageSquare, User, Search } from 'lucide-react';
+import { MessageSquare, User, Search } from 'lucide-react';
+import MessageBubble from '@/components/chat/MessageBubble';
+import ChatInput from '@/components/chat/ChatInput';
 
 export default function ChatPanel({ mode, user }) {
   const [messages, setMessages] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState(null);
-  const [input, setInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
@@ -71,32 +70,28 @@ export default function ChatPanel({ mode, user }) {
     });
   }, [unreadIncomingKey, loading, mode, user?.id]);
 
-  const handleSend = async (e) => {
-    e?.preventDefault();
-    if (!input.trim()) return;
-    const body = input.trim();
-    setInput('');
-    try {
-      let partnerId, partnerName;
-      if (mode === 'stylist') {
-        partnerId = user.id;
-        partnerName = user.full_name || user.email;
-      } else {
-        const partner = stylists.find(s => s.id === selectedPartnerId);
-        partnerId = selectedPartnerId;
-        partnerName = partner?.full_name || partner?.email || 'Stylist';
-      }
-      await base44.entities.Message.create({
-        sender_id: user.id,
-        sender_name: user.full_name || user.email,
-        sender_role: mode === 'admin' ? 'admin' : 'stylist',
-        thread_partner_id: partnerId,
-        thread_partner_name: partnerName,
-        body,
-      });
-    } catch (err) {
-      setInput(body);
+  const handleSend = async (messageData) => {
+    const { body, media_url, media_type } = messageData;
+    if (!body && !media_url) return;
+    let partnerId, partnerName;
+    if (mode === 'stylist') {
+      partnerId = user.id;
+      partnerName = user.full_name || user.email;
+    } else {
+      const partner = stylists.find(s => s.id === selectedPartnerId);
+      partnerId = selectedPartnerId;
+      partnerName = partner?.full_name || partner?.email || 'Stylist';
     }
+    await base44.entities.Message.create({
+      sender_id: user.id,
+      sender_name: user.full_name || user.email,
+      sender_role: mode === 'admin' ? 'admin' : 'stylist',
+      thread_partner_id: partnerId,
+      thread_partner_name: partnerName,
+      body: body || '',
+      media_url,
+      media_type,
+    });
   };
 
   if (loading) {
@@ -121,20 +116,14 @@ export default function ChatPanel({ mode, user }) {
               <div className="space-y-3">
                 {conversationMessages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] rounded-lg px-3 py-2 ${msg.sender_id === user.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                      <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
-                      <p className="text-xs opacity-70 mt-1">{new Date(msg.created_date).toLocaleTimeString()}</p>
-                    </div>
+                    <MessageBubble msg={msg} isOwn={msg.sender_id === user.id} />
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
               </div>
             )}
           </div>
-          <form onSubmit={handleSend} className="p-3 border-t flex gap-2">
-            <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message..." />
-            <Button type="submit" size="icon"><Send className="w-4 h-4" /></Button>
-          </form>
+          <ChatInput onSend={handleSend} />
         </Card>
       </div>
     );
@@ -198,20 +187,14 @@ export default function ChatPanel({ mode, user }) {
                     <div className="space-y-3">
                       {conversationMessages.map(msg => (
                         <div key={msg.id} className={`flex ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[75%] rounded-lg px-3 py-2 ${msg.sender_role === 'admin' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                            <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
-                            <p className="text-xs opacity-70 mt-1">{new Date(msg.created_date).toLocaleTimeString()}</p>
-                          </div>
+                          <MessageBubble msg={msg} isOwn={msg.sender_role === 'admin'} />
                         </div>
                       ))}
                       <div ref={messagesEndRef} />
                     </div>
                   )}
                 </div>
-                <form onSubmit={handleSend} className="p-3 border-t flex gap-2">
-                  <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message..." />
-                  <Button type="submit" size="icon"><Send className="w-4 h-4" /></Button>
-                </form>
+                <ChatInput onSend={handleSend} />
               </>
             ) : (
               <div className="flex items-center justify-center text-muted-foreground">Select a stylist to chat</div>
