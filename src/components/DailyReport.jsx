@@ -76,6 +76,21 @@ export default function DailyReport() {
   });
   const categoryBreakdown = Object.values(catMap).sort((a, b) => b.count - a.count);
 
+  // Group by person
+  const personMap = {};
+  todaysOrders.forEach(o => {
+    const key = `${o.requested_by_name}__${o.requested_by_type}`;
+    if (!personMap[key]) {
+      personMap[key] = { name: o.requested_by_name, type: o.requested_by_type, count: 0, revenue: 0, items: {} };
+    }
+    personMap[key].count++;
+    personMap[key].revenue += o.price || 0;
+    const itemName = o.item_name;
+    if (!personMap[key].items[itemName]) personMap[key].items[itemName] = 0;
+    personMap[key].items[itemName]++;
+  });
+  const personBreakdown = Object.values(personMap).sort((a, b) => b.count - a.count);
+
   // Stats
   const totalItems = todaysOrders.length;
   const totalRevenue = todaysOrders.reduce((sum, o) => sum + (o.price || 0), 0);
@@ -168,6 +183,34 @@ export default function DailyReport() {
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-muted-foreground">{cat.count} served</span>
                     <Badge variant="secondary">${cat.revenue.toFixed(2)}</Badge>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* By Person Breakdown */}
+          <Card className="lg:col-span-2">
+            <CardHeader><CardTitle className="text-base">Orders by Person</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {personBreakdown.map(person => (
+                <div key={`${person.name}__${person.type}`} className="border rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{person.name}</span>
+                      <Badge variant="outline" className="capitalize text-xs">{person.type}</Badge>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">{person.count} item{person.count !== 1 ? 's' : ''}</span>
+                      <Badge variant="secondary">${person.revenue.toFixed(2)}</Badge>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(person.items).map(([itemName, qty]) => (
+                      <Badge key={itemName} variant="outline" className="text-xs">
+                        {qty}× {itemName}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               ))}
