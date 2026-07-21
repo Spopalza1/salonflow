@@ -13,6 +13,7 @@ export default function StylistManager() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [inviting, setInviting] = useState(false);
+  const [lastInvited, setLastInvited] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function StylistManager() {
     try {
       await base44.users.inviteUser(email.trim(), 'stylist');
       toast({ title: 'Invitation sent!', description: `${email} has been invited as a stylist.` });
+      setLastInvited(email.trim());
       setEmail('');
     } catch (err) {
       toast({ title: 'Failed to invite', description: err.message, variant: 'destructive' });
@@ -66,6 +68,13 @@ export default function StylistManager() {
             </Button>
           </form>
           <p className="text-xs text-muted-foreground mt-2">The stylist receives an email invitation to set up their login credentials. They'll be assigned the "stylist" role automatically and taken to the stylist dashboard on login.</p>
+
+          {lastInvited && (
+            <div className="mt-3 p-3 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1">You can also share this direct sign-up link with the stylist:</p>
+              <code className="text-xs break-all text-primary">{window.location.origin}/register?email={encodeURIComponent(lastInvited)}</code>
+            </div>
+          )}
         </CardContent>
       </Card>
 

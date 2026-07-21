@@ -38,12 +38,9 @@ export default function Login() {
       title="Welcome back"
       subtitle="Log in to your account"
       footer={
-        <>
-          Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            Create one
-          </Link>
-        </>
+        <p className="text-sm text-muted-foreground">
+          Registration is by invitation only.
+        </p>
       }
     >
       <Button
