@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Coffee, TrendingUp, Users, Utensils } from 'lucide-react';
+import { Coffee, TrendingUp, Users, Utensils, Printer, FileDown, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 function parseDate(dateStr) {
   if (!dateStr) return null;
@@ -37,6 +40,8 @@ export default function DailyReport() {
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
@@ -132,11 +137,81 @@ export default function DailyReport() {
 
   const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
+  const captureReport = async () => {
+    return await html2canvas(reportRef.current, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      onclone: (doc) => {
+        doc.querySelectorAll('.no-export').forEach(el => el.style.display = 'none');
+      }
+    });
+  };
+
+  const handlePrint = async () => {
+    if (!reportRef.current) return;
+    setExporting(true);
+    try {
+      const canvas = await captureReport();
+      const imgData = canvas.toDataURL('image/png');
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`<html><head><title>Daily Report - ${todayStr}</title></head><body style="margin:0;padding:0;"><img src="${imgData}" style="width:100%;" /></body></html>`);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        setTimeout(() => printWindow.close(), 200);
+      }, 300);
+    } catch {
+      window.print();
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleSavePDF = async () => {
+    if (!reportRef.current) return;
+    setExporting(true);
+    try {
+      const canvas = await captureReport();
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      pdf.save(`daily-report-${new Date().toISOString().split('T')[0]}.pdf`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <h2 className="font-heading text-xl font-semibold">Daily Report</h2>
-        <Badge variant="secondary">{todayStr}</Badge>
+    <div ref={reportRef} className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <h2 className="font-heading text-xl font-semibold">Daily Report</h2>
+          <Badge variant="secondary">{todayStr}</Badge>
+        </div>
+        <div className="flex items-center gap-2 no-export">
+          <Button variant="outline" size="sm" onClick={handlePrint} disabled={exporting}>
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+            Print
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSavePDF} disabled={exporting}>
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+            Save PDF
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
