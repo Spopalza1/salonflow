@@ -50,6 +50,8 @@ export default function NotificationsDropdown() {
     service: 'services',
     service_note: 'services',
     guest_message: 'messages',
+    chat: 'chat',
+    service_update: 'services',
   };
 
   const handleNotificationClick = (n) => {

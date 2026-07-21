@@ -12,7 +12,6 @@ import GuestMessagesPanel from '@/components/GuestMessagesPanel';
 import DailyReport from '@/components/DailyReport';
 import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail, BarChart3 } from 'lucide-react';
 import { useMessageNotifications } from '@/hooks/useMessageNotifications';
-import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 
 export default function FrontDeskDashboard() {
@@ -30,7 +29,6 @@ export default function FrontDeskDashboard() {
 
   useMessageNotifications('admin', user);
   useAdminNotifications();
-  const unreadCount = useUnreadMessages('admin', user);
 
   return (
     <div className="p-6">
@@ -38,11 +36,8 @@ export default function FrontDeskDashboard() {
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="orders"><ClipboardList className="w-4 h-4 mr-2" />Orders</TabsTrigger>
           <TabsTrigger value="menu"><Coffee className="w-4 h-4 mr-2" />Menu</TabsTrigger>
-          <TabsTrigger value="chat" className="relative">
+          <TabsTrigger value="chat">
             <MessageSquare className="w-4 h-4 mr-2" />Chat
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-background" />
-            )}
           </TabsTrigger>
           <TabsTrigger value="services"><Scissors className="w-4 h-4 mr-2" />Services</TabsTrigger>
           <TabsTrigger value="stylists"><Users className="w-4 h-4 mr-2" />Stylists</TabsTrigger>

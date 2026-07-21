@@ -27,15 +27,18 @@ function notify(title, body) {
   }
 }
 
+// Module-level Sets prevent duplicate notifications across hook re-mounts (e.g. React StrictMode)
+const knownOrderIds = new Set();
+const knownServiceIds = new Set();
+const completedServiceIds = new Set();
+const knownNoteIds = new Set();
+const knownGuestMessageIds = new Set();
+const knownMessageIds = new Set();
+
 export function useAdminNotifications() {
   const { toast } = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
-  const knownOrderIds = useRef(new Set());
-  const knownServiceIds = useRef(new Set());
-  const completedServiceIds = useRef(new Set());
-  const knownNoteIds = useRef(new Set());
-  const knownGuestMessageIds = useRef(new Set());
 
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -44,24 +47,26 @@ export function useAdminNotifications() {
 
     const loadExisting = async () => {
       try {
-        const [orders, services, notes, guestMessages] = await Promise.all([
+        const [orders, services, notes, guestMessages, messages] = await Promise.all([
           base44.entities.Order.filter({}, '-created_date', 100),
           base44.entities.Service.filter({ status: 'ongoing' }, '-created_date'),
           base44.entities.ServiceNote.list('created_date', 500),
           base44.entities.GuestMessage.list('created_date', 100),
+          base44.entities.Message.list('created_date', 100),
         ]);
-        orders.forEach(o => knownOrderIds.current.add(o.id));
-        services.forEach(s => knownServiceIds.current.add(s.id));
-        notes.forEach(n => knownNoteIds.current.add(n.id));
-        guestMessages.forEach(g => knownGuestMessageIds.current.add(g.id));
+        orders.forEach(o => knownOrderIds.add(o.id));
+        services.forEach(s => knownServiceIds.add(s.id));
+        notes.forEach(n => knownNoteIds.add(n.id));
+        guestMessages.forEach(g => knownGuestMessageIds.add(g.id));
+        messages.forEach(m => knownMessageIds.add(m.id));
       } catch (e) { /* ignore */ }
     };
     loadExisting();
 
     const unsubOrders = base44.entities.Order.subscribe((event) => {
       if (event.type !== 'create') return;
-      if (knownOrderIds.current.has(event.data.id)) return;
-      knownOrderIds.current.add(event.data.id);
+      if (knownOrderIds.has(event.data.id)) return;
+      knownOrderIds.add(event.data.id);
       const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
       notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
       base44.entities.Notification.create({
@@ -77,8 +82,8 @@ export function useAdminNotifications() {
 
     const unsubServices = base44.entities.Service.subscribe((event) => {
       if (event.type === 'create') {
-        if (knownServiceIds.current.has(event.data.id)) return;
-        knownServiceIds.current.add(event.data.id);
+        if (knownServiceIds.has(event.data.id)) return;
+        knownServiceIds.add(event.data.id);
         notify('New Service Started', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
         base44.entities.Notification.create({
           title: 'New Service Started',
@@ -86,8 +91,8 @@ export function useAdminNotifications() {
           type: 'service',
         });
       } else if (event.type === 'update') {
-        if (event.data.status === 'completed' && !completedServiceIds.current.has(event.data.id)) {
-          completedServiceIds.current.add(event.data.id);
+        if (event.data.status === 'completed' && !completedServiceIds.has(event.data.id)) {
+          completedServiceIds.add(event.data.id);
           notify('Service Completed', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
           base44.entities.Notification.create({
             title: 'Service Completed',
@@ -100,8 +105,8 @@ export function useAdminNotifications() {
 
     const unsubNotes = base44.entities.ServiceNote.subscribe((event) => {
       if (event.type !== 'create') return;
-      if (knownNoteIds.current.has(event.data.id)) return;
-      knownNoteIds.current.add(event.data.id);
+      if (knownNoteIds.has(event.data.id)) return;
+      knownNoteIds.add(event.data.id);
       notify(`Service Update From ${event.data.author_name}`, event.data.content);
       base44.entities.Notification.create({
         title: `Service Update From ${event.data.author_name}`,
@@ -112,8 +117,8 @@ export function useAdminNotifications() {
 
     const unsubGuestMessages = base44.entities.GuestMessage.subscribe((event) => {
       if (event.type !== 'create') return;
-      if (knownGuestMessageIds.current.has(event.data.id)) return;
-      knownGuestMessageIds.current.add(event.data.id);
+      if (knownGuestMessageIds.has(event.data.id)) return;
+      knownGuestMessageIds.add(event.data.id);
       notify(`New Message From ${event.data.guest_name}`, event.data.message);
       base44.entities.Notification.create({
         title: `New Message From ${event.data.guest_name}`,
@@ -126,11 +131,34 @@ export function useAdminNotifications() {
       });
     });
 
+    const unsubMessages = base44.entities.Message.subscribe((event) => {
+      if (event.type !== 'create') return;
+      if (knownMessageIds.has(event.data.id)) return;
+      knownMessageIds.add(event.data.id);
+      if (event.data.sender_role === 'admin') return; // Don't notify for admin's own messages
+      const isServiceUpdate = event.data.message_type === 'service_update';
+      const title = isServiceUpdate
+        ? `Service Update From ${event.data.sender_name}`
+        : `New Chat From ${event.data.sender_name}`;
+      const body = event.data.body || (event.data.media_type ? `Sent a ${event.data.media_type}` : '');
+      notify(title, body);
+      base44.entities.Notification.create({
+        title,
+        body,
+        type: isServiceUpdate ? 'service_update' : 'chat',
+      });
+      toastRef.current({
+        title,
+        description: body,
+      });
+    });
+
     return () => {
       unsubOrders();
       unsubServices();
       unsubNotes();
       unsubGuestMessages();
+      unsubMessages();
     };
   }, []);
 }

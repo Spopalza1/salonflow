@@ -14,7 +14,9 @@
         "order",
         "service",
         "service_note",
-        "guest_message"
+        "guest_message",
+        "chat",
+        "service_update"
       ],
       "default": "order"
     },
