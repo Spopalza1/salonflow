@@ -5,9 +5,17 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Coffee, TrendingUp, Users, Utensils } from 'lucide-react';
 
+function parseDate(dateStr) {
+  if (!dateStr) return null;
+  // Strip extra fractional-second digits (DB returns 6, JS only handles 3)
+  const cleaned = dateStr.replace(/\.(\d{3})\d*/, '.$1');
+  const d = new Date(cleaned);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function isToday(dateStr) {
-  if (!dateStr) return false;
-  const date = new Date(dateStr);
+  const date = parseDate(dateStr);
+  if (!date) return false;
   const today = new Date();
   return date.getDate() === today.getDate() &&
     date.getMonth() === today.getMonth() &&
@@ -15,8 +23,9 @@ function isToday(dateStr) {
 }
 
 function formatTime(dateStr) {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const date = parseDate(dateStr);
+  if (!date) return '';
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function servedTime(order) {
@@ -285,7 +294,7 @@ export default function DailyReport() {
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {todaysOrders
                   .slice()
-                  .sort((a, b) => new Date(servedTime(b)) - new Date(servedTime(a)))
+                  .sort((a, b) => (parseDate(servedTime(b))?.getTime() || 0) - (parseDate(servedTime(a))?.getTime() || 0))
                   .map(o => (
                   <div key={o.id} className="flex items-center justify-between py-2 border-b last:border-0">
                     <div>
