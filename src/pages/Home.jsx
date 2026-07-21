@@ -5,9 +5,16 @@ import { Scissors, Coffee, MessageSquare, QrCode, Shield, User } from 'lucide-re
 
 export default function Home() {
   const { isAuthenticated, user, authChecked } = useAuth();
+  const urlParams = new URLSearchParams(window.location.search);
+  const emailParam = urlParams.get('email');
 
   if (authChecked && isAuthenticated && user) {
     return <Navigate to={user.role === 'admin' ? '/front-desk' : '/stylist'} replace />;
+  }
+
+  // Redirect invited users to the sign-up page
+  if (emailParam) {
+    return <Navigate to={`/register${window.location.search}`} replace />;
   }
 
   return (

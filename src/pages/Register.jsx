@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ export default function Register() {
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [isInvited, setIsInvited] = useState(false);
+  const [redirectNoInvite, setRedirectNoInvite] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -25,8 +26,15 @@ export default function Register() {
     if (emailParam) {
       setEmail(emailParam);
       setIsInvited(true);
+    } else {
+      // No invite email param — block public sign-up
+      setRedirectNoInvite(true);
     }
   }, []);
+
+  if (redirectNoInvite) {
+    return <Navigate to="/login" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
