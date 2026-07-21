@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, Coffee, FolderPlus, Gift, Upload, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -294,10 +295,16 @@ export default function MenuManager() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Input id="category" list="categories-list" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="Coffee" required />
-              <datalist id="categories-list">
-                {existingCategoryNames.map(c => <option key={c} value={c} />)}
-              </datalist>
+              <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
+                <SelectTrigger id="category" className="w-full">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingCategoryNames.map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Price ($)</Label>
