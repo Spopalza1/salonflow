@@ -17,7 +17,7 @@ export default function StylistView() {
     <div className="p-6">
       <Tabs defaultValue="coffee">
         <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="coffee"><Coffee className="w-4 h-4 mr-2" />Order Coffee</TabsTrigger>
+          <TabsTrigger value="coffee"><Coffee className="w-4 h-4 mr-2" />Order</TabsTrigger>
           <TabsTrigger value="chat" className="relative">
             <MessageSquare className="w-4 h-4 mr-2" />Chat
             {unreadCount > 0 && (
