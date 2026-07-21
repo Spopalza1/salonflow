@@ -27,25 +27,29 @@ export default function DailyReport() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     const load = async () => {
-      const data = await base44.entities.Order.filter({ status: 'served' }, '-updated_date', 500);
-      setOrders(data);
-      setLoading(false);
+      try {
+        const data = await base44.entities.Order.filter({}, '-created_date', 500);
+        setOrders(data);
+        setError(null);
+      } catch (err) {
+        setError(err.message || 'Failed to load orders');
+      } finally {
+        setLoading(false);
+      }
     };
     load();
 
     const unsubscribe = base44.entities.Order.subscribe((event) => {
       if (event.type === 'create' || event.type === 'update') {
-        if (event.data.status === 'served') {
-          setOrders(prev => {
-            const exists = prev.find(o => o.id === event.data.id);
-            if (exists) return prev.map(o => o.id === event.data.id ? event.data : o);
-            return [event.data, ...prev];
-          });
-        } else {
-          setOrders(prev => prev.filter(o => o.id !== event.data.id));
-        }
+        setOrders(prev => {
+          const exists = prev.find(o => o.id === event.data.id);
+          if (exists) return prev.map(o => o.id === event.data.id ? event.data : o);
+          return [event.data, ...prev];
+        });
       } else if (event.type === 'delete') {
         setOrders(prev => prev.filter(o => o.id !== event.id));
       }
@@ -67,7 +71,11 @@ export default function DailyReport() {
     return <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" /></div>;
   }
 
-  const todaysOrders = orders.filter(o => isToday(servedTime(o)));
+  if (error) {
+    return <div className="text-center py-20 text-destructive"><p>Error loading report: {error}</p></div>;
+  }
+
+  const todaysOrders = orders.filter(o => o.status === 'served' && isToday(servedTime(o)));
 
   // Group by item name
   const itemMap = {};
