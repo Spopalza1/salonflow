@@ -1,0 +1,40 @@
+{
+  "name": "Service",
+  "type": "object",
+  "properties": {
+    "stylist_id": {
+      "type": "string"
+    },
+    "stylist_name": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "service_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ongoing",
+        "completed"
+      ],
+      "default": "ongoing"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "stylist_id",
+    "stylist_name",
+    "client_name",
+    "service_name"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "item_name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "requested_by_type": {
+      "type": "string",
+      "enum": [
+        "stylist",
+        "guest"
+      ]
+    },
+    "requested_by_name": {
+      "type": "string"
+    },
+    "requested_by_user_id": {
+      "type": "string"
+    },
+    "chair_table": {
+      "type": "string"
+    },
+    "guest_session": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "preparing",
+        "served",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_name",
+    "requested_by_type",
+    "requested_by_name"
+  ]
+}
