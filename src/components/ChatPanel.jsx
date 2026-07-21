@@ -57,17 +57,9 @@ export default function ChatPanel({ mode, user }) {
   // Mark incoming messages as read when the conversation is viewed
   useEffect(() => {
     if (loading) return;
-    const hasUnread = conversationMessages.some(m => !m.read && m.sender_id !== user.id);
-    if (!hasUnread) return;
-
-    let filter;
-    if (mode === 'stylist') {
-      filter = { thread_partner_id: user.id, sender_role: 'admin', read: false };
-    } else {
-      if (!selectedPartnerId) return;
-      filter = { thread_partner_id: selectedPartnerId, sender_role: { $ne: 'admin' }, read: false };
-    }
-    base44.entities.Message.updateMany(filter, { $set: { read: true } });
+    const unreadIncoming = conversationMessages.filter(m => !m.read && m.sender_id !== user.id);
+    if (unreadIncoming.length === 0) return;
+    base44.entities.Message.bulkUpdate(unreadIncoming.map(m => ({ id: m.id, read: true })));
   }, [mode, user?.id, selectedPartnerId, loading, messages.length]);
 
   const conversationMessages = mode === 'stylist'

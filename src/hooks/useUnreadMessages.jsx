@@ -22,8 +22,23 @@ export function useUnreadMessages(mode, user) {
 
     loadCount();
 
-    const unsubscribe = base44.entities.Message.subscribe(() => {
-      loadCount();
+    const isRelevant = (msg) => {
+      if (mode === 'admin') return msg.sender_role !== 'admin';
+      return msg.sender_role === 'admin' && msg.thread_partner_id === user.id;
+    };
+
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.type === 'create') {
+        if (isRelevant(event.data) && !event.data.read) {
+          setUnreadCount(prev => prev + 1);
+        }
+      } else if (event.type === 'update') {
+        if (isRelevant(event.data) && event.data.read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+      } else {
+        loadCount();
+      }
     });
 
     return unsubscribe;
