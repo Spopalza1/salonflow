@@ -23,9 +23,14 @@ export default function VerifyAccount() {
     setError("");
     setLoading(true);
     try {
-      await base44.auth.verifyOtp({ email, otpCode });
-      toast({ title: "Email verified!", description: "You can now log in with your credentials." });
-      window.location.href = "/login";
+      const result = await base44.auth.verifyOtp({ email, otpCode });
+      if (result?.access_token) {
+        base44.auth.setToken(result.access_token);
+        window.location.href = "/";
+      } else {
+        toast({ title: "Email verified!", description: "You can now log in with your credentials." });
+        window.location.href = "/login";
+      }
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
