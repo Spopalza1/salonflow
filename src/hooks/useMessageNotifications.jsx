@@ -19,10 +19,8 @@ function playBeep() {
   } catch (e) { /* ignore */ }
 }
 
-export function useMessageNotifications(mode, user, onServiceUpdate) {
+export function useMessageNotifications(mode, user) {
   const knownIds = useRef(new Set());
-  const callbackRef = useRef(onServiceUpdate);
-  callbackRef.current = onServiceUpdate;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -56,9 +54,6 @@ export function useMessageNotifications(mode, user, onServiceUpdate) {
         playBeep();
 
         const isServiceUpdate = msg.message_type === 'service_update';
-        if (isServiceUpdate && mode === 'admin' && callbackRef.current) {
-          callbackRef.current(msg.thread_partner_id, msg.sender_name);
-        }
 
         if ('Notification' in window && Notification.permission === 'granted') {
           const title = isServiceUpdate

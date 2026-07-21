@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Send, MessageSquare, User, Search } from 'lucide-react';
 
-export default function ChatPanel({ mode, user, focusStylistId }) {
+export default function ChatPanel({ mode, user }) {
   const [messages, setMessages] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState(null);
@@ -24,12 +24,6 @@ export default function ChatPanel({ mode, user, focusStylistId }) {
     };
     loadStylists();
   }, [mode]);
-
-  useEffect(() => {
-    if (focusStylistId && stylists.length > 0) {
-      setSelectedPartnerId(focusStylistId);
-    }
-  }, [focusStylistId, stylists]);
 
   useEffect(() => {
     const load = async () => {
@@ -60,19 +54,22 @@ export default function ChatPanel({ mode, user, focusStylistId }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, selectedPartnerId]);
 
-  // Mark incoming messages as read when the conversation is viewed
-  useEffect(() => {
-    if (loading) return;
-    const unreadIncoming = conversationMessages.filter(m => !m.read && m.sender_id !== user.id);
-    if (unreadIncoming.length === 0) return;
-    unreadIncoming.forEach(m => {
-      base44.entities.Message.update(m.id, { read: true });
-    });
-  }, [mode, user?.id, selectedPartnerId, loading, messages.length]);
-
   const conversationMessages = mode === 'stylist'
     ? messages
     : messages.filter(m => m.thread_partner_id === selectedPartnerId);
+
+  const unreadIncomingKey = conversationMessages
+    .filter(m => !m.read && m.sender_id !== user.id)
+    .map(m => m.id)
+    .join(',');
+
+  // Mark incoming messages as read when the conversation is viewed
+  useEffect(() => {
+    if (loading || !unreadIncomingKey) return;
+    unreadIncomingKey.split(',').filter(Boolean).forEach(id => {
+      base44.entities.Message.update(id, { read: true });
+    });
+  }, [unreadIncomingKey, loading, mode, user?.id]);
 
   const handleSend = async (e) => {
     e?.preventDefault();

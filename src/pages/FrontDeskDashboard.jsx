@@ -17,14 +17,8 @@ import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('orders');
-  const [focusStylistId, setFocusStylistId] = useState(null);
 
-  const handleServiceUpdate = (stylistId) => {
-    setFocusStylistId(stylistId);
-    setActiveTab('chat');
-  };
-
-  useMessageNotifications('admin', user, handleServiceUpdate);
+  useMessageNotifications('admin', user);
   useAdminNotifications();
   const unreadCount = useUnreadMessages('admin', user);
 
@@ -48,7 +42,7 @@ export default function FrontDeskDashboard() {
         </TabsList>
         <TabsContent value="orders" className="mt-6"><OrdersPanel /></TabsContent>
         <TabsContent value="menu" className="mt-6"><MenuManager /></TabsContent>
-        <TabsContent value="chat" className="mt-6"><ChatPanel mode="admin" user={user} focusStylistId={focusStylistId} /></TabsContent>
+        <TabsContent value="chat" className="mt-6"><ChatPanel mode="admin" user={user} /></TabsContent>
         <TabsContent value="services" className="mt-6"><ServicesPanel mode="admin" user={user} /></TabsContent>
         <TabsContent value="stylists" className="mt-6"><StylistManager /></TabsContent>
         <TabsContent value="messages" className="mt-6"><GuestMessagesPanel /></TabsContent>
