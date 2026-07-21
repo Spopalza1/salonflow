@@ -11,10 +11,12 @@ import DailyReport from '@/components/DailyReport';
 import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail, BarChart3 } from 'lucide-react';
 import { useMessageNotifications } from '@/hooks/useMessageNotifications';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
   useMessageNotifications('admin', user);
+  useAdminNotifications();
   const unreadCount = useUnreadMessages('admin', user);
 
   return (

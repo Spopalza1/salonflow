@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,18 +21,9 @@ export default function OrdersPanel() {
     const saved = localStorage.getItem('salonflow_show_chair_table');
     return saved !== null ? saved === 'true' : true;
   });
-  const knownIds = useRef(new Set());
-
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, []);
-
   useEffect(() => {
     const load = async () => {
       const data = await base44.entities.Order.filter({}, '-created_date', 100);
-      data.forEach(o => knownIds.current.add(o.id));
       setOrders(data);
       setLoading(false);
     };
@@ -40,14 +31,6 @@ export default function OrdersPanel() {
 
     const unsubscribe = base44.entities.Order.subscribe((event) => {
       if (event.type === 'create') {
-        if (!knownIds.current.has(event.data.id)) {
-          knownIds.current.add(event.data.id);
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('New Order Request', {
-              body: `${event.data.requested_by_name} requested ${event.data.item_name}${event.data.chair_table ? ' (' + event.data.chair_table + ')' : ''}`,
-            });
-          }
-        }
         setOrders(prev => [event.data, ...prev]);
       } else if (event.type === 'update') {
         setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));
