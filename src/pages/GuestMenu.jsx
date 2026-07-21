@@ -27,12 +27,29 @@ export default function GuestMenu() {
   const [chair, setChair] = useState('');
   const [orders, setOrders] = useState([]);
   const [showOrders, setShowOrders] = useState(false);
+  const [salonName, setSalonName] = useState('Salonflow');
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try { setGuestInfo(JSON.parse(stored)); } catch { /* ignore */ }
     }
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      const data = await base44.entities.SalonSetting.list();
+      if (data.length > 0 && data[0].salon_name) {
+        setSalonName(data[0].salon_name);
+      }
+    };
+    load();
+    const unsubscribe = base44.entities.SalonSetting.subscribe((event) => {
+      if (event.type === 'create' || event.type === 'update') {
+        setSalonName(event.data.salon_name || 'Salonflow');
+      }
+    });
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -98,7 +115,7 @@ export default function GuestMenu() {
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scissors className="w-5 h-5 text-primary" />
-            <span className="font-heading font-semibold">Salonflow</span>
+            <span className="font-heading font-semibold">{salonName}</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:block">Hi, {guestInfo.name}</span>

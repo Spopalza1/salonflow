@@ -41,9 +41,9 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/guest" element={<GuestMenu />} />
+      <Route path="/" element={<Home />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
           <Route path="/front-desk" element={<FrontDeskDashboard />} />
           <Route path="/stylist" element={<StylistView />} />
         </Route>

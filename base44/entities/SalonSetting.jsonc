@@ -1,0 +1,9 @@
+{
+  "name": "SalonSetting",
+  "type": "object",
+  "properties": {
+    "salon_name": {
+      "type": "string"
+    }
+  }
+}
