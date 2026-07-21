@@ -13,7 +13,6 @@ export default function StylistManager() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [title, setTitle] = useState('');
-  const [role, setRole] = useState('stylist');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
   const { toast } = useToast();
@@ -45,9 +44,9 @@ export default function StylistManager() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !title.trim() || !role.trim()) return;
-    if (role.trim().toLowerCase() === 'admin') {
-      setError('Cannot assign "admin" role.');
+    if (!email.trim() || !title.trim()) return;
+    if (title.trim().toLowerCase() === 'admin') {
+      setError('Cannot use "admin" as a title.');
       return;
     }
     setCreating(true);
@@ -56,16 +55,15 @@ export default function StylistManager() {
       // Step 1: Invite the user with default role (platform sends the invitation email)
       await base44.users.inviteUser(email.trim(), 'user');
 
-      // Step 2: Find the new user and set their title + custom role
+      // Step 2: Find the new user and set their title
       const users = await base44.entities.User.filter({ email: email.trim() });
       if (users.length > 0) {
-        await base44.entities.User.update(users[0].id, { title: title.trim(), role: role.trim() });
+        await base44.entities.User.update(users[0].id, { title: title.trim() });
       }
 
       toast({ title: 'Invitation sent!', description: `${email} will receive an email to set up their account.` });
       setEmail('');
       setTitle('');
-      setRole('stylist');
     } catch (err) {
       setError(err.message || 'Failed to invite user');
     } finally {
@@ -90,14 +88,10 @@ export default function StylistManager() {
       <Card>
         <CardContent className="p-4">
           <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="stylist-email"><Mail className="w-3.5 h-3.5 inline mr-1" />Email</Label>
                 <Input id="stylist-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="stylist@example.com" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="stylist-role"><Briefcase className="w-3.5 h-3.5 inline mr-1" />Role</Label>
-                <Input id="stylist-role" type="text" value={role} onChange={e => setRole(e.target.value)} placeholder="e.g. stylist" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="stylist-title"><Briefcase className="w-3.5 h-3.5 inline mr-1" />Title</Label>
@@ -139,7 +133,6 @@ export default function StylistManager() {
                     <div className="font-medium truncate">{s.full_name || s.email}</div>
                     <div className="text-sm text-muted-foreground truncate">{s.email}</div>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <Badge variant="secondary" className="text-xs">{s.role}</Badge>
                       {s.title && <Badge variant="outline" className="text-xs">{s.title}</Badge>}
                     </div>
                   </div>
