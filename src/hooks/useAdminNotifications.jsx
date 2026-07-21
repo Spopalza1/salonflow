@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useToast } from '@/components/ui/use-toast';
 
 function playBeep() {
   try {
@@ -27,6 +28,9 @@ function notify(title, body) {
 }
 
 export function useAdminNotifications() {
+  const { toast } = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
   const knownOrderIds = useRef(new Set());
   const knownServiceIds = useRef(new Set());
   const completedServiceIds = useRef(new Set());
@@ -57,6 +61,10 @@ export function useAdminNotifications() {
       knownOrderIds.current.add(event.data.id);
       const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
       notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
+      toastRef.current({
+        title: 'New Order Received',
+        description: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
+      });
     });
 
     const unsubServices = base44.entities.Service.subscribe((event) => {
