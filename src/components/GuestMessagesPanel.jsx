@@ -37,7 +37,7 @@ export default function GuestMessagesPanel() {
       <style>
         body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
         h2 { margin-bottom: 4px; }
-        .date { color: #666; font-size: 14px; margin-bottom: 20px; }
+        .date { color: hsl(var(--muted-foreground)); font-size: 14px; margin-bottom: 20px; }
         .message { font-size: 16px; line-height: 1.6; white-space: pre-wrap; }
       </style></head><body>
         <h2>Message from ${msg.guest_name}</h2>
