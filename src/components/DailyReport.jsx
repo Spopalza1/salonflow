@@ -84,7 +84,9 @@ export default function DailyReport() {
     return <div className="text-center py-20 text-destructive"><p>Error loading report: {error}</p></div>;
   }
 
-  const todaysOrders = orders.filter(o => o.status === 'served' && isToday(servedTime(o)));
+  const servedAll = orders.filter(o => o.status === 'served');
+  const todaysOrders = servedAll.filter(o => isToday(servedTime(o)));
+  const debugInfo = `DEBUG: ${orders.length} total orders loaded, ${servedAll.length} served, ${todaysOrders.length} served today. Sample: ${orders[0] ? JSON.stringify({ status: orders[0].status, updated: orders[0].updated_date, created: orders[0].created_date }) : 'none'}`;
 
   // Group by item name
   const itemMap = {};
@@ -138,6 +140,7 @@ export default function DailyReport() {
         <h2 className="font-heading text-xl font-semibold">Daily Report</h2>
         <Badge variant="secondary">{todayStr}</Badge>
       </div>
+      <p className="text-xs text-muted-foreground font-mono">{debugInfo}</p>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
