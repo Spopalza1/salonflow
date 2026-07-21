@@ -64,6 +64,11 @@ export function useAdminNotifications() {
       knownOrderIds.current.add(event.data.id);
       const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
       notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
+      base44.entities.Notification.create({
+        title: 'New Order Received',
+        body: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
+        type: 'order',
+      });
       toastRef.current({
         title: 'New Order Received',
         description: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
@@ -75,10 +80,20 @@ export function useAdminNotifications() {
         if (knownServiceIds.current.has(event.data.id)) return;
         knownServiceIds.current.add(event.data.id);
         notify('New Service Started', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
+        base44.entities.Notification.create({
+          title: 'New Service Started',
+          body: `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`,
+          type: 'service',
+        });
       } else if (event.type === 'update') {
         if (event.data.status === 'completed' && !completedServiceIds.current.has(event.data.id)) {
           completedServiceIds.current.add(event.data.id);
           notify('Service Completed', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
+          base44.entities.Notification.create({
+            title: 'Service Completed',
+            body: `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`,
+            type: 'service',
+          });
         }
       }
     });
@@ -88,6 +103,11 @@ export function useAdminNotifications() {
       if (knownNoteIds.current.has(event.data.id)) return;
       knownNoteIds.current.add(event.data.id);
       notify(`Service Update From ${event.data.author_name}`, event.data.content);
+      base44.entities.Notification.create({
+        title: `Service Update From ${event.data.author_name}`,
+        body: event.data.content,
+        type: 'service_note',
+      });
     });
 
     const unsubGuestMessages = base44.entities.GuestMessage.subscribe((event) => {
@@ -95,6 +115,11 @@ export function useAdminNotifications() {
       if (knownGuestMessageIds.current.has(event.data.id)) return;
       knownGuestMessageIds.current.add(event.data.id);
       notify(`New Message From ${event.data.guest_name}`, event.data.message);
+      base44.entities.Notification.create({
+        title: `New Message From ${event.data.guest_name}`,
+        body: event.data.message,
+        type: 'guest_message',
+      });
       toastRef.current({
         title: `New Message From ${event.data.guest_name}`,
         description: event.data.message,

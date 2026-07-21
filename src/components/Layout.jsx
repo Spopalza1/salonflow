@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Scissors, LogOut, QrCode } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import NotificationsDropdown from '@/components/NotificationsDropdown';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -27,6 +28,7 @@ export default function Layout() {
               <div className="text-sm font-medium">{user?.full_name || user?.email}</div>
               <Badge variant="secondary" className="capitalize text-xs">{user?.role}</Badge>
             </div>
+            <NotificationsDropdown />
             <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => logout()}>
               <LogOut className="w-4 h-4" />
