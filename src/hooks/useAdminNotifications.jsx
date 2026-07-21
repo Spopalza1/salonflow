@@ -58,6 +58,8 @@ export function useAdminNotifications() {
   salonIdRef.current = user?.salon_id;
 
   useEffect(() => {
+    if (!user?.salon_id) return;
+
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
@@ -65,10 +67,10 @@ export function useAdminNotifications() {
     const loadExisting = async () => {
       try {
         const [orders, services, notes, guestMessages, messages] = await Promise.all([
-          base44.entities.Order.filter({}, '-created_date', 100),
+          base44.entities.Order.filter({ salon_id: salonIdRef.current }, '-created_date', 100),
           base44.entities.Service.filter({ status: 'ongoing' }, '-created_date'),
           base44.entities.ServiceNote.list('created_date', 500),
-          base44.entities.GuestMessage.list('created_date', 100),
+          base44.entities.GuestMessage.filter({ salon_id: salonIdRef.current }, '-created_date', 100),
           base44.entities.Message.list('created_date', 100),
         ]);
         orders.forEach(o => knownOrderIds.add(o.id));
@@ -84,9 +86,9 @@ export function useAdminNotifications() {
       if (event.type === 'create') {
         if (knownOrderIds.has(event.data.id)) return;
         knownOrderIds.add(event.data.id);
+        if (event.data.salon_id && salonIdRef.current && event.data.salon_id !== salonIdRef.current) return;
         const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
         notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
-        if (event.data.salon_id && salonIdRef.current && event.data.salon_id !== salonIdRef.current) return;
         const notif = await dedupCreateNotification(`order:${event.data.id}`, {
           title: 'New Order Received',
           body: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
@@ -151,8 +153,8 @@ export function useAdminNotifications() {
       if (event.type !== 'create') return;
       if (knownGuestMessageIds.has(event.data.id)) return;
       knownGuestMessageIds.add(event.data.id);
-      notify(`New Message From ${event.data.guest_name}`, event.data.message);
       if (event.data.salon_id && salonIdRef.current && event.data.salon_id !== salonIdRef.current) return;
+      notify(`New Message From ${event.data.guest_name}`, event.data.message);
       dedupCreateNotification(`guest:${event.data.id}`, {
         title: `New Message From ${event.data.guest_name}`,
         body: event.data.message,
@@ -195,5 +197,5 @@ export function useAdminNotifications() {
       unsubGuestMessages();
       unsubMessages();
     };
-  }, []);
+  }, [user?.salon_id]);
 }

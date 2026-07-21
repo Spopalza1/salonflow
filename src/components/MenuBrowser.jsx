@@ -52,7 +52,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const handleOrder = async (item) => {
     setOrdering(item.id);
     try {
-      const isComplimentary = complimentarySet.has(item.category);
+      const isComplimentary = complimentarySet.has(item.category) || item.complimentary;
       const orderData = {
         item_name: item.name,
         category: item.category,
@@ -123,7 +123,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between text-base">
                       <span>{item.name}</span>
-                      {isComplimentary
+                      {isComplimentary || item.complimentary
                         ? <Badge className="bg-green-600">Complimentary</Badge>
                         : item.price != null && <Badge variant="secondary">${item.price.toFixed(2)}</Badge>}
                     </CardTitle>

@@ -25,6 +25,10 @@
       "type": "number",
       "default": 0
     },
+    "complimentary": {
+      "type": "boolean",
+      "default": false
+    },
     "salon_id": {
       "type": "string"
     }

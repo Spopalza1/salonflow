@@ -23,7 +23,7 @@ export default function MenuManager() {
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [catForm, setCatForm] = useState({ name: '', id: null });
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: '', category: '', price: '', description: '', image_url: '', available: true });
+  const [form, setForm] = useState({ name: '', category: '', price: '', description: '', image_url: '', available: true, complimentary: false });
   const [uploading, setUploading] = useState(false);
 
   const handleImageUpload = async (e) => {
@@ -73,7 +73,7 @@ export default function MenuManager() {
   // Item dialog handlers
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', category: existingCategoryNames[0] || '', price: '', description: '', image_url: '', available: true });
+    setForm({ name: '', category: existingCategoryNames[0] || '', price: '', description: '', image_url: '', available: true, complimentary: false });
     setDialogOpen(true);
   };
 
@@ -86,6 +86,7 @@ export default function MenuManager() {
       description: item.description || '',
       image_url: item.image_url || '',
       available: item.available,
+      complimentary: item.complimentary || false,
     });
     setDialogOpen(true);
   };
@@ -99,6 +100,7 @@ export default function MenuManager() {
       description: form.description,
       image_url: form.image_url || null,
       available: form.available,
+      complimentary: form.complimentary,
       salon_id: user?.salon_id,
     };
     try {
@@ -120,6 +122,14 @@ export default function MenuManager() {
     try {
       await base44.entities.MenuItem.delete(item.id);
       toast({ title: 'Item deleted' });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const toggleItemComplimentary = async (item) => {
+    try {
+      await base44.entities.MenuItem.update(item.id, { complimentary: !item.complimentary });
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
@@ -248,13 +258,19 @@ export default function MenuManager() {
                           {!item.available && <Badge variant="destructive">Hidden</Badge>}
                         </div>
                         {item.description && <p className="text-sm text-muted-foreground mt-1">{item.description}</p>}
-                        {complimentarySet.has(category)
+                        {complimentarySet.has(category) || item.complimentary
                           ? <p className="text-sm font-medium mt-1 text-green-600">Complimentary</p>
                           : item.price != null && <p className="text-sm font-medium mt-1">${item.price.toFixed(2)}</p>}
                       </div>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Switch checked={item.complimentary || false} onCheckedChange={() => toggleItemComplimentary(item)} />
+                          <Label className="text-xs text-muted-foreground">Free</Label>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -310,6 +326,10 @@ export default function MenuManager() {
             <div className="flex items-center gap-2">
               <Switch id="available" checked={form.available} onCheckedChange={v => setForm({ ...form, available: v })} />
               <Label htmlFor="available">Available on menu</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="complimentary" checked={form.complimentary} onCheckedChange={v => setForm({ ...form, complimentary: v })} />
+              <Label htmlFor="complimentary">Complimentary (free)</Label>
             </div>
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>

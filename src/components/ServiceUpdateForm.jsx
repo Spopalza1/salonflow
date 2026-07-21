@@ -24,6 +24,7 @@ export default function ServiceUpdateForm({ user }) {
         thread_partner_name: user.full_name || user.email,
         body: message.trim(),
         message_type: 'service_update',
+        salon_id: user.salon_id,
       });
       toast({ title: 'Service update sent to front desk' });
       setMessage('');

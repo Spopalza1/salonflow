@@ -5,20 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Printer, Trash2, Check } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function GuestMessagesPanel() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!user?.salon_id) return;
     const load = async () => {
-      const data = await base44.entities.GuestMessage.filter({}, '-created_date', 200);
+      const data = await base44.entities.GuestMessage.filter({ salon_id: user.salon_id }, '-created_date', 200);
       setMessages(data);
       setLoading(false);
     };
     load();
     const unsubscribe = base44.entities.GuestMessage.subscribe((event) => {
+      if (event.data.salon_id && event.data.salon_id !== user.salon_id) return;
       if (event.type === 'create') {
         setMessages(prev => [event.data, ...prev]);
       } else if (event.type === 'update') {
@@ -28,7 +32,7 @@ export default function GuestMessagesPanel() {
       }
     });
     return unsubscribe;
-  }, []);
+  }, [user?.salon_id]);
 
   const handlePrint = (msg) => {
     const printWin = window.open('', '_blank');
