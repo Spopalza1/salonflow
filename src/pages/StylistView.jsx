@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
@@ -13,9 +14,29 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 export default function StylistView() {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('tab') || 'coffee';
+  });
+
   useMessageNotifications('stylist', user);
   const unreadCount = useUnreadMessages('stylist', user);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    navigate(`?tab=${value}`);
+  };
 
   const displayName = user?.display_name || user?.full_name || user?.email || 'Stylist';
 
@@ -33,7 +54,7 @@ export default function StylistView() {
           Edit Profile
         </Button>
       </div>
-      <Tabs defaultValue="coffee">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="coffee"><Coffee className="w-4 h-4 mr-2" />Order</TabsTrigger>
           <TabsTrigger value="chat" className="relative">

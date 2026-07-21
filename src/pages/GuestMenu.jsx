@@ -185,7 +185,7 @@ export default function GuestMenu() {
   if (view === 'message') {
     return (
       <div className="min-h-screen bg-muted/30">
-        <header className="bg-background border-b sticky top-0 z-10">
+        <header className="bg-background border-b sticky top-0 z-10 safe-area-top">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={() => setView('choice')}>
               <ArrowLeft className="w-4 h-4 mr-2" />Back
@@ -243,7 +243,7 @@ export default function GuestMenu() {
   // Step 3b: Menu browser
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="bg-background border-b sticky top-0 z-10">
+      <header className="bg-background border-b sticky top-0 z-10 safe-area-top">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => setView('choice')}>
             <ArrowLeft className="w-4 h-4 mr-2" />Back

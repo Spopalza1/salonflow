@@ -88,5 +88,33 @@
 
   body {
     @apply bg-background text-foreground font-body;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input, textarea, [contenteditable], .select-text {
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-touch-callout: default;
+  }
+}
+
+@layer utilities {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 44px minimum touch targets on mobile */
+@media (pointer: coarse) {
+  button.h-9.w-9 {
+    min-width: 44px;
+    min-height: 44px;
   }
 }

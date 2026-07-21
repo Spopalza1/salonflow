@@ -44,7 +44,7 @@ export default function MessageBubble({ msg, isOwn, canDownload }) {
         {isAudio && (
           <VoiceMessagePlayer src={msg.media_url} isOwn={isOwn} />
         )}
-        {msg.body && !isAudio && <p className="text-sm whitespace-pre-wrap">{msg.body}</p>}
+        {msg.body && !isAudio && <p className="text-sm whitespace-pre-wrap select-text">{msg.body}</p>}
         <p className="text-[10px] opacity-60 mt-1 text-right">{new Date(msg.created_date).toLocaleTimeString()}</p>
       </div>
       {viewerMedia && (

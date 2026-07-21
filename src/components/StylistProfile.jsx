@@ -5,14 +5,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/AuthContext';
-import { Save, User, Armchair } from 'lucide-react';
+import { Save, User, Armchair, Trash2, AlertTriangle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export default function StylistProfile({ onSaved }) {
-  const { user, checkUserAuth } = useAuth();
+  const { user, checkUserAuth, logout } = useAuth();
   const [displayName, setDisplayName] = useState(user?.display_name || '');
   const [username, setUsername] = useState(user?.username || '');
   const [chairNumber, setChairNumber] = useState(user?.chair_number || '');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async (e) => {
@@ -34,42 +47,87 @@ export default function StylistProfile({ onSaved }) {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await base44.entities.User.delete(user.id);
+      logout();
+    } catch (err) {
+      toast({ title: 'Failed to delete account', description: err.message, variant: 'destructive' });
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
+  };
+
   return (
-    <form onSubmit={handleSave} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="display-name"><User className="w-3.5 h-3.5 inline mr-1" />Display Name</Label>
-        <Input
-          id="display-name"
-          value={displayName}
-          onChange={e => setDisplayName(e.target.value)}
-          placeholder="Your name as it appears to others"
-        />
+    <div className="space-y-4">
+      <form onSubmit={handleSave} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="display-name"><User className="w-3.5 h-3.5 inline mr-1" />Display Name</Label>
+          <Input
+            id="display-name"
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+            placeholder="Your name as it appears to others"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="username"><User className="w-3.5 h-3.5 inline mr-1" />Username</Label>
+          <Input
+            id="username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            placeholder="Choose a display username"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="chair-number"><Armchair className="w-3.5 h-3.5 inline mr-1" />Chair Number (optional)</Label>
+          <Input
+            id="chair-number"
+            value={chairNumber}
+            onChange={e => setChairNumber(e.target.value)}
+            placeholder="e.g. Chair 3"
+          />
+          <p className="text-xs text-muted-foreground">
+            This will appear on your orders when the chair/table option is enabled at the front desk.
+          </p>
+        </div>
+        <Button type="submit" disabled={saving} className="w-full">
+          <Save className="w-4 h-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Profile'}
+        </Button>
+      </form>
+      <div className="pt-4 border-t">
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="w-full">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Account
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                Delete Account?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This action is irreversible. Deleting your account will permanently remove all your stylist data, including your profile, services, messages, and orders. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? 'Deleting...' : 'Delete My Account'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="username"><User className="w-3.5 h-3.5 inline mr-1" />Username</Label>
-        <Input
-          id="username"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-          placeholder="Choose a display username"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="chair-number"><Armchair className="w-3.5 h-3.5 inline mr-1" />Chair Number (optional)</Label>
-        <Input
-          id="chair-number"
-          value={chairNumber}
-          onChange={e => setChairNumber(e.target.value)}
-          placeholder="e.g. Chair 3"
-        />
-        <p className="text-xs text-muted-foreground">
-          This will appear on your orders when the chair/table option is enabled at the front desk.
-        </p>
-      </div>
-      <Button type="submit" disabled={saving} className="w-full">
-        <Save className="w-4 h-4 mr-2" />
-        {saving ? 'Saving...' : 'Save Profile'}
-      </Button>
-    </form>
+    </div>
   );
 }

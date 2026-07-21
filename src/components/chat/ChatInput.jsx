@@ -239,7 +239,7 @@ export default function ChatInput({ onSend }) {
   };
 
   return (
-    <div className="p-3 border-t">
+    <div className="p-3 border-t safe-area-bottom">
       {uploading && (
         <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
           <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" />

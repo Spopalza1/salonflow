@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/AuthContext';
 import OrdersPanel from '@/components/OrdersPanel';
@@ -17,22 +17,31 @@ import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('orders');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('tab') || 'orders';
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab) {
+    if (tab && tab !== activeTab) {
       setActiveTab(tab);
     }
   }, [location.search]);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    navigate(`?tab=${value}`);
+  };
 
   useMessageNotifications('admin', user);
   useAdminNotifications();
 
   return (
     <div className="p-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="orders"><ClipboardList className="w-4 h-4 mr-2" />Orders</TabsTrigger>
           <TabsTrigger value="menu"><Coffee className="w-4 h-4 mr-2" />Menu</TabsTrigger>
