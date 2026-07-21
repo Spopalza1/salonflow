@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useToast } from '@/components/ui/use-toast';
 
 function playBeep() {
   try {
@@ -20,6 +21,9 @@ function playBeep() {
 }
 
 export function useMessageNotifications(mode, user) {
+  const { toast } = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
   const knownIds = useRef(new Set());
 
   useEffect(() => {
@@ -54,6 +58,13 @@ export function useMessageNotifications(mode, user) {
         playBeep();
 
         const isServiceUpdate = msg.message_type === 'service_update';
+
+        if (mode === 'admin' && !isServiceUpdate) {
+          toastRef.current({
+            title: `New Chat From ${msg.sender_name}`,
+            description: msg.body,
+          });
+        }
 
         if ('Notification' in window && Notification.permission === 'granted') {
           const title = isServiceUpdate

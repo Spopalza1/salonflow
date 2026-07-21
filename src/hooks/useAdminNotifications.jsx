@@ -35,6 +35,7 @@ export function useAdminNotifications() {
   const knownServiceIds = useRef(new Set());
   const completedServiceIds = useRef(new Set());
   const knownNoteIds = useRef(new Set());
+  const knownGuestMessageIds = useRef(new Set());
 
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -43,14 +44,16 @@ export function useAdminNotifications() {
 
     const loadExisting = async () => {
       try {
-        const [orders, services, notes] = await Promise.all([
+        const [orders, services, notes, guestMessages] = await Promise.all([
           base44.entities.Order.filter({}, '-created_date', 100),
           base44.entities.Service.filter({ status: 'ongoing' }, '-created_date'),
           base44.entities.ServiceNote.list('created_date', 500),
+          base44.entities.GuestMessage.list('created_date', 100),
         ]);
         orders.forEach(o => knownOrderIds.current.add(o.id));
         services.forEach(s => knownServiceIds.current.add(s.id));
         notes.forEach(n => knownNoteIds.current.add(n.id));
+        guestMessages.forEach(g => knownGuestMessageIds.current.add(g.id));
       } catch (e) { /* ignore */ }
     };
     loadExisting();
@@ -87,10 +90,22 @@ export function useAdminNotifications() {
       notify(`Service Update From ${event.data.author_name}`, event.data.content);
     });
 
+    const unsubGuestMessages = base44.entities.GuestMessage.subscribe((event) => {
+      if (event.type !== 'create') return;
+      if (knownGuestMessageIds.current.has(event.data.id)) return;
+      knownGuestMessageIds.current.add(event.data.id);
+      notify(`New Message From ${event.data.guest_name}`, event.data.message);
+      toastRef.current({
+        title: `New Message From ${event.data.guest_name}`,
+        description: event.data.message,
+      });
+    });
+
     return () => {
       unsubOrders();
       unsubServices();
       unsubNotes();
+      unsubGuestMessages();
     };
   }, []);
 }
