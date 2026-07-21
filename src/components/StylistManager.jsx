@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Users, Mail, Briefcase, Trash2 } from 'lucide-react';
+import { UserPlus, Users, Mail, Briefcase, Trash2, Copy, Link as LinkIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function StylistManager() {
@@ -15,7 +15,21 @@ export default function StylistManager() {
   const [title, setTitle] = useState('');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
+  const [inviteLink, setInviteLink] = useState(null);
   const { toast } = useToast();
+
+  const getSignUpLink = (emailAddr) => {
+    return `${window.location.origin}/register?email=${encodeURIComponent(emailAddr)}`;
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: 'Link copied!', description: 'Share this link with your stylist.' });
+    } catch {
+      toast({ title: 'Copy failed', description: 'Please copy the link manually.', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -61,7 +75,9 @@ export default function StylistManager() {
         await base44.entities.User.update(users[0].id, { title: title.trim() });
       }
 
-      toast({ title: 'Invitation sent!', description: `${email} will receive an email to set up their account.` });
+      const link = getSignUpLink(email.trim());
+      setInviteLink(link);
+      toast({ title: 'Invitation sent!', description: 'Copy the sign-up link below and share it with your stylist.' });
       setEmail('');
       setTitle('');
     } catch (err) {
@@ -108,8 +124,26 @@ export default function StylistManager() {
           </form>
 
           <p className="text-xs text-muted-foreground mt-3">
-            The stylist will receive an email invitation to set up their own account and password.
+            After inviting, copy the sign-up link and share it with your stylist. Only invited emails can sign up — the page is not accessible to the public.
           </p>
+
+          {inviteLink && (
+            <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <LinkIcon className="w-4 h-4 text-primary" />
+                Stylist Sign-Up Link
+              </div>
+              <div className="flex items-center gap-2">
+                <Input readOnly value={inviteLink} className="text-xs h-9" />
+                <Button type="button" size="sm" variant="default" className="shrink-0" onClick={() => copyToClipboard(inviteLink)}>
+                  <Copy className="w-3.5 h-3.5 mr-1" />Copy
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Send this link directly to your stylist. They'll set their password and verify via email code.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -136,9 +170,14 @@ export default function StylistManager() {
                       {s.title && <Badge variant="outline" className="text-xs">{s.title}</Badge>}
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleRemove(s)}>
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" title="Copy sign-up link" onClick={() => copyToClipboard(getSignUpLink(s.email))}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleRemove(s)}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
