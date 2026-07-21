@@ -34,6 +34,7 @@ const completedServiceIds = new Set();
 const knownNoteIds = new Set();
 const knownGuestMessageIds = new Set();
 const knownMessageIds = new Set();
+const orderNotificationMap = new Map(); // orderId -> notificationId
 
 export function useAdminNotifications() {
   const { toast } = useToast();
@@ -63,21 +64,31 @@ export function useAdminNotifications() {
     };
     loadExisting();
 
-    const unsubOrders = base44.entities.Order.subscribe((event) => {
-      if (event.type !== 'create') return;
-      if (knownOrderIds.has(event.data.id)) return;
-      knownOrderIds.add(event.data.id);
-      const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
-      notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
-      base44.entities.Notification.create({
-        title: 'New Order Received',
-        body: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
-        type: 'order',
-      });
-      toastRef.current({
-        title: 'New Order Received',
-        description: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
-      });
+    const unsubOrders = base44.entities.Order.subscribe(async (event) => {
+      if (event.type === 'create') {
+        if (knownOrderIds.has(event.data.id)) return;
+        knownOrderIds.add(event.data.id);
+        const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
+        notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
+        const notif = await base44.entities.Notification.create({
+          title: 'New Order Received',
+          body: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
+          type: 'order',
+        });
+        orderNotificationMap.set(event.data.id, notif.id);
+        toastRef.current({
+          title: 'New Order Received',
+          description: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
+        });
+      } else if (event.type === 'update' && event.data.status === 'served') {
+        const notifId = orderNotificationMap.get(event.data.id);
+        if (notifId) {
+          orderNotificationMap.delete(event.data.id);
+          try {
+            await base44.entities.Notification.delete(notifId);
+          } catch (e) { /* already deleted */ }
+        }
+      }
     });
 
     const unsubServices = base44.entities.Service.subscribe((event) => {
