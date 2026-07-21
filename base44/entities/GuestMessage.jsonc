@@ -1,0 +1,20 @@
+{
+  "name": "GuestMessage",
+  "type": "object",
+  "properties": {
+    "guest_name": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "printed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "guest_name",
+    "message"
+  ]
+}

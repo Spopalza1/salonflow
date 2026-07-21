@@ -6,7 +6,8 @@ import ChatPanel from '@/components/ChatPanel';
 import ServicesPanel from '@/components/ServicesPanel';
 import QRDisplay from '@/components/QRDisplay';
 import StylistManager from '@/components/StylistManager';
-import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users } from 'lucide-react';
+import GuestMessagesPanel from '@/components/GuestMessagesPanel';
+import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail } from 'lucide-react';
 
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function FrontDeskDashboard() {
           <TabsTrigger value="chat"><MessageSquare className="w-4 h-4 mr-2" />Chat</TabsTrigger>
           <TabsTrigger value="services"><Scissors className="w-4 h-4 mr-2" />Services</TabsTrigger>
           <TabsTrigger value="stylists"><Users className="w-4 h-4 mr-2" />Stylists</TabsTrigger>
+          <TabsTrigger value="messages"><Mail className="w-4 h-4 mr-2" />Messages</TabsTrigger>
           <TabsTrigger value="qr"><QrCode className="w-4 h-4 mr-2" />QR Code</TabsTrigger>
         </TabsList>
         <TabsContent value="orders" className="mt-6"><OrdersPanel /></TabsContent>
@@ -27,6 +29,7 @@ export default function FrontDeskDashboard() {
         <TabsContent value="chat" className="mt-6"><ChatPanel mode="admin" user={user} /></TabsContent>
         <TabsContent value="services" className="mt-6"><ServicesPanel mode="admin" user={user} /></TabsContent>
         <TabsContent value="stylists" className="mt-6"><StylistManager /></TabsContent>
+        <TabsContent value="messages" className="mt-6"><GuestMessagesPanel /></TabsContent>
         <TabsContent value="qr" className="mt-6"><QRDisplay /></TabsContent>
       </Tabs>
     </div>

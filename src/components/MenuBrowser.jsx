@@ -1,48 +1,59 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Coffee, Plus, Check } from 'lucide-react';
+import { Coffee, Plus, Check, Gift } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function MenuBrowser({ mode, user, guestInfo }) {
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const load = async () => {
-      const data = await base44.entities.MenuItem.filter({ available: true }, 'display_order');
+      const [data, cats] = await Promise.all([
+        base44.entities.MenuItem.filter({ available: true }, 'display_order'),
+        base44.entities.MenuCategory.list('display_order')
+      ]);
       setItems(data);
+      setCategories(cats);
       setLoading(false);
     };
     load();
-    const unsubscribe = base44.entities.MenuItem.subscribe((event) => {
+
+    const unsubItems = base44.entities.MenuItem.subscribe((event) => {
       if (event.type === 'create') {
-        if (event.data.available) {
-          setItems(prev => [...prev, event.data].sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
-        }
+        if (event.data.available) setItems(prev => [...prev, event.data].sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
       } else if (event.type === 'update') {
-        setItems(prev => {
-          const updated = prev.map(i => i.id === event.data.id ? event.data : i);
-          return updated.filter(i => i.available).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-        });
+        setItems(prev => prev.map(i => i.id === event.data.id ? event.data : i).filter(i => i.available).sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
       } else if (event.type === 'delete') {
         setItems(prev => prev.filter(i => i.id !== event.id));
       }
     });
-    return unsubscribe;
+
+    const unsubCats = base44.entities.MenuCategory.subscribe((event) => {
+      if (event.type === 'create') setCategories(prev => [...prev, event.data]);
+      else if (event.type === 'update') setCategories(prev => prev.map(c => c.id === event.data.id ? event.data : c));
+      else if (event.type === 'delete') setCategories(prev => prev.filter(c => c.id !== event.id));
+    });
+
+    return () => { unsubItems(); unsubCats(); };
   }, []);
+
+  const complimentarySet = new Set(categories.filter(c => c.complimentary).map(c => c.name));
 
   const handleOrder = async (item) => {
     setOrdering(item.id);
     try {
+      const isComplimentary = complimentarySet.has(item.category);
       const orderData = {
         item_name: item.name,
         category: item.category,
-        price: item.price,
+        price: isComplimentary ? null : item.price,
         status: 'pending',
       };
       if (mode === 'stylist') {
@@ -52,7 +63,6 @@ export default function MenuBrowser({ mode, user, guestInfo }) {
       } else {
         orderData.requested_by_type = 'guest';
         orderData.requested_by_name = guestInfo?.name || 'Guest';
-        orderData.chair_table = guestInfo?.chair || '';
         orderData.guest_session = guestInfo?.session || '';
       }
       await base44.entities.Order.create(orderData);
@@ -64,10 +74,10 @@ export default function MenuBrowser({ mode, user, guestInfo }) {
     }
   };
 
-  const categories = {};
+  const grouped = {};
   items.forEach(item => {
-    if (!categories[item.category]) categories[item.category] = [];
-    categories[item.category].push(item);
+    if (!grouped[item.category]) grouped[item.category] = [];
+    grouped[item.category].push(item);
   });
 
   if (loading) {
@@ -89,35 +99,43 @@ export default function MenuBrowser({ mode, user, guestInfo }) {
 
   return (
     <div className="space-y-8">
-      {Object.entries(categories).map(([category, categoryItems]) => (
-        <div key={category}>
-          <h2 className="font-heading text-xl font-semibold mb-3">{category}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categoryItems.map(item => (
-              <Card key={item.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-base">
-                    <span>{item.name}</span>
-                    {item.price != null && <Badge variant="secondary">${item.price.toFixed(2)}</Badge>}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {item.description && <p className="text-sm text-muted-foreground mb-3">{item.description}</p>}
-                  <Button
-                    className="w-full"
-                    onClick={() => handleOrder(item)}
-                    disabled={ordering === item.id}
-                  >
-                    {ordering === item.id
-                      ? <><Check className="w-4 h-4 mr-2" />Sending...</>
-                      : <><Plus className="w-4 h-4 mr-2" />Request</>}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+      {Object.entries(grouped).map(([category, categoryItems]) => {
+        const isComplimentary = complimentarySet.has(category);
+        return (
+          <div key={category}>
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="font-heading text-xl font-semibold">{category}</h2>
+              {isComplimentary && <Badge variant="default"><Gift className="w-3 h-3 mr-1" />Complimentary</Badge>}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categoryItems.map(item => (
+                <Card key={item.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between text-base">
+                      <span>{item.name}</span>
+                      {isComplimentary
+                        ? <Badge className="bg-green-600">Complimentary</Badge>
+                        : item.price != null && <Badge variant="secondary">${item.price.toFixed(2)}</Badge>}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {item.description && <p className="text-sm text-muted-foreground mb-3">{item.description}</p>}
+                    <Button
+                      className="w-full"
+                      onClick={() => handleOrder(item)}
+                      disabled={ordering === item.id}
+                    >
+                      {ordering === item.id
+                        ? <><Check className="w-4 h-4 mr-2" />Sending...</>
+                        : <><Plus className="w-4 h-4 mr-2" />Request</>}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

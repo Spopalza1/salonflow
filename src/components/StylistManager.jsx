@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Users, Mail, Lock, Briefcase, Copy, Check } from 'lucide-react';
+import { UserPlus, Users, Mail, Lock, Briefcase, Copy, Check, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function StylistManager() {
@@ -89,6 +89,16 @@ export default function StylistManager() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleRemove = async (stylist) => {
+    if (!confirm(`Remove ${stylist.full_name || stylist.email}? They will no longer have access.`)) return;
+    try {
+      await base44.entities.User.delete(stylist.id);
+      toast({ title: 'User removed', description: `${stylist.email} no longer has access.` });
+    } catch (err) {
+      toast({ title: 'Failed to remove', description: err.message, variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="font-heading text-xl font-semibold">Stylists</h2>
@@ -157,7 +167,7 @@ export default function StylistManager() {
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <Users className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{s.full_name || s.email}</div>
                     <div className="text-sm text-muted-foreground truncate">{s.email}</div>
                     <div className="flex items-center gap-1.5 mt-1">
@@ -165,6 +175,9 @@ export default function StylistManager() {
                       {s.title && <Badge variant="outline" className="text-xs">{s.title}</Badge>}
                     </div>
                   </div>
+                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => handleRemove(s)}>
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
