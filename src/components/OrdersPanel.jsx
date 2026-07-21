@@ -17,7 +17,10 @@ const STATUS_CONFIG = {
 export default function OrdersPanel() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showChairTable, setShowChairTable] = useState(true);
+  const [showChairTable, setShowChairTable] = useState(() => {
+    const saved = localStorage.getItem('salonflow_show_chair_table');
+    return saved !== null ? saved === 'true' : true;
+  });
   const knownIds = useRef(new Set());
 
   useEffect(() => {
@@ -82,7 +85,7 @@ export default function OrdersPanel() {
           {pendingCount > 0 && <Badge variant="destructive">{pendingCount} new</Badge>}
         </div>
         <div className="flex items-center gap-2">
-          <Switch id="show-chair" checked={showChairTable} onCheckedChange={setShowChairTable} />
+          <Switch id="show-chair" checked={showChairTable} onCheckedChange={(checked) => { setShowChairTable(checked); localStorage.setItem('salonflow_show_chair_table', checked); }} />
           <Label htmlFor="show-chair" className="text-sm text-muted-foreground cursor-pointer">Chair/Table</Label>
         </div>
       </div>
