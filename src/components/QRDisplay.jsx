@@ -6,19 +6,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { QrCode, Download, Save } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function QRDisplay() {
+  const { user } = useAuth();
   const [salonName, setSalonName] = useState('');
   const [settingId, setSettingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  const guestUrl = `${window.location.origin}/guest`;
+  const guestUrl = `${window.location.origin}/guest${user?.salon_id ? `?salon=${user.salon_id}` : ''}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(guestUrl)}`;
 
   useEffect(() => {
     const load = async () => {
-      const data = await base44.entities.SalonSetting.list();
+      const data = await base44.entities.SalonSetting.filter({ salon_id: user?.salon_id });
       if (data.length > 0) {
         setSalonName(data[0].salon_name || '');
         setSettingId(data[0].id);
@@ -42,7 +44,7 @@ export default function QRDisplay() {
       if (settingId) {
         await base44.entities.SalonSetting.update(settingId, { salon_name: salonName });
       } else {
-        const created = await base44.entities.SalonSetting.create({ salon_name: salonName });
+        const created = await base44.entities.SalonSetting.create({ salon_name: salonName, salon_id: user?.salon_id });
         setSettingId(created.id);
       }
       toast({ title: 'Salon name updated' });

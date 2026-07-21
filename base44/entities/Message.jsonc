@@ -46,6 +46,9 @@
     "read": {
       "type": "boolean",
       "default": false
+    },
+    "salon_id": {
+      "type": "string"
     }
   },
   "required": [
@@ -54,5 +57,17 @@
     "sender_role",
     "thread_partner_id",
     "body"
-  ]
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "update": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "delete": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    }
+  }
 }

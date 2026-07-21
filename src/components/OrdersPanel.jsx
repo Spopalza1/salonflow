@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Coffee, Utensils, Check, X } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', variant: 'destructive' },
@@ -15,6 +16,7 @@ const STATUS_CONFIG = {
 };
 
 export default function OrdersPanel() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showChairTable, setShowChairTable] = useState(() => {
@@ -23,7 +25,7 @@ export default function OrdersPanel() {
   });
   useEffect(() => {
     const load = async () => {
-      const data = await base44.entities.Order.filter({}, '-created_date', 100);
+      const data = await base44.entities.Order.filter({ salon_id: user?.salon_id }, '-created_date', 100);
       setOrders(data);
       setLoading(false);
     };
@@ -31,6 +33,7 @@ export default function OrdersPanel() {
 
     const unsubscribe = base44.entities.Order.subscribe((event) => {
       if (event.type === 'create') {
+        if (event.data.salon_id && user?.salon_id && event.data.salon_id !== user.salon_id) return;
         setOrders(prev => [event.data, ...prev]);
       } else if (event.type === 'update') {
         setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));

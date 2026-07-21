@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Plus, Pencil, Trash2, Coffee, FolderPlus, Gift, Upload, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image as UIImage } from '@/components/ui/image';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function MenuManager() {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,8 +43,8 @@ export default function MenuManager() {
   useEffect(() => {
     const load = async () => {
       const [itemData, catData] = await Promise.all([
-        base44.entities.MenuItem.list('display_order'),
-        base44.entities.MenuCategory.list('display_order')
+        base44.entities.MenuItem.filter({ salon_id: user?.salon_id }, 'display_order'),
+        base44.entities.MenuCategory.filter({ salon_id: user?.salon_id }, 'display_order')
       ]);
       setItems(itemData);
       setCategories(catData);
@@ -97,6 +99,7 @@ export default function MenuManager() {
       description: form.description,
       image_url: form.image_url || null,
       available: form.available,
+      salon_id: user?.salon_id,
     };
     try {
       if (editing) {
@@ -147,7 +150,7 @@ export default function MenuManager() {
         }
         toast({ title: 'Category renamed' });
       } else {
-        await base44.entities.MenuCategory.create({ name: catForm.name, complimentary: false, display_order: categories.length });
+        await base44.entities.MenuCategory.create({ name: catForm.name, complimentary: false, display_order: categories.length, salon_id: user?.salon_id });
         toast({ title: 'Category created' });
       }
       setCatDialogOpen(false);

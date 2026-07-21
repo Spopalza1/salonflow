@@ -39,7 +39,7 @@ export default function StylistManager() {
 
   useEffect(() => {
     const load = async () => {
-      const data = await base44.entities.User.filter({ role: { $ne: 'admin' } });
+      const data = await base44.entities.User.filter({ role: { $ne: 'admin' }, salon_id: user.salon_id });
       setStylists(data);
       setLoading(false);
     };
@@ -78,7 +78,7 @@ export default function StylistManager() {
       // Step 2: Find the new user and set their title
       const users = await base44.entities.User.filter({ email: email.trim() });
       if (users.length > 0) {
-        await base44.entities.User.update(users[0].id, { title: title.trim() });
+        await base44.entities.User.update(users[0].id, { title: title.trim(), salon_id: user.salon_id });
       }
 
       const link = getSignUpLink(email.trim());

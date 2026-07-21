@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/lib/AuthContext';
 
 function playBeep() {
   try {
@@ -50,8 +51,11 @@ async function dedupCreateNotification(key, data) {
 
 export function useAdminNotifications() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const toastRef = useRef(toast);
   toastRef.current = toast;
+  const salonIdRef = useRef(user?.salon_id);
+  salonIdRef.current = user?.salon_id;
 
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -82,10 +86,12 @@ export function useAdminNotifications() {
         knownOrderIds.add(event.data.id);
         const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
         notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
+        if (event.data.salon_id && salonIdRef.current && event.data.salon_id !== salonIdRef.current) return;
         const notif = await dedupCreateNotification(`order:${event.data.id}`, {
           title: 'New Order Received',
           body: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
           type: 'order',
+          salon_id: salonIdRef.current,
         });
         orderNotificationMap.set(event.data.id, notif.id);
         toastRef.current({
@@ -112,6 +118,7 @@ export function useAdminNotifications() {
           title: 'New Service Started',
           body: `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`,
           type: 'service',
+          salon_id: salonIdRef.current,
         });
       } else if (event.type === 'update') {
         if (event.data.status === 'completed' && !completedServiceIds.has(event.data.id)) {
@@ -121,6 +128,7 @@ export function useAdminNotifications() {
             title: 'Service Completed',
             body: `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`,
             type: 'service',
+            salon_id: salonIdRef.current,
           });
         }
       }
@@ -135,6 +143,7 @@ export function useAdminNotifications() {
         title: `Service Update From ${event.data.author_name}`,
         body: event.data.content,
         type: 'service_note',
+        salon_id: salonIdRef.current,
       });
     });
 
@@ -143,10 +152,12 @@ export function useAdminNotifications() {
       if (knownGuestMessageIds.has(event.data.id)) return;
       knownGuestMessageIds.add(event.data.id);
       notify(`New Message From ${event.data.guest_name}`, event.data.message);
+      if (event.data.salon_id && salonIdRef.current && event.data.salon_id !== salonIdRef.current) return;
       dedupCreateNotification(`guest:${event.data.id}`, {
         title: `New Message From ${event.data.guest_name}`,
         body: event.data.message,
         type: 'guest_message',
+        salon_id: salonIdRef.current,
       });
       toastRef.current({
         title: `New Message From ${event.data.guest_name}`,
@@ -169,6 +180,7 @@ export function useAdminNotifications() {
         title,
         body,
         type: isServiceUpdate ? 'service_update' : 'chat',
+        salon_id: salonIdRef.current,
       });
       toastRef.current({
         title,

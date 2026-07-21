@@ -7,7 +7,7 @@ import { Coffee, Plus, Check, Gift } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image as UIImage } from '@/components/ui/image';
 
-export default function MenuBrowser({ mode, user, guestInfo }) {
+export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,9 +16,11 @@ export default function MenuBrowser({ mode, user, guestInfo }) {
 
   useEffect(() => {
     const load = async () => {
+      const itemFilter = salonId ? { available: true, salon_id: salonId } : { available: true };
+      const catFilter = salonId ? { salon_id: salonId } : {};
       const [data, cats] = await Promise.all([
-        base44.entities.MenuItem.filter({ available: true }, 'display_order'),
-        base44.entities.MenuCategory.list('display_order')
+        base44.entities.MenuItem.filter(itemFilter, 'display_order'),
+        base44.entities.MenuCategory.filter(catFilter, 'display_order')
       ]);
       setItems(data);
       setCategories(cats);
@@ -56,6 +58,7 @@ export default function MenuBrowser({ mode, user, guestInfo }) {
         category: item.category,
         price: isComplimentary ? null : item.price,
         status: 'pending',
+        salon_id: salonId,
       };
       if (mode === 'stylist') {
         orderData.requested_by_type = 'stylist';

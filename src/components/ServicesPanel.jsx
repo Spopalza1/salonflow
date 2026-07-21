@@ -89,6 +89,7 @@ export default function ServicesPanel({ mode, user }) {
         service_name: serviceForm.service_name,
         status: 'ongoing',
         started_at: new Date().toISOString(),
+        salon_id: user.salon_id,
       });
       toast({ title: 'Service started' });
       setServiceForm({ client_name: '', service_name: '' });
@@ -107,6 +108,7 @@ export default function ServicesPanel({ mode, user }) {
         author_name: user.full_name || user.email,
         note_type: noteForm.note_type,
         content: noteForm.content,
+        salon_id: user.salon_id,
       });
       toast({ title: 'Note added' });
       setNoteForm({ note_type: 'note', content: '' });

@@ -1,0 +1,28 @@
+{
+  "name": "Salon",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "subdomain": {
+      "type": "string"
+    },
+    "owner_user_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": true,
+    "read": true,
+    "update": {
+      "data.owner_user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.owner_user_id": "{{user.id}}"
+    }
+  }
+}

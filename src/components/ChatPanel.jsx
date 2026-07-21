@@ -23,7 +23,7 @@ export default function ChatPanel({ mode, user }) {
   useEffect(() => {
     if (mode !== 'admin') return;
     const loadStylists = async () => {
-      const data = await base44.entities.User.filter({ role: { $ne: 'admin' } });
+      const data = await base44.entities.User.filter({ role: { $ne: 'admin' }, salon_id: user.salon_id });
       setStylists(data);
       if (data.length > 0) setSelectedPartnerId(data[0].id);
     };
@@ -97,6 +97,7 @@ export default function ChatPanel({ mode, user }) {
       body: body || '',
       media_url,
       media_type,
+      salon_id: user.salon_id,
     });
   };
 

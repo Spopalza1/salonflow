@@ -29,6 +29,9 @@
     "ended_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "salon_id": {
+      "type": "string"
     }
   },
   "required": [
@@ -36,5 +39,17 @@
     "stylist_name",
     "client_name",
     "service_name"
-  ]
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "update": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "delete": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    }
+  }
 }

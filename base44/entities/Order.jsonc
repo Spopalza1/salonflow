@@ -42,11 +42,24 @@
     },
     "notes": {
       "type": "string"
+    },
+    "salon_id": {
+      "type": "string"
     }
   },
   "required": [
     "item_name",
     "requested_by_type",
     "requested_by_name"
-  ]
+  ],
+  "rls": {
+    "create": true,
+    "read": true,
+    "update": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "delete": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    }
+  }
 }

@@ -36,6 +36,9 @@ export default function GuestMenu() {
   const [salonName, setSalonName] = useState('Salonflow');
   const { toast } = useToast();
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const salonId = urlParams.get('salon');
+
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -45,7 +48,7 @@ export default function GuestMenu() {
 
   useEffect(() => {
     const load = async () => {
-      const data = await base44.entities.SalonSetting.list();
+      const data = await base44.entities.SalonSetting.filter(salonId ? { salon_id: salonId } : {});
       if (data.length > 0 && data[0].salon_name) {
         setSalonName(data[0].salon_name);
       }
@@ -101,6 +104,7 @@ export default function GuestMenu() {
       await base44.entities.GuestMessage.create({
         guest_name: guestInfo.name,
         message: messageText.trim(),
+        salon_id: salonId,
       });
       setMessageSent(true);
       setMessageText('');
@@ -284,7 +288,7 @@ export default function GuestMenu() {
       )}
 
       <div className="max-w-4xl mx-auto p-4">
-        <MenuBrowser mode="guest" guestInfo={guestInfo} />
+        <MenuBrowser mode="guest" guestInfo={guestInfo} salonId={salonId} />
       </div>
     </div>
   );

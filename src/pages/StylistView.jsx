@@ -66,7 +66,7 @@ export default function StylistView() {
           <TabsTrigger value="services"><Scissors className="w-4 h-4 mr-2" />My Services</TabsTrigger>
           <TabsTrigger value="service-update"><BellRing className="w-4 h-4 mr-2" />Service Update</TabsTrigger>
         </TabsList>
-        <TabsContent value="coffee" className="mt-6"><MenuBrowser mode="stylist" user={user} /></TabsContent>
+        <TabsContent value="coffee" className="mt-6"><MenuBrowser mode="stylist" user={user} salonId={user?.salon_id} /></TabsContent>
         <TabsContent value="chat" className="mt-6"><ChatPanel mode="stylist" user={user} /></TabsContent>
         <TabsContent value="services" className="mt-6"><ServicesPanel mode="stylist" user={user} /></TabsContent>
         <TabsContent value="service-update" className="mt-6"><ServiceUpdateForm user={user} /></TabsContent>

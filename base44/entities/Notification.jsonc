@@ -23,11 +23,26 @@
     "read": {
       "type": "boolean",
       "default": false
+    },
+    "salon_id": {
+      "type": "string"
     }
   },
   "required": [
     "title",
     "body",
     "type"
-  ]
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "update": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "delete": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    }
+  }
 }

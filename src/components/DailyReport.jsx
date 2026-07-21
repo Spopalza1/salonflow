@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { Coffee, TrendingUp, Users, Utensils, Printer, FileDown, Loader2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { useAuth } from '@/lib/AuthContext';
 
 function parseDate(dateStr) {
   if (!dateStr) return null;
@@ -36,6 +37,7 @@ function servedTime(order) {
 }
 
 export default function DailyReport() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,7 @@ export default function DailyReport() {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await base44.entities.Order.filter({}, '-created_date', 500);
+        const data = await base44.entities.Order.filter({ salon_id: user?.salon_id }, '-created_date', 500);
         setOrders(data);
         setError(null);
       } catch (err) {
@@ -58,6 +60,7 @@ export default function DailyReport() {
     load();
 
     const unsubscribe = base44.entities.Order.subscribe((event) => {
+      if (event.data.salon_id && user?.salon_id && event.data.salon_id !== user.salon_id) return;
       if (event.type === 'create' || event.type === 'update') {
         setOrders(prev => {
           const exists = prev.find(o => o.id === event.data.id);

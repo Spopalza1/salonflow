@@ -18,6 +18,7 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import VerifyAccount from '@/pages/VerifyAccount';
+import SalonSignUp from '@/pages/SalonSignUp';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -55,9 +56,14 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-account" element={<VerifyAccount />} />
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+      <Route path="/salon-signup" element={<SalonSignUp />} />
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} allowedRoles={['admin']} />}>
         <Route element={<Layout />}>
           <Route path="/front-desk" element={<FrontDeskDashboard />} />
+        </Route>
+      </Route>
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} allowedRoles={['admin', 'stylist']} />}>
+        <Route element={<Layout />}>
           <Route path="/stylist" element={<StylistView />} />
         </Route>
       </Route>
