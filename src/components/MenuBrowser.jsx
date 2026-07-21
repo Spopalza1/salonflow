@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Coffee, Plus, Check, Gift } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Image as UIImage } from '@/components/ui/image';
 
 export default function MenuBrowser({ mode, user, guestInfo }) {
   const [items, setItems] = useState([]);
@@ -110,6 +111,9 @@ export default function MenuBrowser({ mode, user, guestInfo }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {categoryItems.map(item => (
                 <Card key={item.id}>
+                  {item.image_url && (
+                    <UIImage src={item.image_url} alt={item.name} className="w-full h-36 rounded-t-lg" fittingType="fill" />
+                  )}
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between text-base">
                       <span>{item.name}</span>

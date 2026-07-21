@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Coffee, FolderPlus, Gift } from 'lucide-react';
+import { Plus, Pencil, Trash2, Coffee, FolderPlus, Gift, Upload, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Image as UIImage } from '@/components/ui/image';
 
 export default function MenuManager() {
   const [items, setItems] = useState([]);
@@ -20,7 +21,22 @@ export default function MenuManager() {
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [catForm, setCatForm] = useState({ name: '', id: null });
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: '', category: '', price: '', description: '', available: true });
+  const [form, setForm] = useState({ name: '', category: '', price: '', description: '', image_url: '', available: true });
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setForm(prev => ({ ...prev, image_url: file_url }));
+    } catch (err) {
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -55,7 +71,7 @@ export default function MenuManager() {
   // Item dialog handlers
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', category: existingCategoryNames[0] || '', price: '', description: '', available: true });
+    setForm({ name: '', category: existingCategoryNames[0] || '', price: '', description: '', image_url: '', available: true });
     setDialogOpen(true);
   };
 
@@ -66,6 +82,7 @@ export default function MenuManager() {
       category: item.category,
       price: item.price?.toString() || '',
       description: item.description || '',
+      image_url: item.image_url || '',
       available: item.available,
     });
     setDialogOpen(true);
@@ -78,6 +95,7 @@ export default function MenuManager() {
       category: form.category,
       price: form.price ? parseFloat(form.price) : null,
       description: form.description,
+      image_url: form.image_url || null,
       available: form.available,
     };
     try {
@@ -217,6 +235,9 @@ export default function MenuManager() {
               {categoryItems.map(item => (
                 <Card key={item.id}>
                   <CardContent className="p-4">
+                    {item.image_url && (
+                      <UIImage src={item.image_url} alt={item.name} className="w-full h-32 rounded-lg object-cover mb-3" fittingType="fill" />
+                    )}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
@@ -266,6 +287,22 @@ export default function MenuManager() {
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Rich espresso with steamed milk" />
+            </div>
+            <div className="space-y-2">
+              <Label>Item Picture</Label>
+              {form.image_url ? (
+                <div className="relative">
+                  <UIImage src={form.image_url} alt="Item preview" className="w-full h-40 rounded-lg" fittingType="fill" />
+                  <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8" onClick={() => setForm({ ...form, image_url: '' })}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
+                  {uploading && <span className="text-sm text-muted-foreground shrink-0">Uploading...</span>}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Switch id="available" checked={form.available} onCheckedChange={v => setForm({ ...form, available: v })} />
