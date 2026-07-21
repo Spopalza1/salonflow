@@ -9,6 +9,9 @@
         "stylist"
       ],
       "default": "stylist"
+    },
+    "title": {
+      "type": "string"
     }
   }
 }
