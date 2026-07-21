@@ -56,7 +56,7 @@ export function useAdminNotifications() {
       if (knownOrderIds.current.has(event.data.id)) return;
       knownOrderIds.current.add(event.data.id);
       const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
-      notify('New Order Request', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
+      notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
     });
 
     const unsubServices = base44.entities.Service.subscribe((event) => {
@@ -76,10 +76,7 @@ export function useAdminNotifications() {
       if (event.type !== 'create') return;
       if (knownNoteIds.current.has(event.data.id)) return;
       knownNoteIds.current.add(event.data.id);
-      const typeLabel = event.data.note_type === 'extension' ? 'Service Extension'
-        : event.data.note_type === 'extra_service' ? 'Extra Service'
-        : 'Service Note';
-      notify(`New ${typeLabel}`, `${event.data.author_name}: ${event.data.content}`);
+      notify(`Service Update From ${event.data.author_name}`, event.data.content);
     });
 
     return () => {

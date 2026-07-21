@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/AuthContext';
 import OrdersPanel from '@/components/OrdersPanel';
@@ -15,13 +16,21 @@ import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
-  useMessageNotifications('admin', user);
+  const [activeTab, setActiveTab] = useState('orders');
+  const [focusStylistId, setFocusStylistId] = useState(null);
+
+  const handleServiceUpdate = (stylistId) => {
+    setFocusStylistId(stylistId);
+    setActiveTab('chat');
+  };
+
+  useMessageNotifications('admin', user, handleServiceUpdate);
   useAdminNotifications();
   const unreadCount = useUnreadMessages('admin', user);
 
   return (
     <div className="p-6">
-      <Tabs defaultValue="orders">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="orders"><ClipboardList className="w-4 h-4 mr-2" />Orders</TabsTrigger>
           <TabsTrigger value="menu"><Coffee className="w-4 h-4 mr-2" />Menu</TabsTrigger>
@@ -39,7 +48,7 @@ export default function FrontDeskDashboard() {
         </TabsList>
         <TabsContent value="orders" className="mt-6"><OrdersPanel /></TabsContent>
         <TabsContent value="menu" className="mt-6"><MenuManager /></TabsContent>
-        <TabsContent value="chat" className="mt-6"><ChatPanel mode="admin" user={user} /></TabsContent>
+        <TabsContent value="chat" className="mt-6"><ChatPanel mode="admin" user={user} focusStylistId={focusStylistId} /></TabsContent>
         <TabsContent value="services" className="mt-6"><ServicesPanel mode="admin" user={user} /></TabsContent>
         <TabsContent value="stylists" className="mt-6"><StylistManager /></TabsContent>
         <TabsContent value="messages" className="mt-6"><GuestMessagesPanel /></TabsContent>

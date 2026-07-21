@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Send, MessageSquare, User, Search } from 'lucide-react';
 
-export default function ChatPanel({ mode, user }) {
+export default function ChatPanel({ mode, user, focusStylistId }) {
   const [messages, setMessages] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState(null);
@@ -24,6 +24,12 @@ export default function ChatPanel({ mode, user }) {
     };
     loadStylists();
   }, [mode]);
+
+  useEffect(() => {
+    if (focusStylistId && stylists.length > 0) {
+      setSelectedPartnerId(focusStylistId);
+    }
+  }, [focusStylistId, stylists]);
 
   useEffect(() => {
     const load = async () => {

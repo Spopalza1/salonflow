@@ -19,8 +19,10 @@ function playBeep() {
   } catch (e) { /* ignore */ }
 }
 
-export function useMessageNotifications(mode, user) {
+export function useMessageNotifications(mode, user, onServiceUpdate) {
   const knownIds = useRef(new Set());
+  const callbackRef = useRef(onServiceUpdate);
+  callbackRef.current = onServiceUpdate;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -53,9 +55,16 @@ export function useMessageNotifications(mode, user) {
       if (shouldNotify) {
         playBeep();
 
+        const isServiceUpdate = msg.message_type === 'service_update';
+        if (isServiceUpdate && mode === 'admin' && callbackRef.current) {
+          callbackRef.current(msg.thread_partner_id, msg.sender_name);
+        }
+
         if ('Notification' in window && Notification.permission === 'granted') {
-          const title = mode === 'admin' ? 'New message from stylist' : 'New message from front desk';
-          new Notification(title, { body: `${msg.sender_name}: ${msg.body}` });
+          const title = isServiceUpdate
+            ? `Service Update From ${msg.sender_name}`
+            : 'New Message Received';
+          new Notification(title, { body: msg.body });
         }
       }
     });

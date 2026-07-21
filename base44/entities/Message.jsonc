@@ -24,6 +24,14 @@
     "body": {
       "type": "string"
     },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "chat",
+        "service_update"
+      ],
+      "default": "chat"
+    },
     "read": {
       "type": "boolean",
       "default": false
