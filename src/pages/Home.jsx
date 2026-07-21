@@ -1,7 +1,7 @@
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Scissors, Coffee, MessageSquare, QrCode, LogIn } from 'lucide-react';
+import { Scissors, Coffee, MessageSquare, QrCode, Shield, User } from 'lucide-react';
 
 export default function Home() {
   const { isAuthenticated, user, authChecked } = useAuth();
@@ -24,10 +24,10 @@ export default function Home() {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button size="lg" asChild>
-            <Link to="/login"><LogIn className="w-5 h-5 mr-2" />Staff Login</Link>
+            <Link to="/login"><Shield className="w-5 h-5 mr-2" />Admin Login</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link to="/guest"><QrCode className="w-5 h-5 mr-2" />Guest Menu</Link>
+            <Link to="/login"><User className="w-5 h-5 mr-2" />User Login</Link>
           </Button>
         </div>
       </div>
