@@ -4,13 +4,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Send, MessageSquare, User } from 'lucide-react';
+import { Send, MessageSquare, User, Search } from 'lucide-react';
 
 export default function ChatPanel({ mode, user }) {
   const [messages, setMessages] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState(null);
   const [input, setInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
 
@@ -91,7 +92,7 @@ export default function ChatPanel({ mode, user }) {
       await base44.entities.Message.create({
         sender_id: user.id,
         sender_name: user.full_name || user.email,
-        sender_role: user.role,
+        sender_role: mode === 'admin' ? 'admin' : 'stylist',
         thread_partner_id: partnerId,
         thread_partner_name: partnerName,
         body,
@@ -143,6 +144,12 @@ export default function ChatPanel({ mode, user }) {
   }
 
   const stylistsWithMessages = new Set(messages.filter(m => m.thread_partner_id).map(m => m.thread_partner_id));
+  const unreadByStylist = new Set(messages.filter(m => !m.read && m.sender_role !== 'admin' && m.thread_partner_id).map(m => m.thread_partner_id));
+  const filteredStylists = stylists.filter(s => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (s.full_name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q);
+  });
 
   return (
     <div className="space-y-3">
@@ -157,17 +164,26 @@ export default function ChatPanel({ mode, user }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-4 h-[calc(100vh-240px)]">
-          <Card className="overflow-hidden">
-            <div className="overflow-y-auto h-full p-2 space-y-1">
-              {stylists.map(s => (
+          <Card className="overflow-hidden flex flex-col">
+            <div className="p-2 border-b">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search stylists..." className="h-8 pl-7 text-sm" />
+              </div>
+            </div>
+            <div className="overflow-y-auto flex-1 p-2 space-y-1">
+              {filteredStylists.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-4">No stylists found</p>
+              ) : null}
+              {filteredStylists.map(s => (
                 <button
                   key={s.id}
                   onClick={() => setSelectedPartnerId(s.id)}
                   className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors ${selectedPartnerId === s.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
                 >
                   <span className="text-sm font-medium truncate">{s.full_name || s.email}</span>
-                  {stylistsWithMessages.has(s.id) && selectedPartnerId !== s.id && (
-                    <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                  {unreadByStylist.has(s.id) && selectedPartnerId !== s.id && (
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
                   )}
                 </button>
               ))}
