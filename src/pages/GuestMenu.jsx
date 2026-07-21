@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import MenuBrowser from '@/components/MenuBrowser';
 import { Scissors, Coffee } from 'lucide-react';
 
-const STORAGE_KEY = 'salonconnect_guest';
+const STORAGE_KEY = 'salonflow_guest';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', variant: 'destructive' },
@@ -98,7 +98,7 @@ export default function GuestMenu() {
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scissors className="w-5 h-5 text-primary" />
-            <span className="font-heading font-semibold">SalonConnect</span>
+            <span className="font-heading font-semibold">Salonflow</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:block">Hi, {guestInfo.name}</span>

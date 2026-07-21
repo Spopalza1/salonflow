@@ -13,7 +13,7 @@ export default function Layout() {
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2">
             <Scissors className="w-5 h-5 text-primary" />
-            <span className="font-heading font-semibold text-lg">SalonConnect</span>
+            <span className="font-heading font-semibold text-lg">Salonflow</span>
           </div>
           <div className="flex items-center gap-3">
             <a href="/guest" target="_blank" rel="noopener noreferrer">
