@@ -11,7 +11,7 @@ export function useUnreadMessages(mode, user) {
       try {
         let filter;
         if (mode === 'admin') {
-          filter = { sender_role: 'stylist', read: false };
+          filter = { sender_role: { $ne: 'admin' }, read: false };
         } else {
           filter = { sender_role: 'admin', thread_partner_id: user.id, read: false };
         }

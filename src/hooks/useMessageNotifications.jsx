@@ -47,7 +47,7 @@ export function useMessageNotifications(mode, user) {
       if (msg.sender_id === user.id) return; // don't notify for own messages
 
       const shouldNotify =
-        (mode === 'admin' && msg.sender_role === 'stylist') ||
+        (mode === 'admin' && msg.sender_role !== 'admin') ||
         (mode === 'stylist' && msg.sender_role === 'admin' && msg.thread_partner_id === user.id);
 
       if (shouldNotify) {

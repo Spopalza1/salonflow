@@ -18,7 +18,7 @@ export default function ChatPanel({ mode, user }) {
   useEffect(() => {
     if (mode !== 'admin') return;
     const loadStylists = async () => {
-      const data = await base44.entities.User.filter({ role: 'stylist' });
+      const data = await base44.entities.User.filter({ role: { $ne: 'admin' } });
       setStylists(data);
       if (data.length > 0) setSelectedPartnerId(data[0].id);
     };
@@ -65,7 +65,7 @@ export default function ChatPanel({ mode, user }) {
       filter = { thread_partner_id: user.id, sender_role: 'admin', read: false };
     } else {
       if (!selectedPartnerId) return;
-      filter = { thread_partner_id: selectedPartnerId, sender_role: 'stylist', read: false };
+      filter = { thread_partner_id: selectedPartnerId, sender_role: { $ne: 'admin' }, read: false };
     }
     base44.entities.Message.updateMany(filter, { $set: { read: true } });
   }, [mode, user?.id, selectedPartnerId, loading, messages.length]);
