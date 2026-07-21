@@ -5,17 +5,24 @@ import ChatPanel from '@/components/ChatPanel';
 import ServicesPanel from '@/components/ServicesPanel';
 import { Coffee, MessageSquare, Scissors } from 'lucide-react';
 import { useMessageNotifications } from '@/hooks/useMessageNotifications';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 export default function StylistView() {
   const { user } = useAuth();
   useMessageNotifications('stylist', user);
+  const unreadCount = useUnreadMessages('stylist', user);
 
   return (
     <div className="p-6">
       <Tabs defaultValue="coffee">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="coffee"><Coffee className="w-4 h-4 mr-2" />Order Coffee</TabsTrigger>
-          <TabsTrigger value="chat"><MessageSquare className="w-4 h-4 mr-2" />Chat</TabsTrigger>
+          <TabsTrigger value="chat" className="relative">
+            <MessageSquare className="w-4 h-4 mr-2" />Chat
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-background" />
+            )}
+          </TabsTrigger>
           <TabsTrigger value="services"><Scissors className="w-4 h-4 mr-2" />My Services</TabsTrigger>
         </TabsList>
         <TabsContent value="coffee" className="mt-6"><MenuBrowser mode="stylist" user={user} /></TabsContent>

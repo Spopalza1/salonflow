@@ -53,6 +53,22 @@ export default function ChatPanel({ mode, user }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, selectedPartnerId]);
 
+  // Mark incoming messages as read when the conversation is viewed
+  useEffect(() => {
+    if (loading) return;
+    const hasUnread = conversationMessages.some(m => !m.read && m.sender_id !== user.id);
+    if (!hasUnread) return;
+
+    let filter;
+    if (mode === 'stylist') {
+      filter = { thread_partner_id: user.id, sender_role: 'admin', read: false };
+    } else {
+      if (!selectedPartnerId) return;
+      filter = { thread_partner_id: selectedPartnerId, sender_role: 'stylist', read: false };
+    }
+    base44.entities.Message.updateMany(filter, { $set: { read: true } });
+  }, [mode, user?.id, selectedPartnerId, loading, messages.length]);
+
   const conversationMessages = mode === 'stylist'
     ? messages
     : messages.filter(m => m.thread_partner_id === selectedPartnerId);
