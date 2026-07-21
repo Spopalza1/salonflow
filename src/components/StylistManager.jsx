@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Users, Mail, Briefcase, Trash2, Copy, Link as LinkIcon } from 'lucide-react';
+import { UserPlus, Users, Mail, Briefcase, Trash2, Copy, Link as LinkIcon, MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/lib/AuthContext';
+import StylistMessageDialog from '@/components/StylistMessageDialog';
 
 export default function StylistManager() {
   const [stylists, setStylists] = useState([]);
@@ -16,7 +18,9 @@ export default function StylistManager() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
   const [inviteLink, setInviteLink] = useState(null);
+  const [messageTarget, setMessageTarget] = useState(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const getSignUpLink = (emailAddr) => {
     return `${window.location.origin}/register?email=${encodeURIComponent(emailAddr)}`;
@@ -171,6 +175,9 @@ export default function StylistManager() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" title="Send message" onClick={() => setMessageTarget(s)}>
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" title="Copy sign-up link" onClick={() => copyToClipboard(getSignUpLink(s.email))}>
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -183,6 +190,15 @@ export default function StylistManager() {
             </Card>
           ))}
         </div>
+      )}
+
+      {messageTarget && user && (
+        <StylistMessageDialog
+          stylist={messageTarget}
+          user={user}
+          open={!!messageTarget}
+          onOpenChange={(v) => !v && setMessageTarget(null)}
+        />
       )}
     </div>
   );
