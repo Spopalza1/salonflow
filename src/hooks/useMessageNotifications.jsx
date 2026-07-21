@@ -59,9 +59,11 @@ export function useMessageNotifications(mode, user) {
 
         const isServiceUpdate = msg.message_type === 'service_update';
 
-        if (mode === 'admin' && !isServiceUpdate) {
+        if (mode === 'admin') {
           toastRef.current({
-            title: `New Chat From ${msg.sender_name}`,
+            title: isServiceUpdate
+              ? `Service Update From ${msg.sender_name}`
+              : `New Chat From ${msg.sender_name}`,
             description: msg.body,
           });
         }
