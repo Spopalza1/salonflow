@@ -34,10 +34,7 @@ export default function Login() {
       subtitle="Log in to your account"
       footer={
         <p className="text-sm text-muted-foreground">
-          Invited?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            Create your account
-          </Link>
+          Registration is by invitation only.
         </p>
       }
     >

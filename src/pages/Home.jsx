@@ -1,17 +1,10 @@
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Scissors, Coffee, MessageSquare, QrCode, Shield, User, UserPlus } from 'lucide-react';
+import { Scissors, Coffee, MessageSquare, QrCode, Shield, User } from 'lucide-react';
 
 export default function Home() {
   const { isAuthenticated, user, authChecked } = useAuth();
-
-  // If arriving from an invitation link with ?email=, send to registration
-  const urlParams = new URLSearchParams(window.location.search);
-  const inviteEmail = urlParams.get('email');
-  if (inviteEmail && !(authChecked && isAuthenticated)) {
-    return <Navigate to={`/register?email=${encodeURIComponent(inviteEmail)}`} replace />;
-  }
 
   if (authChecked && isAuthenticated && user) {
     return <Navigate to={user.role === 'admin' ? '/front-desk' : '/stylist'} replace />;
@@ -35,9 +28,6 @@ export default function Home() {
           </Button>
           <Button size="lg" variant="outline" asChild>
             <Link to="/login"><User className="w-5 h-5 mr-2" />User Login</Link>
-          </Button>
-          <Button size="lg" variant="ghost" asChild>
-            <Link to="/register"><UserPlus className="w-5 h-5 mr-2" />Sign up</Link>
           </Button>
         </div>
       </div>
