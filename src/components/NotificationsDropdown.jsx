@@ -22,7 +22,10 @@ export default function NotificationsDropdown() {
 
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
       if (event.type === 'create') {
-        setNotifications(prev => [event.data, ...prev].slice(0, 50));
+        setNotifications(prev => {
+          if (prev.some(n => n.id === event.data.id)) return prev;
+          return [event.data, ...prev].slice(0, 50);
+        });
       } else if (event.type === 'update') {
         setNotifications(prev => prev.map(n => n.id === event.data.id ? event.data : n));
       } else if (event.type === 'delete') {
