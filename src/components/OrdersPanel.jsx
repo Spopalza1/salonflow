@@ -3,6 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Coffee, Utensils, Check, X } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -15,6 +17,7 @@ const STATUS_CONFIG = {
 export default function OrdersPanel() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showChairTable, setShowChairTable] = useState(true);
   const knownIds = useRef(new Set());
 
   useEffect(() => {
@@ -73,9 +76,15 @@ export default function OrdersPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <h2 className="font-heading text-xl font-semibold">Orders & Requests</h2>
-        {pendingCount > 0 && <Badge variant="destructive">{pendingCount} new</Badge>}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <h2 className="font-heading text-xl font-semibold">Orders & Requests</h2>
+          {pendingCount > 0 && <Badge variant="destructive">{pendingCount} new</Badge>}
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch id="show-chair" checked={showChairTable} onCheckedChange={setShowChairTable} />
+          <Label htmlFor="show-chair" className="text-sm text-muted-foreground cursor-pointer">Chair/Table</Label>
+        </div>
       </div>
 
       {sorted.length === 0 ? (
@@ -98,7 +107,7 @@ export default function OrdersPanel() {
                 <div className="text-sm space-y-0.5 mb-3">
                   <div>From: <span className="font-medium">{order.requested_by_name}</span></div>
                   <div>Type: <Badge variant="outline" className="capitalize text-xs">{order.requested_by_type}</Badge></div>
-                  {order.chair_table && <div>Chair/Table: {order.chair_table}</div>}
+                  {showChairTable && order.chair_table && <div>Chair/Table: {order.chair_table}</div>}
                   {order.notes && <div className="text-muted-foreground">Note: {order.notes}</div>}
                 </div>
                 <div className="flex gap-1">
