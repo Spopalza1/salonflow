@@ -19,13 +19,17 @@ function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function servedTime(order) {
+  return order.updated_date || order.created_date;
+}
+
 export default function DailyReport() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const data = await base44.entities.Order.filter({ status: 'served' }, '-created_date', 500);
+      const data = await base44.entities.Order.filter({ status: 'served' }, '-updated_date', 500);
       setOrders(data);
       setLoading(false);
     };
@@ -46,14 +50,24 @@ export default function DailyReport() {
         setOrders(prev => prev.filter(o => o.id !== event.id));
       }
     });
-    return unsubscribe;
+
+    const interval = setInterval(load, 10000);
+
+    const onVisible = () => { if (!document.hidden) load(); };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   if (loading) {
     return <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" /></div>;
   }
 
-  const todaysOrders = orders.filter(o => isToday(o.created_date));
+  const todaysOrders = orders.filter(o => isToday(servedTime(o)));
 
   // Group by item name
   const itemMap = {};
@@ -263,7 +277,7 @@ export default function DailyReport() {
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {todaysOrders
                   .slice()
-                  .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+                  .sort((a, b) => new Date(servedTime(b)) - new Date(servedTime(a)))
                   .map(o => (
                   <div key={o.id} className="flex items-center justify-between py-2 border-b last:border-0">
                     <div>
@@ -275,7 +289,7 @@ export default function DailyReport() {
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-medium">${(o.price || 0).toFixed(2)}</div>
-                      <div className="text-xs text-muted-foreground">{formatTime(o.created_date)}</div>
+                      <div className="text-xs text-muted-foreground">{formatTime(servedTime(o))}</div>
                     </div>
                   </div>
                 ))}
