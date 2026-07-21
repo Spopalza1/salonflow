@@ -27,6 +27,7 @@ export function useUnreadMessages(mode, user) {
       return msg.sender_role === 'admin' && msg.thread_partner_id === user.id;
     };
 
+    let reloadTimer;
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         if (isRelevant(event.data) && !event.data.read) {
@@ -39,9 +40,14 @@ export function useUnreadMessages(mode, user) {
       } else {
         loadCount();
       }
+      clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(loadCount, 1000);
     });
 
-    return unsubscribe;
+    return () => {
+      clearTimeout(reloadTimer);
+      unsubscribe();
+    };
   }, [mode, user?.id]);
 
   return unreadCount;

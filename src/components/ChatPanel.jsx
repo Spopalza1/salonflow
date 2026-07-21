@@ -59,7 +59,9 @@ export default function ChatPanel({ mode, user }) {
     if (loading) return;
     const unreadIncoming = conversationMessages.filter(m => !m.read && m.sender_id !== user.id);
     if (unreadIncoming.length === 0) return;
-    base44.entities.Message.bulkUpdate(unreadIncoming.map(m => ({ id: m.id, read: true })));
+    unreadIncoming.forEach(m => {
+      base44.entities.Message.update(m.id, { read: true });
+    });
   }, [mode, user?.id, selectedPartnerId, loading, messages.length]);
 
   const conversationMessages = mode === 'stylist'
