@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MobileSelect } from '@/components/ui/mobile-select';
-import { Palette, Type, LayoutGrid, Store, Save, Loader2, Upload, X, Hash, Copy, Check } from 'lucide-react';
+import { Palette, Type, LayoutGrid, Store, Save, Loader2, Upload, X, Hash, Copy, Check, ImagePlus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSalonCustomization } from '@/lib/salonCustomizationContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -69,6 +69,20 @@ export default function CustomizationPanel() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       handleChange('salon_logo_url', file_url);
+    } catch (err) {
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleBackgroundUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      handleChange('menu_background_image', file_url);
     } catch (err) {
       toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -154,6 +168,28 @@ export default function CustomizationPanel() {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><ImagePlus className="w-5 h-5" />Guest Menu Background</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">Upload a photo to display as the background of your guest menu page.</p>
+          {form.menu_background_image ? (
+            <div className="relative inline-block w-full">
+              <UIImage src={form.menu_background_image} alt="Background" className="h-28 w-full rounded-lg" fittingType="fill" />
+              <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-7 w-7" onClick={() => handleChange('menu_background_image', '')}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Input type="file" accept="image/*" onChange={handleBackgroundUpload} disabled={uploading} />
+              {uploading && <span className="text-sm text-muted-foreground shrink-0">Uploading...</span>}
+            </div>
+          )}
         </CardContent>
       </Card>
 
