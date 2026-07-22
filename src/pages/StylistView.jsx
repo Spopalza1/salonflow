@@ -9,7 +9,7 @@ import ServicesPanel from '@/components/ServicesPanel';
 import { Coffee, MessageSquare, Scissors, BellRing, User, Settings } from 'lucide-react';
 import ServiceUpdateForm from '@/components/ServiceUpdateForm';
 import StylistProfileDialog from '@/components/StylistProfileDialog';
-import { useMessageNotifications } from '@/hooks/useMessageNotifications';
+import { useStylistNotifications } from '@/hooks/useStylistNotifications';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import AnimatedTabContent from '@/components/AnimatedTabContent';
 
@@ -23,7 +23,7 @@ export default function StylistView() {
     return params.get('tab') || 'coffee';
   });
 
-  useMessageNotifications('stylist', user);
+  useStylistNotifications(user);
   const unreadCount = useUnreadMessages('stylist', user);
 
   useEffect(() => {
