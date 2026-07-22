@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import PullToRefresh from '@/components/PullToRefresh';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,6 +25,7 @@ export default function OrdersPanel() {
     const saved = localStorage.getItem('salonflow_show_chair_table');
     return saved !== null ? saved === 'true' : true;
   });
+  const pendingOptimisticUpdates = useRef(new Set());
   const loadOrders = useCallback(async () => {
     if (!user?.salon_id) { setOrders([]); return; }
     const data = await base44.entities.Order.filter({ salon_id: user.salon_id }, '-created_date', 100);
@@ -42,6 +43,7 @@ export default function OrdersPanel() {
           return [event.data, ...prev];
         });
       } else if (event.type === 'update') {
+        if (pendingOptimisticUpdates.current.has(event.data.id)) return;
         setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));
       } else if (event.type === 'delete') {
         setOrders(prev => prev.filter(o => o.id !== event.id));
@@ -52,12 +54,15 @@ export default function OrdersPanel() {
 
   const updateStatus = async (order, status) => {
     const prevStatus = order.status;
+    pendingOptimisticUpdates.current.add(order.id);
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status } : o));
     try {
       await base44.entities.Order.update(order.id, { status });
     } catch (err) {
       setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: prevStatus } : o));
       console.error(err);
+    } finally {
+      setTimeout(() => pendingOptimisticUpdates.current.delete(order.id), 1000);
     }
   };
 
