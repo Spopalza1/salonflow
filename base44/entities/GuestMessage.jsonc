@@ -8,6 +8,21 @@
     "message": {
       "type": "string"
     },
+    "sender_type": {
+      "type": "string",
+      "enum": [
+        "guest",
+        "front_desk"
+      ],
+      "default": "guest"
+    },
+    "guest_session": {
+      "type": "string"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
     "printed": {
       "type": "boolean",
       "default": false

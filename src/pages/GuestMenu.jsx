@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import MenuBrowser from '@/components/MenuBrowser';
-import { Scissors, Coffee, Mail, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
+import GuestChat from '@/components/GuestChat';
+import { Scissors, Coffee, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const STORAGE_KEY = 'salonflow_guest';
@@ -28,9 +29,6 @@ export default function GuestMenu() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [view, setView] = useState('choice');
-  const [messageText, setMessageText] = useState('');
-  const [sending, setSending] = useState(false);
-  const [messageSent, setMessageSent] = useState(false);
   const [orders, setOrders] = useState([]);
   const [showOrders, setShowOrders] = useState(false);
   const [salonName, setSalonName] = useState('Salonflow');
@@ -99,26 +97,6 @@ export default function GuestMenu() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
     setGuestInfo(info);
     setView('choice');
-  };
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!messageText.trim()) return;
-    setSending(true);
-    try {
-      await base44.entities.GuestMessage.create({
-        guest_name: guestInfo.name,
-        message: messageText.trim(),
-        salon_id: salonId,
-      });
-      setMessageSent(true);
-      setMessageText('');
-      toast({ title: 'Message sent!', description: 'The front desk will receive your message.' });
-    } catch (err) {
-      toast({ title: 'Failed to send', description: err.message, variant: 'destructive' });
-    } finally {
-      setSending(false);
-    }
   };
 
   if (!salonId) {
@@ -190,14 +168,14 @@ export default function GuestMenu() {
               </div>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => { setMessageSent(false); setView('message'); }}>
+          <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setView('chat')}>
             <CardContent className="p-6 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Mail className="w-6 h-6 text-primary" />
+                <MessageCircle className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium">Leave a Message</h3>
-                <p className="text-sm text-muted-foreground">Send a note to the front desk</p>
+                <h3 className="font-medium">Chat with Front Desk</h3>
+                <p className="text-sm text-muted-foreground">Live chat with our team</p>
               </div>
             </CardContent>
           </Card>
@@ -206,10 +184,10 @@ export default function GuestMenu() {
     );
   }
 
-  // Step 3a: Message form
-  if (view === 'message') {
+  // Step 3a: Live chat with front desk
+  if (view === 'chat') {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-muted/30 flex flex-col">
         <header className="bg-background border-b sticky top-0 z-10 safe-area-top">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={() => setView('choice')}>
@@ -219,47 +197,8 @@ export default function GuestMenu() {
             <div className="w-16" />
           </div>
         </header>
-        <div className="max-w-2xl mx-auto p-4">
-          {messageSent ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-500" />
-                <h2 className="font-heading text-lg font-semibold mb-2">Message Sent!</h2>
-                <p className="text-sm text-muted-foreground mb-6">The front desk has received your message.</p>
-                <div className="flex flex-col gap-2">
-                  <Button onClick={() => { setMessageSent(false); setView('message'); }}>Send Another Message</Button>
-                  <Button variant="outline" onClick={() => setView('choice')}>Back to Home</Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Mail className="w-5 h-5 text-primary" />
-                  <h2 className="font-heading text-lg font-semibold">Message for Front Desk</h2>
-                </div>
-                <form onSubmit={handleSendMessage} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="msg">Your Message</Label>
-                    <Textarea
-                      id="msg"
-                      value={messageText}
-                      onChange={e => setMessageText(e.target.value)}
-                      placeholder="Type your message for the front desk here..."
-                      rows={6}
-                      required
-                      autoFocus
-                    />
-                  </div>
-                  <div className="text-sm text-muted-foreground">From: {guestInfo.name}</div>
-                  <Button type="submit" className="w-full" disabled={sending}>
-                    {sending ? <><Send className="w-4 h-4 mr-2" />Sending...</> : <><Send className="w-4 h-4 mr-2" />Send Message</>}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          )}
+        <div className="flex-1 max-w-2xl mx-auto w-full">
+          <GuestChat guestInfo={guestInfo} salonId={salonId} />
         </div>
       </div>
     );
