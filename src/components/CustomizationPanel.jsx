@@ -11,6 +11,7 @@ import { useSalonCustomization } from '@/lib/salonCustomizationContext';
 import { useAuth } from '@/lib/AuthContext';
 import { applyCustomization, DEFAULTS, FONT_OPTIONS } from '@/lib/salonTheme';
 import { Image as UIImage } from '@/components/ui/image';
+import ImageEditorDialog from '@/components/ImageEditorDialog';
 
 function ColorField({ label, value, onChange }) {
   return (
@@ -42,6 +43,7 @@ export default function CustomizationPanel() {
   const [uploading, setUploading] = useState(false);
   const [showStoreId, setShowStoreId] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [editingImage, setEditingImage] = useState(null);
 
   const handleCopyStoreId = () => {
     navigator.clipboard.writeText(user?.salon_id || '');
@@ -62,27 +64,29 @@ export default function CustomizationPanel() {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleLogoUpload = async (e) => {
+  const handleLogoFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      handleChange('salon_logo_url', file_url);
-    } catch (err) {
-      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
-    } finally {
-      setUploading(false);
-    }
+    e.target.value = '';
+    setEditingImage({ file, aspectRatio: 1, target: 'salon_logo_url' });
   };
 
-  const handleBackgroundUpload = async (e) => {
+  const handleBackgroundFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = '';
+    setEditingImage({ file, aspectRatio: 16 / 9, target: 'menu_background_image' });
+  };
+
+  const handleEditorApply = async (blob) => {
+    if (!editingImage) return;
+    const file = new File([blob], 'edited.png', { type: 'image/png' });
     setUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      handleChange('menu_background_image', file_url);
+      handleChange(editingImage.target, file_url);
+      setEditingImage(null);
+      toast({ title: 'Image saved' });
     } catch (err) {
       toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -109,6 +113,16 @@ export default function CustomizationPanel() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      {editingImage && (
+        <ImageEditorDialog
+          file={editingImage.file}
+          aspectRatio={editingImage.aspectRatio}
+          onApply={handleEditorApply}
+          onClose={() => !uploading && setEditingImage(null)}
+          uploading={uploading}
+        />
+      )}
+
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="font-heading text-xl font-semibold">Customize Your Portal</h2>
         <div className="flex gap-2">
@@ -163,10 +177,22 @@ export default function CustomizationPanel() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Input type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploading} />
+                <Input type="file" accept="image/*" onChange={handleLogoFileSelect} disabled={uploading} />
                 {uploading && <span className="text-sm text-muted-foreground shrink-0">Uploading...</span>}
               </div>
             )}
+          </div>
+          <div className="space-y-2">
+            <Label>Logo Size: {form.logo_size ?? 32}px</Label>
+            <input
+              type="range"
+              min="16"
+              max="80"
+              value={form.logo_size ?? 32}
+              onChange={(e) => handleChange('logo_size', parseInt(e.target.value))}
+              className="w-full"
+            />
+            <p className="text-xs text-muted-foreground">Controls the logo height in headers and the guest menu</p>
           </div>
         </CardContent>
       </Card>
@@ -186,10 +212,22 @@ export default function CustomizationPanel() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Input type="file" accept="image/*" onChange={handleBackgroundUpload} disabled={uploading} />
+              <Input type="file" accept="image/*" onChange={handleBackgroundFileSelect} disabled={uploading} />
               {uploading && <span className="text-sm text-muted-foreground shrink-0">Uploading...</span>}
             </div>
           )}
+          <div className="space-y-2">
+            <Label>Background Overlay: {form.bg_overlay_opacity ?? 80}%</Label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={form.bg_overlay_opacity ?? 80}
+              onChange={(e) => handleChange('bg_overlay_opacity', parseInt(e.target.value))}
+              className="w-full"
+            />
+            <p className="text-xs text-muted-foreground">Higher = more solid background over the image. Lower = image shows through more.</p>
+          </div>
         </CardContent>
       </Card>
 

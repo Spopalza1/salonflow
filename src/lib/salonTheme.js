@@ -1,7 +1,9 @@
 export const DEFAULTS = {
   salon_display_name: '',
   salon_logo_url: '',
+  logo_size: 32,
   menu_background_image: '',
+  bg_overlay_opacity: 80,
   primary_color: '#000000',
   secondary_color: '#000000',
   accent_color: '#000000',

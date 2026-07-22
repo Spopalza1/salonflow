@@ -28,18 +28,19 @@ function generateSession() {
   return (crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2));
 }
 
-function SalonLogo({ logoUrl, size = 'sm' }) {
+function SalonLogo({ logoUrl, height = 32, large = false }) {
+  const h = large ? height * 2 : height;
   if (logoUrl) {
-    return <UIImage src={logoUrl} alt="logo" className={size === 'lg' ? 'h-14 w-auto mx-auto mb-3' : 'h-7 w-auto shrink-0'} fittingType="fit" />;
+    return <UIImage src={logoUrl} alt="logo" style={{ height: `${h}px`, width: 'auto' }} className={large ? 'mx-auto mb-3' : 'shrink-0'} fittingType="fit" />;
   }
-  if (size === 'lg') {
+  if (large) {
     return (
-      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-3">
-        <Scissors className="w-7 h-7 text-primary" />
+      <div className="inline-flex items-center justify-center rounded-full bg-primary/10 mb-3" style={{ width: `${h}px`, height: `${h}px` }}>
+        <Scissors className="text-primary" style={{ width: `${h * 0.5}px`, height: `${h * 0.5}px` }} />
       </div>
     );
   }
-  return <Scissors className="w-5 h-5 text-primary shrink-0" />;
+  return <Scissors className="text-primary shrink-0" style={{ width: `${h * 0.6}px`, height: `${h * 0.6}px` }} />;
 }
 
 export default function GuestMenu() {
@@ -63,6 +64,8 @@ export default function GuestMenu() {
   const displayName = settings.salon_display_name || salonName;
   const logoUrl = settings.salon_logo_url;
   const bgImage = settings.menu_background_image;
+  const logoSize = settings.logo_size || 32;
+  const bgOverlayOpacity = settings.bg_overlay_opacity ?? 80;
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -151,7 +154,7 @@ export default function GuestMenu() {
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Card className="max-w-sm w-full">
           <CardContent className="p-6 text-center">
-            <SalonLogo logoUrl={logoUrl} size="lg" />
+            <SalonLogo logoUrl={logoUrl} height={logoSize} large />
             <h1 className="font-heading text-xl font-semibold mb-2">Salon Not Found</h1>
             <p className="text-sm text-muted-foreground">Please scan the QR code at your salon to access the menu.</p>
           </CardContent>
@@ -163,12 +166,12 @@ export default function GuestMenu() {
   // Step 1: Name form
   if (!guestInfo) {
     return (
-      <GuestShell bgImage={bgImage}>
+      <GuestShell bgImage={bgImage} overlayOpacity={bgOverlayOpacity}>
         <div className="min-h-screen flex items-center justify-center p-4">
           <Card className="max-w-sm w-full">
             <CardContent className="p-6">
               <div className="text-center mb-6">
-                <SalonLogo logoUrl={logoUrl} size="lg" />
+                <SalonLogo logoUrl={logoUrl} height={logoSize} large />
                 <h1 className="font-heading text-xl font-semibold">{displayName}</h1>
                 <p className="text-sm text-muted-foreground mt-1">Tell us who you are to get started.</p>
               </div>
@@ -193,11 +196,11 @@ export default function GuestMenu() {
   // Step 2: Choice screen
   if (view === 'choice') {
     return (
-      <GuestShell bgImage={bgImage}>
+      <GuestShell bgImage={bgImage} overlayOpacity={bgOverlayOpacity}>
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="max-w-md w-full space-y-4">
             <div className="text-center mb-6">
-              <SalonLogo logoUrl={logoUrl} size="lg" />
+              <SalonLogo logoUrl={logoUrl} height={logoSize} large />
               <h1 className="font-heading text-xl font-semibold">Welcome, {guestInfo.firstName}!</h1>
               <p className="text-sm text-muted-foreground mt-1">What would you like to do?</p>
             </div>
@@ -232,7 +235,7 @@ export default function GuestMenu() {
   // Step 3a: Message form
   if (view === 'message') {
     return (
-      <GuestShell bgImage={bgImage}>
+      <GuestShell bgImage={bgImage} overlayOpacity={bgOverlayOpacity}>
         <div>
           <header className="bg-background/90 backdrop-blur-sm border-b sticky top-0 z-10 safe-area-top">
             <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
@@ -240,7 +243,7 @@ export default function GuestMenu() {
                 <ArrowLeft className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Back</span>
               </Button>
               <div className="flex items-center gap-2 min-w-0">
-                <SalonLogo logoUrl={logoUrl} />
+                <SalonLogo logoUrl={logoUrl} height={logoSize} />
                 <span className="font-heading font-semibold text-sm truncate">{displayName}</span>
               </div>
               <div className="flex items-center gap-1 shrink-0">
@@ -297,7 +300,7 @@ export default function GuestMenu() {
 
   // Step 3b: Menu browser
   return (
-    <GuestShell bgImage={bgImage}>
+    <GuestShell bgImage={bgImage} overlayOpacity={bgOverlayOpacity}>
       <div>
         <header className="bg-background/90 backdrop-blur-sm border-b sticky top-0 z-10 safe-area-top">
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
@@ -305,7 +308,7 @@ export default function GuestMenu() {
               <ArrowLeft className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Back</span>
             </Button>
             <div className="flex items-center gap-2 min-w-0">
-              <SalonLogo logoUrl={logoUrl} />
+              <SalonLogo logoUrl={logoUrl} height={logoSize} />
               <span className="font-heading font-semibold text-sm truncate">{displayName}</span>
             </div>
             <div className="flex items-center gap-1 shrink-0">

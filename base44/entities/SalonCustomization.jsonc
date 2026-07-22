@@ -11,8 +11,16 @@
     "salon_logo_url": {
       "type": "string"
     },
+    "logo_size": {
+      "type": "number",
+      "default": 32
+    },
     "menu_background_image": {
       "type": "string"
+    },
+    "bg_overlay_opacity": {
+      "type": "number",
+      "default": 80
     },
     "primary_color": {
       "type": "string",

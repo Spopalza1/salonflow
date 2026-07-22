@@ -25,7 +25,7 @@ function LayoutContent() {
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2">
             {settings?.salon_logo_url ? (
-              <UIImage src={settings.salon_logo_url} alt="logo" className="h-8 w-auto" fittingType="fit" />
+              <UIImage src={settings.salon_logo_url} alt="logo" style={{ height: `${settings.logo_size || 32}px`, width: 'auto' }} fittingType="fit" />
             ) : (
               <Scissors className="w-5 h-5 text-primary" />
             )}
