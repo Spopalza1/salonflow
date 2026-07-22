@@ -66,17 +66,21 @@ export default function GuestMenu() {
   useEffect(() => {
     if (!guestInfo?.session) return;
     const load = async () => {
-      const data = await base44.entities.Order.filter(
-        { guest_session: guestInfo.session },
-        '-created_date', 20
-      );
-      setOrders(data);
+      try {
+        const response = await base44.functions.invoke('getGuestOrders', {
+          salon_id: salonId,
+          guest_session: guestInfo.session
+        });
+        setOrders(response.data.orders || []);
+      } catch (e) {
+        setOrders([]);
+      }
     };
     load();
     const unsubscribe = base44.entities.Order.subscribe((event) => {
-      if (event.type === 'create' && event.data.guest_session === guestInfo.session) {
+      if (event.type === 'create' && event.data.guest_session === guestInfo.session && event.data.salon_id === salonId) {
         setOrders(prev => [event.data, ...prev]);
-      } else if (event.type === 'update' && event.data.guest_session === guestInfo.session) {
+      } else if (event.type === 'update' && event.data.guest_session === guestInfo.session && event.data.salon_id === salonId) {
         setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));
       }
     });
