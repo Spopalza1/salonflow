@@ -49,7 +49,9 @@
   ],
   "rls": {
     "create": true,
-    "read": true,
+    "read": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
     "update": {
       "data.salon_id": "{{user.data.salon_id}}"
     },
