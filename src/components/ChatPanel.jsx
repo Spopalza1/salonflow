@@ -20,6 +20,7 @@ export default function ChatPanel({ mode, user }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false);
+  const [deletedConversations, setDeletedConversations] = useState(new Set());
   const messagesEndRef = useRef(null);
   const stylistInitRef = useRef(false);
 
@@ -76,6 +77,15 @@ export default function ChatPanel({ mode, user }) {
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
+        // Restore a deleted conversation if a new message arrives for it
+        if (event.data.thread_partner_id) {
+          setDeletedConversations((prev) => {
+            if (!prev.has(event.data.thread_partner_id)) return prev;
+            const next = new Set(prev);
+            next.delete(event.data.thread_partner_id);
+            return next;
+          });
+        }
         setMessages((prev) => {
           if (prev.some((m) => m.id === event.data.id)) return prev;
           return [...prev, event.data];
@@ -144,8 +154,11 @@ export default function ChatPanel({ mode, user }) {
     }};
 
   const handleDeleteConversation = async () => {
-    await base44.entities.Message.deleteMany({ thread_partner_id: selectedPartnerId });
+    const partnerId = selectedPartnerId;
+    await base44.entities.Message.deleteMany({ thread_partner_id: partnerId });
+    setDeletedConversations((prev) => new Set(prev).add(partnerId));
     setShowDeleteConvConfirm(false);
+    setMobileChatActive(false);
   };
 
   if (loading) {
@@ -186,6 +199,7 @@ export default function ChatPanel({ mode, user }) {
   const stylistsWithMessages = new Set(messages.filter((m) => m.thread_partner_id).map((m) => m.thread_partner_id));
   const unreadByStylist = new Set(messages.filter((m) => !m.read && m.sender_role !== 'admin' && m.thread_partner_id).map((m) => m.thread_partner_id));
   const filteredStylists = stylists.filter((s) => {
+    if (deletedConversations.has(s.id)) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (s.full_name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q);

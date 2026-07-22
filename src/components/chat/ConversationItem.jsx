@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -8,6 +8,7 @@ const HOLD_DURATION = 500;
 export default function ConversationItem({ stylist, isSelected, hasUnread, onSelect, onDelete }) {
   const [offset, setOffset] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const containerRef = useRef(null);
   const startX = useRef(0);
   const startY = useRef(0);
   const currentX = useRef(0);
@@ -21,6 +22,18 @@ export default function ConversationItem({ stylist, isSelected, hasUnread, onSel
     setOffset(0);
     setRevealed(false);
   }, []);
+
+  // Click outside to close when revealed (desktop press-and-hold)
+  useEffect(() => {
+    if (!revealed) return;
+    const handlePointerDown = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        close();
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [revealed, close]);
 
   const handleTouchStart = (e) => {
     const touch = e.touches[0];
@@ -90,7 +103,7 @@ export default function ConversationItem({ stylist, isSelected, hasUnread, onSel
   };
 
   return (
-    <div className="relative overflow-hidden rounded-lg">
+    <div ref={containerRef} className="relative overflow-hidden rounded-lg">
       {/* Delete action behind */}
       <div className="absolute inset-y-0 right-0 flex items-center justify-center" style={{ width: REVEAL_WIDTH }}>
         <Button
