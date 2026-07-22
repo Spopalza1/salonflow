@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,20 +39,32 @@ export default function StylistManager() {
     }
   };
 
+  const loadStylists = useCallback(async () => {
+    if (!user?.salon_id) return;
+    try {
+      const res = await base44.functions.invoke('getSalonStylists', {});
+      setStylists(res.data?.stylists || []);
+    } catch (err) {
+      toast({ title: 'Failed to load stylists', description: err.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.salon_id]);
+
+  useEffect(() => {
+    loadStylists();
+  }, [loadStylists]);
+
+  // Auto-refresh when any user in the salon updates their profile
   useEffect(() => {
     if (!user?.salon_id) return;
-    const load = async () => {
-      try {
-        const res = await base44.functions.invoke('getSalonStylists', {});
-        setStylists(res.data?.stylists || []);
-      } catch (err) {
-        toast({ title: 'Failed to load stylists', description: err.message, variant: 'destructive' });
-      } finally {
-        setLoading(false);
+    const unsubscribe = base44.entities.User.subscribe((event) => {
+      if (event.type === 'update' || event.type === 'create' || event.type === 'delete') {
+        loadStylists();
       }
-    };
-    load();
-  }, [user?.salon_id]);
+    });
+    return unsubscribe;
+  }, [user?.salon_id, loadStylists]);
 
   const handleCreate = async (e) => {
     e.preventDefault();

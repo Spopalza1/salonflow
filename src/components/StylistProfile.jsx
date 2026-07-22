@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,11 +32,30 @@ export default function StylistProfile({ onSaved }) {
     e.preventDefault();
     setSaving(true);
     try {
+      const newName = displayName.trim();
+      const oldName = user?.display_name || user?.full_name || '';
       await base44.auth.updateMe({
-        display_name: displayName.trim(),
+        display_name: newName,
         username: username.trim(),
         chair_number: chairNumber.trim(),
       });
+
+      // Update all messages so chat names stay in sync
+      if (newName && newName !== oldName) {
+        try {
+          await base44.entities.Message.updateMany(
+            { sender_id: user.id },
+            { $set: { sender_name: newName } }
+          );
+          await base44.entities.Message.updateMany(
+            { thread_partner_id: user.id },
+            { $set: { thread_partner_name: newName } }
+          );
+        } catch (err) {
+          console.error('Failed to sync message names:', err);
+        }
+      }
+
       await checkUserAuth();
       toast({ title: 'Profile updated!', description: 'Your changes have been saved.' });
       onSaved?.();

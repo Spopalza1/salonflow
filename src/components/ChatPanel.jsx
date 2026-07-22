@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,21 +20,37 @@ export default function ChatPanel({ mode, user }) {
   const [loading, setLoading] = useState(true);
   const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false);
   const messagesEndRef = useRef(null);
+  const stylistInitRef = useRef(false);
+
+  const loadStylists = useCallback(async () => {
+    if (mode !== 'admin' || !user?.salon_id) return;
+    try {
+      const res = await base44.functions.invoke('getSalonStylists', {});
+      const nonAdmins = res.data?.stylists || [];
+      setStylists(nonAdmins);
+      if (!stylistInitRef.current && nonAdmins.length > 0) {
+        setSelectedPartnerId(nonAdmins[0].id);
+        stylistInitRef.current = true;
+      }
+    } catch (err) {
+      console.error('Failed to load stylists for chat:', err);
+    }
+  }, [mode, user?.salon_id]);
 
   useEffect(() => {
-    if (mode !== 'admin' || !user?.salon_id) return;
-    const loadStylists = async () => {
-      try {
-        const res = await base44.functions.invoke('getSalonStylists', {});
-        const nonAdmins = res.data?.stylists || [];
-        setStylists(nonAdmins);
-        if (nonAdmins.length > 0 && !selectedPartnerId) setSelectedPartnerId(nonAdmins[0].id);
-      } catch (err) {
-        console.error('Failed to load stylists for chat:', err);
-      }
-    };
     loadStylists();
-  }, [mode, user?.salon_id]);
+  }, [loadStylists]);
+
+  // Auto-refresh stylist list when a user updates their profile
+  useEffect(() => {
+    if (mode !== 'admin' || !user?.salon_id) return;
+    const unsubscribe = base44.entities.User.subscribe((event) => {
+      if (event.type === 'update' || event.type === 'create' || event.type === 'delete') {
+        loadStylists();
+      }
+    });
+    return unsubscribe;
+  }, [mode, user?.salon_id, loadStylists]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -99,15 +115,15 @@ export default function ChatPanel({ mode, user }) {
     let partnerId, partnerName;
     if (mode === 'stylist') {
       partnerId = user.id;
-      partnerName = user.full_name || user.email;
+      partnerName = user.display_name || user.full_name || user.email;
     } else {
       const partner = stylists.find(s => s.id === selectedPartnerId);
       partnerId = selectedPartnerId;
-      partnerName = partner?.full_name || partner?.email || 'Stylist';
+      partnerName = partner?.display_name || partner?.full_name || partner?.email || 'Stylist';
     }
     await base44.entities.Message.create({
       sender_id: user.id,
-      sender_name: user.full_name || user.email,
+      sender_name: user.display_name || user.full_name || user.email,
       sender_role: mode === 'admin' ? 'admin' : 'stylist',
       thread_partner_id: partnerId,
       thread_partner_name: partnerName,
@@ -204,7 +220,7 @@ export default function ChatPanel({ mode, user }) {
                   onClick={() => { setSelectedPartnerId(s.id); setMobileChatActive(true); }}
                   className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors ${selectedPartnerId === s.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
                 >
-                  <span className="text-sm font-medium truncate">{s.full_name || s.email}</span>
+                  <span className="text-sm font-medium truncate">{s.display_name || s.full_name || s.email}</span>
                   {unreadByStylist.has(s.id) && selectedPartnerId !== s.id && (
                     <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
                   )}
@@ -220,7 +236,7 @@ export default function ChatPanel({ mode, user }) {
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
                   <span className="text-sm font-medium truncate flex-1">
-                    {stylists.find(s => s.id === selectedPartnerId)?.full_name || stylists.find(s => s.id === selectedPartnerId)?.email || 'Stylist'}
+                    {stylists.find(s => s.id === selectedPartnerId)?.display_name || stylists.find(s => s.id === selectedPartnerId)?.full_name || stylists.find(s => s.id === selectedPartnerId)?.email || 'Stylist'}
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => setShowDeleteConvConfirm(true)} className="text-destructive hover:text-destructive h-8">
                     <Trash2 className="w-3.5 h-3.5 mr-1" />
