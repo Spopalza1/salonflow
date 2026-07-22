@@ -6,24 +6,30 @@ import { Badge } from '@/components/ui/badge';
 import { Coffee, Plus, Check, Gift } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image as UIImage } from '@/components/ui/image';
+import ItemCustomizationDialog from '@/components/ItemCustomizationDialog';
 
 export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [optionGroups, setOptionGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(null);
+  const [customItem, setCustomItem] = useState(null);
+  const [customOpen, setCustomOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     const load = async () => {
       const itemFilter = salonId ? { available: true, salon_id: salonId } : { available: true };
       const catFilter = salonId ? { salon_id: salonId } : {};
-      const [data, cats] = await Promise.all([
+      const [data, cats, groups] = await Promise.all([
         base44.entities.MenuItem.filter(itemFilter, 'display_order'),
-        base44.entities.MenuCategory.filter(catFilter, 'display_order')
+        base44.entities.MenuCategory.filter(catFilter, 'display_order'),
+        base44.entities.MenuItemOptionGroup.filter(salonId ? { salon_id: salonId } : {})
       ]);
       setItems(data);
       setCategories(cats);
+      setOptionGroups(groups);
       setLoading(false);
     };
     load();
@@ -48,22 +54,42 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
       else if (event.type === 'delete') setCategories(prev => prev.filter(c => c.id !== event.id));
     });
 
-    return () => { unsubItems(); unsubCats(); };
+    const unsubGroups = base44.entities.MenuItemOptionGroup.subscribe((event) => {
+      if (salonId && event.data?.salon_id !== salonId) return;
+      if (event.type === 'create') setOptionGroups(prev => [...prev, event.data]);
+      else if (event.type === 'update') setOptionGroups(prev => prev.map(g => g.id === event.data.id ? event.data : g));
+      else if (event.type === 'delete') setOptionGroups(prev => prev.filter(g => g.id !== event.id));
+    });
+
+    return () => { unsubItems(); unsubCats(); unsubGroups(); };
   }, []);
 
   const complimentarySet = new Set(categories.filter(c => c.complimentary).map(c => c.name));
 
+  const itemOptionGroups = (itemId) => optionGroups.filter(g => g.menu_item_id === itemId);
+
   const handleOrder = async (item) => {
+    const groups = itemOptionGroups(item.id);
+    if (groups.length > 0) {
+      setCustomItem(item);
+      setCustomOpen(true);
+      return;
+    }
+    await submitOrder(item, null, item.price);
+  };
+
+  const submitOrder = async (item, customizations, adjustedPrice) => {
     setOrdering(item.id);
     try {
       const isComplimentary = complimentarySet.has(item.category) || item.complimentary;
       const orderData = {
         item_name: item.name,
         category: item.category,
-        price: isComplimentary ? null : item.price,
+        price: isComplimentary ? null : (adjustedPrice != null ? adjustedPrice : item.price),
         status: 'pending',
         salon_id: salonId,
       };
+      if (customizations) orderData.customizations = customizations;
       if (mode === 'stylist') {
         orderData.requested_by_type = 'stylist';
         orderData.requested_by_name = user?.display_name || user?.full_name || user?.email || 'Stylist';
@@ -83,6 +109,12 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     } finally {
       setOrdering(null);
     }
+  };
+
+  const handleCustomConfirm = (customizations, adjustedPrice) => {
+    const isComplimentary = customItem && (complimentarySet.has(customItem.category) || customItem.complimentary);
+    submitOrder(customItem, customizations, isComplimentary ? null : adjustedPrice);
+    setCustomOpen(false);
   };
 
   const grouped = {};
@@ -141,7 +173,9 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
                     >
                       {ordering === item.id
                         ? <><Check className="w-4 h-4 mr-2" />Sending...</>
-                        : <><Plus className="w-4 h-4 mr-2" />Request</>}
+                        : itemOptionGroups(item.id).length > 0
+                          ? <><Plus className="w-4 h-4 mr-2" />Customize</>
+                          : <><Plus className="w-4 h-4 mr-2" />Request</>}
                     </Button>
                   </CardContent>
                 </Card>
@@ -150,6 +184,17 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
           </div>
         );
       })}
+
+      {customItem && (
+        <ItemCustomizationDialog
+          item={customItem}
+          optionGroups={itemOptionGroups(customItem.id)}
+          open={customOpen}
+          onOpenChange={setCustomOpen}
+          onConfirm={handleCustomConfirm}
+          basePrice={customItem.complimentary || complimentarySet.has(customItem.category) ? 0 : customItem.price}
+        />
+      )}
     </div>
   );
 }

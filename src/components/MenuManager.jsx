@@ -10,10 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MobileSelect } from '@/components/ui/mobile-select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Coffee, FolderPlus, Gift, Upload, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Coffee, FolderPlus, Gift, Upload, X, SlidersHorizontal } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image as UIImage } from '@/components/ui/image';
 import { useAuth } from '@/lib/AuthContext';
+import OptionGroupManager from '@/components/OptionGroupManager';
 
 export default function MenuManager() {
   const { user } = useAuth();
@@ -339,6 +340,16 @@ export default function MenuManager() {
               <Switch id="complimentary" checked={form.complimentary} onCheckedChange={v => setForm({ ...form, complimentary: v })} />
               <Label htmlFor="complimentary">Complimentary (free)</Label>
             </div>
+            {editing && (
+              <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <Label className="font-semibold">Customization Options</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">Let guests pick modifiers like milk type, sugar level, or decaf.</p>
+                <OptionGroupManager menuItemId={editing.id} salonId={user?.salon_id} />
+              </div>
+            )}
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit">{editing ? 'Save' : 'Add'}</Button>

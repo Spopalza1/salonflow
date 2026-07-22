@@ -111,6 +111,7 @@ export default function OrdersPanel() {
                   <div>From: <span className="font-medium">{order.requested_by_name}</span></div>
                   <div>Type: <Badge variant="outline" className="capitalize text-xs">{order.requested_by_type}</Badge></div>
                   {showChairTable && order.chair_table && <div>Chair/Table: {order.chair_table}</div>}
+                  {order.customizations && <div className="text-muted-foreground italic">Custom: {order.customizations}</div>}
                   {order.notes && <div className="text-muted-foreground">Note: {order.notes}</div>}
                 </div>
                 <div className="flex gap-1">
