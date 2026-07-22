@@ -3,12 +3,12 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Scissors, LogOut, ClipboardList } from 'lucide-react';
-import ThemeToggle from '@/components/ThemeToggle';
+import { Scissors, ClipboardList } from 'lucide-react';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
 import AdminProfileDialog from '@/components/AdminProfileDialog';
 import CustomizationDialog from '@/components/CustomizationDialog';
 import AdminMenu from '@/components/AdminMenu';
+import StylistMenu from '@/components/StylistMenu';
 import { SalonCustomizationProvider, useSalonCustomization } from '@/lib/salonCustomizationContext';
 import { Image as UIImage } from '@/components/ui/image';
 
@@ -53,12 +53,7 @@ function LayoutContent() {
                 onLogout={() => logout()}
               />
             ) : (
-              <>
-                <ThemeToggle />
-                <Button variant="ghost" size="icon" onClick={() => logout()}>
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </>
+              <StylistMenu user={user} onLogout={() => logout()} />
             )}
           </div>
         </div>
