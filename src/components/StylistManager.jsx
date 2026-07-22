@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/AuthContext';
 import StylistMessageDialog from '@/components/StylistMessageDialog';
 import StylistEditDialog from '@/components/StylistEditDialog';
+import InviteQRShare from '@/components/InviteQRShare';
 
 export default function StylistManager() {
   const [stylists, setStylists] = useState([]);
@@ -19,6 +20,7 @@ export default function StylistManager() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
   const [inviteLink, setInviteLink] = useState(null);
+  const [inviteEmail, setInviteEmail] = useState('');
   const [messageTarget, setMessageTarget] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const { toast } = useToast();
@@ -83,7 +85,8 @@ export default function StylistManager() {
 
       const link = getSignUpLink(email.trim());
       setInviteLink(link);
-      toast({ title: 'Invitation sent!', description: 'Copy the sign-up link below and share it with your stylist.' });
+      setInviteEmail(email.trim());
+      toast({ title: 'Invitation sent!', description: 'Share the QR code or link below with your stylist.' });
       setEmail('');
       setTitle('');
     } catch (err) {
@@ -130,25 +133,11 @@ export default function StylistManager() {
           </form>
 
           <p className="text-xs text-muted-foreground mt-3">
-            After inviting, copy the sign-up link and share it with your stylist. Only invited emails can sign up — the page is not accessible to the public.
+            After inviting, share the QR code or link with your stylist. Only invited emails can sign up — the page is not accessible to the public.
           </p>
 
           {inviteLink && (
-            <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <LinkIcon className="w-4 h-4 text-primary" />
-                Stylist Sign-Up Link
-              </div>
-              <div className="flex items-center gap-2">
-                <Input readOnly value={inviteLink} className="text-xs h-9" />
-                <Button type="button" size="sm" variant="default" className="shrink-0" onClick={() => copyToClipboard(inviteLink)}>
-                  <Copy className="w-3.5 h-3.5 mr-1" />Copy
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Send this link directly to your stylist. They'll set their password and verify via email code.
-              </p>
-            </div>
+            <InviteQRShare link={inviteLink} email={inviteEmail} />
           )}
         </CardContent>
       </Card>
