@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,8 @@ export default function CustomizationPanel() {
   const [showStoreId, setShowStoreId] = useState(false);
   const [copied, setCopied] = useState(false);
   const [editingImage, setEditingImage] = useState(null);
+  const initializedRef = useRef(false);
+  const saveTimerRef = useRef(null);
 
   const handleCopyStoreId = () => {
     navigator.clipboard.writeText(user?.salon_id || '');
@@ -53,11 +55,32 @@ export default function CustomizationPanel() {
   };
 
   useEffect(() => {
-    setForm({ ...DEFAULTS, ...settings });
+    if (!initializedRef.current) {
+      setForm({ ...DEFAULTS, ...settings });
+      if (settings.id) initializedRef.current = true;
+    }
   }, [settings]);
 
   useEffect(() => {
     applyCustomization(form);
+  }, [form]);
+
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      setSaving(true);
+      try {
+        await updateSettings(form);
+      } catch (err) {
+        toast({ title: 'Auto-save failed', description: err.message, variant: 'destructive' });
+      } finally {
+        setSaving(false);
+      }
+    }, 800);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
   }, [form]);
 
   const handleChange = (key, value) => {
@@ -146,9 +169,15 @@ export default function CustomizationPanel() {
             <Hash className="w-4 h-4 mr-2" />Store ID
           </Button>
           <Button variant="outline" onClick={handleReset}>Reset</Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
-          </Button>
+          {saving ? (
+            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <Loader2 className="w-4 h-4 animate-spin" />Saving...
+            </span>
+          ) : (
+            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <Check className="w-4 h-4 text-green-500" />All changes saved
+            </span>
+          )}
         </div>
       </div>
 

@@ -34,6 +34,17 @@ export function SalonCustomizationProvider({ children }) {
   }, [loadSettings]);
 
   useEffect(() => {
+    if (!user?.salon_id) return;
+    const unsubscribe = base44.entities.SalonCustomization.subscribe((event) => {
+      if (event.data?.salon_id !== user.salon_id) return;
+      if (event.type === 'create' || event.type === 'update') {
+        setSettings(event.data);
+      }
+    });
+    return unsubscribe;
+  }, [user?.salon_id]);
+
+  useEffect(() => {
     applyCustomization(settings || DEFAULTS);
   }, [settings]);
 
