@@ -25,9 +25,10 @@ export default function ChatPanel({ mode, user }) {
     if (mode !== 'admin' || !user?.salon_id) return;
     const loadStylists = async () => {
       try {
-        const data = await base44.entities.User.filter({ role: { $ne: 'admin' }, salon_id: user.salon_id });
-        setStylists(data);
-        if (data.length > 0) setSelectedPartnerId(data[0].id);
+        const all = await base44.entities.User.filter({ salon_id: user.salon_id });
+        const nonAdmins = all.filter(u => u.role !== 'admin');
+        setStylists(nonAdmins);
+        if (nonAdmins.length > 0) setSelectedPartnerId(nonAdmins[0].id);
       } catch (err) {
         console.error('Failed to load stylists for chat:', err);
       }
@@ -36,22 +37,32 @@ export default function ChatPanel({ mode, user }) {
   }, [mode, user?.salon_id]);
 
   useEffect(() => {
+    if (!user?.id) return;
+    if (mode === 'admin' && !user?.salon_id) return;
     const load = async () => {
-      let data;
-      if (mode === 'stylist') {
-        data = await base44.entities.Message.filter({ thread_partner_id: user.id }, 'created_date');
-      } else {
-        data = await base44.entities.Message.filter({ salon_id: user.salon_id }, 'created_date', 500);
+      try {
+        let data;
+        if (mode === 'stylist') {
+          data = await base44.entities.Message.filter({ thread_partner_id: user.id }, 'created_date');
+        } else {
+          data = await base44.entities.Message.filter({ salon_id: user.salon_id }, 'created_date', 500);
+        }
+        setMessages(data);
+      } catch (err) {
+        console.error('Failed to load messages:', err);
+      } finally {
+        setLoading(false);
       }
-      setMessages(data);
-      setLoading(false);
     };
     load();
 
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
-        setMessages(prev => [...prev, event.data]);
+        setMessages(prev => {
+          if (prev.some(m => m.id === event.data.id)) return prev;
+          return [...prev, event.data];
+        });
       } else if (event.type === 'update') {
         setMessages(prev => prev.map(m => m.id === event.data.id ? event.data : m));
       } else if (event.type === 'delete') {
@@ -59,7 +70,7 @@ export default function ChatPanel({ mode, user }) {
       }
     });
     return unsubscribe;
-  }, [mode, user?.id]);
+  }, [mode, user?.id, user?.salon_id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
