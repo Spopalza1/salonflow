@@ -43,9 +43,8 @@ export default function StylistManager() {
     if (!user?.salon_id) return;
     const load = async () => {
       try {
-        const all = await base44.entities.User.filter({ salon_id: user.salon_id });
-        const nonAdmins = all.filter(u => u.role !== 'admin');
-        setStylists(nonAdmins);
+        const res = await base44.functions.invoke('getSalonStylists', {});
+        setStylists(res.stylists || []);
       } catch (err) {
         toast({ title: 'Failed to load stylists', description: err.message, variant: 'destructive' });
       } finally {
