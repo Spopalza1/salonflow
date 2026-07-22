@@ -28,6 +28,7 @@ export default function QRDisplay() {
     };
     load();
     const unsubscribe = base44.entities.SalonSetting.subscribe((event) => {
+      if (event.data.salon_id !== user?.salon_id) return;
       if (event.type === 'create') {
         setSalonName(event.data.salon_name || '');
         setSettingId(event.data.id);

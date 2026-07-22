@@ -121,6 +121,22 @@ export default function GuestMenu() {
     }
   };
 
+  if (!salonId) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
+        <Card className="max-w-sm w-full">
+          <CardContent className="p-6 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-3">
+              <Scissors className="w-7 h-7 text-primary" />
+            </div>
+            <h1 className="font-heading text-xl font-semibold mb-2">Salon Not Found</h1>
+            <p className="text-sm text-muted-foreground">Please scan the QR code at your salon to access the menu.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Step 1: Name form
   if (!guestInfo) {
     return (
