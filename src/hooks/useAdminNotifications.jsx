@@ -42,6 +42,14 @@ async function dedupCreateNotification(key, data) {
   if (createdNotificationKeys.has(key)) return;
   createdNotificationKeys.add(key);
   try {
+    if (data.source_id) {
+      const existing = await base44.entities.Notification.filter(
+        { source_id: data.source_id, type: data.type },
+        '-created_date',
+        1
+      );
+      if (existing.length > 0) return existing[0];
+    }
     return await base44.entities.Notification.create(data);
   } catch (e) {
     createdNotificationKeys.delete(key);
@@ -94,6 +102,7 @@ export function useAdminNotifications() {
           body: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
           type: 'order',
           salon_id: salonIdRef.current,
+          source_id: event.data.id,
         });
         orderNotificationMap.set(event.data.id, notif.id);
         toastRef.current({
@@ -121,6 +130,7 @@ export function useAdminNotifications() {
           body: `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`,
           type: 'service',
           salon_id: salonIdRef.current,
+          source_id: event.data.id,
         });
       } else if (event.type === 'update') {
         if (event.data.status === 'completed' && !completedServiceIds.has(event.data.id)) {
@@ -131,6 +141,7 @@ export function useAdminNotifications() {
             body: `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`,
             type: 'service',
             salon_id: salonIdRef.current,
+            source_id: event.data.id,
           });
         }
       }
@@ -146,6 +157,7 @@ export function useAdminNotifications() {
         body: event.data.content,
         type: 'service_note',
         salon_id: salonIdRef.current,
+        source_id: event.data.id,
       });
     });
 
@@ -180,6 +192,7 @@ export function useAdminNotifications() {
         body,
         type: isServiceUpdate ? 'service_update' : 'chat',
         salon_id: salonIdRef.current,
+        source_id: event.data.id,
       });
     });
 
