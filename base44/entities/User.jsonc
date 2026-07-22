@@ -25,5 +25,10 @@
     "salon_id": {
       "type": "string"
     }
+  },
+  "rls": {
+    "read": true,
+    "update": true,
+    "delete": true
   }
 }

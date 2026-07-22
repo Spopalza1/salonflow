@@ -41,9 +41,14 @@ export default function StylistManager() {
 
   useEffect(() => {
     const load = async () => {
-      const data = await base44.entities.User.filter({ role: { $ne: 'admin' }, salon_id: user.salon_id });
-      setStylists(data);
-      setLoading(false);
+      try {
+        const data = await base44.entities.User.filter({ role: { $ne: 'admin' }, salon_id: user.salon_id });
+        setStylists(data);
+      } catch (err) {
+        toast({ title: 'Failed to load stylists', description: err.message, variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
     };
     load();
     const unsubscribe = base44.entities.User.subscribe((event) => {
