@@ -26,10 +26,5 @@
     "salon_id": {
       "type": "string"
     }
-  },
-  "rls": {
-    "read": {
-      "data.salon_id": "{{user.data.salon_id}}"
-    }
   }
 }
