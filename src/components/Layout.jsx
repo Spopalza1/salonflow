@@ -3,10 +3,11 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Scissors, LogOut, ClipboardList, UserCircle } from 'lucide-react';
+import { Scissors, LogOut, ClipboardList, UserCircle, Palette } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
 import AdminProfileDialog from '@/components/AdminProfileDialog';
+import CustomizationDialog from '@/components/CustomizationDialog';
 import { SalonCustomizationProvider, useSalonCustomization } from '@/lib/salonCustomizationContext';
 import { Image as UIImage } from '@/components/ui/image';
 
@@ -15,6 +16,7 @@ function LayoutContent() {
   const location = useLocation();
   const { settings } = useSalonCustomization();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -44,6 +46,15 @@ function LayoutContent() {
                   <UserCircle className="w-4 h-4 mr-1" />
                   <span className="hidden sm:inline">Profile</span>
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-1"
+                  onClick={() => setCustomizeOpen(true)}
+                >
+                  <Palette className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Customize</span>
+                </Button>
               </>
             )}
 
@@ -65,6 +76,7 @@ function LayoutContent() {
         <Outlet />
       </main>
       <AdminProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      <CustomizationDialog open={customizeOpen} onOpenChange={setCustomizeOpen} />
     </div>
   );
 }
