@@ -1,11 +1,11 @@
 export const DEFAULTS = {
   salon_display_name: '',
   salon_logo_url: '',
-  primary_color: '#3b82f6',
-  secondary_color: '#facc15',
-  accent_color: '#22c55e',
+  primary_color: '#000000',
+  secondary_color: '#000000',
+  accent_color: '#000000',
   card_background_color: '#ffffff',
-  card_border_color: '#d1d5db',
+  card_border_color: '#000000',
   card_radius: 12,
   font_heading: 'Inter',
   font_body: 'Inter',
@@ -64,18 +64,36 @@ export function hexToHsl(hex) {
   return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+function foregroundFor(hslStr) {
+  if (!hslStr) return null;
+  const lightness = parseFloat(hslStr.split(' ')[2]) / 100;
+  return lightness < 0.5 ? '0 0% 100%' : '0 0% 9%';
+}
+
 export function applyCustomization(settings) {
   const root = document.documentElement;
   const s = { ...DEFAULTS, ...settings };
 
   const primary = hexToHsl(s.primary_color);
-  if (primary) root.style.setProperty('--primary', primary);
+  if (primary) {
+    root.style.setProperty('--primary', primary);
+    const primaryFg = foregroundFor(primary);
+    if (primaryFg) root.style.setProperty('--primary-foreground', primaryFg);
+  }
 
   const secondary = hexToHsl(s.secondary_color);
-  if (secondary) root.style.setProperty('--secondary', secondary);
+  if (secondary) {
+    root.style.setProperty('--secondary', secondary);
+    const secondaryFg = foregroundFor(secondary);
+    if (secondaryFg) root.style.setProperty('--secondary-foreground', secondaryFg);
+  }
 
   const accent = hexToHsl(s.accent_color);
-  if (accent) root.style.setProperty('--accent', accent);
+  if (accent) {
+    root.style.setProperty('--accent', accent);
+    const accentFg = foregroundFor(accent);
+    if (accentFg) root.style.setProperty('--accent-foreground', accentFg);
+  }
 
   const cardBg = hexToHsl(s.card_background_color);
   if (cardBg) root.style.setProperty('--card', cardBg);

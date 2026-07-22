@@ -13,15 +13,15 @@
     },
     "primary_color": {
       "type": "string",
-      "default": "#3b82f6"
+      "default": "#000000"
     },
     "secondary_color": {
       "type": "string",
-      "default": "#facc15"
+      "default": "#000000"
     },
     "accent_color": {
       "type": "string",
-      "default": "#22c55e"
+      "default": "#000000"
     },
     "card_background_color": {
       "type": "string",
@@ -29,7 +29,7 @@
     },
     "card_border_color": {
       "type": "string",
-      "default": "#d1d5db"
+      "default": "#000000"
     },
     "card_radius": {
       "type": "number",
