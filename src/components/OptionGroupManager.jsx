@@ -146,7 +146,7 @@ function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddO
   return (
     <div className="rounded-lg border">
       <div className="flex items-center justify-between p-3">
-        <button onClick={onToggle} className="flex items-center gap-2 flex-1 text-left">
+        <button type="button" onClick={onToggle} className="flex items-center gap-2 flex-1 text-left">
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           <span className="text-sm font-medium">{group.name}</span>
           <Badge variant="outline" className="text-xs">{typeLabel}</Badge>
@@ -193,7 +193,7 @@ function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddO
                     <span className="text-sm">{opt.name}</span>
                     <div className="flex items-center gap-2">
                       {opt.extra_price > 0 && <span className="text-sm text-muted-foreground">+${opt.extra_price.toFixed(2)}</span>}
-                      <button onClick={() => onRemoveOption(opt.name)} className="text-destructive hover:text-destructive/80">
+                      <button type="button" onClick={() => onRemoveOption(opt.name)} className="text-destructive hover:text-destructive/80">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>

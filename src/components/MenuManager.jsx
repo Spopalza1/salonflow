@@ -289,7 +289,7 @@ export default function MenuManager() {
 
       {/* Item Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Edit Item' : 'Add Menu Item'}</DialogTitle>
           </DialogHeader>
