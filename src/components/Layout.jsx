@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Scissors, LogOut, ClipboardList, User, UserCircle } from 'lucide-react';
+import { Scissors, LogOut, ClipboardList, UserCircle } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
 import AdminProfileDialog from '@/components/AdminProfileDialog';
@@ -46,12 +46,7 @@ function LayoutContent() {
                 </Button>
               </>
             )}
-            <Link to="/stylist" className="ml-1">
-              <Button variant={location.pathname === '/stylist' ? 'default' : 'ghost'} size="sm">
-                <User className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">Stylist</span>
-              </Button>
-            </Link>
+
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
