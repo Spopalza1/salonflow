@@ -71,7 +71,7 @@ const AuthenticatedApp = () => {
           <Route path="/front-desk" element={<FrontDeskDashboard />} />
         </Route>
       </Route>
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} allowedRoles={['admin', 'stylist']} />}>
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} allowedRoles={['admin', 'stylist', 'user']} />}>
         <Route element={<Layout />}>
           <Route path="/stylist" element={<StylistView />} />
         </Route>

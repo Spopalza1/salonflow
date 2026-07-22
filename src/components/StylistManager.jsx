@@ -79,23 +79,19 @@ export default function StylistManager() {
     setCreating(true);
     setError(null);
     try {
-      // Step 1: Invite the user with default role (platform sends the invitation email)
-      await base44.users.inviteUser(email.trim(), 'user');
-
-      // Step 2: Find the new user and set their title
-      const users = await base44.entities.User.filter({ email: email.trim() });
-      if (users.length > 0) {
-        await base44.entities.User.update(users[0].id, { title: title.trim(), salon_id: user.salon_id });
-      }
-
-      const link = getSignUpLink(email.trim());
+      const response = await base44.functions.invoke('inviteStylist', {
+        email: email.trim(),
+        title: title.trim(),
+        salonId: user.salon_id,
+      });
+      const link = `${window.location.origin}/register?email=${encodeURIComponent(email.trim())}&salon_id=${encodeURIComponent(user.salon_id)}&title=${encodeURIComponent(title.trim())}`;
       setInviteLink(link);
       setInviteEmail(email.trim());
       toast({ title: 'Invitation sent!', description: 'Share the QR code or link below with your stylist.' });
       setEmail('');
       setTitle('');
     } catch (err) {
-      setError(err.message || 'Failed to invite user');
+      setError(err.response?.data?.error || err.message || 'Failed to invite user');
     } finally {
       setCreating(false);
     }

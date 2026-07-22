@@ -6,9 +6,10 @@
       "type": "string",
       "enum": [
         "admin",
+        "user",
         "stylist"
       ],
-      "default": "stylist"
+      "default": "user"
     },
     "title": {
       "type": "string"

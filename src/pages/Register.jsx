@@ -61,6 +61,21 @@ export default function Register() {
       const result = await base44.auth.verifyOtp({ email, otpCode });
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
+
+        // Apply salon_id and title from the invitation link
+        const urlParams = new URLSearchParams(window.location.search);
+        const salonId = urlParams.get("salon_id");
+        const titleParam = urlParams.get("title");
+        if (salonId || titleParam) {
+          try {
+            await base44.auth.updateMe({
+              ...(salonId && { salon_id: salonId }),
+              ...(titleParam && { title: titleParam }),
+            });
+          } catch (e) {
+            console.error("Failed to set salon/title:", e);
+          }
+        }
       }
       window.location.href = "/";
     } catch (err) {
