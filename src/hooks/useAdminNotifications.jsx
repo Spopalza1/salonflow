@@ -160,10 +160,7 @@ export function useAdminNotifications() {
         body: event.data.message,
         type: 'guest_message',
         salon_id: salonIdRef.current,
-      });
-      toastRef.current({
-        title: `New Message From ${event.data.guest_name}`,
-        description: event.data.message,
+        source_id: event.data.id,
       });
     });
 
@@ -183,10 +180,6 @@ export function useAdminNotifications() {
         body,
         type: isServiceUpdate ? 'service_update' : 'chat',
         salon_id: salonIdRef.current,
-      });
-      toastRef.current({
-        title,
-        description: body,
       });
     });
 

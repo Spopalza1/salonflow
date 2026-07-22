@@ -44,7 +44,14 @@ export default function NotificationsDropdown() {
   };
 
   const clearRead = async () => {
+    const readNotifs = notifications.filter(n => n.read);
+    const guestMsgSources = readNotifs
+      .filter(n => n.type === 'guest_message' && n.source_id)
+      .map(n => n.source_id);
     await base44.entities.Notification.deleteMany({ read: true });
+    if (guestMsgSources.length > 0) {
+      await base44.entities.GuestMessage.deleteMany({ id: { $in: guestMsgSources } });
+    }
     setNotifications(prev => prev.filter(n => !n.read));
   };
 

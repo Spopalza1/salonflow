@@ -11,7 +11,6 @@ import StylistManager from '@/components/StylistManager';
 import GuestMessagesPanel from '@/components/GuestMessagesPanel';
 import DailyReport from '@/components/DailyReport';
 import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail, BarChart3 } from 'lucide-react';
-import { useMessageNotifications } from '@/hooks/useMessageNotifications';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import AnimatedTabContent from '@/components/AnimatedTabContent';
 
@@ -37,7 +36,6 @@ export default function FrontDeskDashboard() {
     navigate(`?tab=${value}`);
   };
 
-  useMessageNotifications('admin', user);
   useAdminNotifications();
 
   return (
