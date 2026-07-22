@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Coffee, Utensils, Check, X } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', variant: 'destructive' },
@@ -55,9 +56,11 @@ export default function OrdersPanel() {
   };
 
   const statusOrder = { pending: 0, preparing: 1, served: 2, cancelled: 3 };
-  const sorted = [...orders].sort((a, b) =>
-    (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9) || new Date(b.created_date) - new Date(a.created_date)
-  );
+  const sorted = [...orders]
+    .filter(o => o.status !== 'served')
+    .sort((a, b) =>
+      (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9) || new Date(b.created_date) - new Date(a.created_date)
+    );
 
   if (loading) {
     return <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" /></div>;
@@ -86,8 +89,16 @@ export default function OrdersPanel() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <AnimatePresence>
           {sorted.map(order => (
-            <Card key={order.id} className={order.status === 'pending' ? 'border-destructive/50' : ''}>
+            <motion.div
+              key={order.id}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.4 } }}
+            >
+            <Card className={order.status === 'pending' ? 'border-destructive/50' : ''}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -116,13 +127,15 @@ export default function OrdersPanel() {
                       <Button size="sm" variant="ghost" onClick={() => updateStatus(order, 'cancelled')}><X className="w-3 h-3" /></Button>
                     </>
                   )}
-                  {(order.status === 'served' || order.status === 'cancelled') && (
+                  {order.status === 'cancelled' && (
                     <Badge variant="outline" className="ml-auto">{STATUS_CONFIG[order.status]?.label}</Badge>
                   )}
                 </div>
               </CardContent>
             </Card>
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
       )}
     </div>
