@@ -115,15 +115,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = (shouldRedirect = true) => {
-    setUser(null);
-    setIsAuthenticated(false);
-    
+    base44.auth.logout();
     if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      base44.auth.logout('https://salonflow.live/');
-    } else {
-      // Just remove the token without redirect
-      base44.auth.logout();
+      window.location.href = 'https://salonflow.live/';
     }
   };
 
