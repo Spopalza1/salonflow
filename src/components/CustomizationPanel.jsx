@@ -78,6 +78,22 @@ export default function CustomizationPanel() {
     setEditingImage({ file, aspectRatio: 16 / 9, target: 'menu_background_image' });
   };
 
+  const handleBackgroundVideoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      handleChange('menu_background_video', file_url);
+      toast({ title: 'Background video saved' });
+    } catch (err) {
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleEditorApply = async (blob) => {
     if (!editingImage) return;
     const file = new File([blob], 'edited.png', { type: 'image/png' });
@@ -227,6 +243,23 @@ export default function CustomizationPanel() {
               className="w-full"
             />
             <p className="text-xs text-muted-foreground">Higher = more solid background over the image. Lower = image shows through more.</p>
+          </div>
+          <div className="space-y-2">
+            <Label>Background Video (optional)</Label>
+            {form.menu_background_video ? (
+              <div className="relative inline-block w-full">
+                <video src={form.menu_background_video} className="h-28 w-full rounded-lg object-cover" muted loop playsInline />
+                <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-7 w-7" onClick={() => handleChange('menu_background_video', '')}>
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Input type="file" accept="video/*" onChange={handleBackgroundVideoUpload} disabled={uploading} />
+                {uploading && <span className="text-sm text-muted-foreground shrink-0">Uploading...</span>}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">If set, this video plays as the background instead of the image. Keep it short for faster loading.</p>
           </div>
         </CardContent>
       </Card>

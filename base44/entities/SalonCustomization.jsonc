@@ -18,6 +18,9 @@
     "menu_background_image": {
       "type": "string"
     },
+    "menu_background_video": {
+      "type": "string"
+    },
     "bg_overlay_opacity": {
       "type": "number",
       "default": 80

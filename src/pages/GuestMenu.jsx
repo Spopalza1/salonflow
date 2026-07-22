@@ -64,6 +64,7 @@ export default function GuestMenu() {
   const displayName = settings.salon_display_name || salonName;
   const logoUrl = settings.salon_logo_url;
   const bgImage = settings.menu_background_image;
+  const bgVideo = settings.menu_background_video;
   const logoSize = settings.logo_size || 32;
   const bgOverlayOpacity = settings.bg_overlay_opacity ?? 80;
 
@@ -166,7 +167,7 @@ export default function GuestMenu() {
   // Step 1: Name form
   if (!guestInfo) {
     return (
-      <GuestShell bgImage={bgImage} overlayOpacity={bgOverlayOpacity}>
+      <GuestShell bgImage={bgImage} bgVideo={bgVideo} overlayOpacity={bgOverlayOpacity}>
         <div className="min-h-screen flex items-center justify-center p-4">
           <Card className="max-w-sm w-full">
             <CardContent className="p-6">
@@ -196,7 +197,7 @@ export default function GuestMenu() {
   // Step 2: Choice screen
   if (view === 'choice') {
     return (
-      <GuestShell bgImage={bgImage} overlayOpacity={bgOverlayOpacity}>
+      <GuestShell bgImage={bgImage} bgVideo={bgVideo} overlayOpacity={bgOverlayOpacity}>
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="max-w-md w-full space-y-4">
             <div className="text-center mb-6">
@@ -235,7 +236,7 @@ export default function GuestMenu() {
   // Step 3a: Message form
   if (view === 'message') {
     return (
-      <GuestShell bgImage={bgImage} overlayOpacity={bgOverlayOpacity}>
+      <GuestShell bgImage={bgImage} bgVideo={bgVideo} overlayOpacity={bgOverlayOpacity}>
         <div>
           <header className="bg-background/90 backdrop-blur-sm border-b sticky top-0 z-10 safe-area-top">
             <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
@@ -300,7 +301,7 @@ export default function GuestMenu() {
 
   // Step 3b: Menu browser
   return (
-    <GuestShell bgImage={bgImage} overlayOpacity={bgOverlayOpacity}>
+    <GuestShell bgImage={bgImage} bgVideo={bgVideo} overlayOpacity={bgOverlayOpacity}>
       <div>
         <header className="bg-background/90 backdrop-blur-sm border-b sticky top-0 z-10 safe-area-top">
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">

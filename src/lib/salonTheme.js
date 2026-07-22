@@ -3,6 +3,7 @@ export const DEFAULTS = {
   salon_logo_url: '',
   logo_size: 32,
   menu_background_image: '',
+  menu_background_video: '',
   bg_overlay_opacity: 80,
   primary_color: '#000000',
   secondary_color: '#000000',
