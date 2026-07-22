@@ -5,6 +5,15 @@
     "name": {
       "type": "string"
     },
+    "input_type": {
+      "type": "string",
+      "enum": [
+        "options",
+        "number",
+        "yesno"
+      ],
+      "default": "options"
+    },
     "options": {
       "type": "array",
       "items": {
@@ -26,6 +35,40 @@
     "allow_multiple": {
       "type": "boolean",
       "default": false
+    },
+    "number_unit": {
+      "type": "string"
+    },
+    "number_min": {
+      "type": "number",
+      "default": 0
+    },
+    "number_max": {
+      "type": "number"
+    },
+    "number_step": {
+      "type": "number",
+      "default": 1
+    },
+    "number_price_per_unit": {
+      "type": "number",
+      "default": 0
+    },
+    "yes_label": {
+      "type": "string",
+      "default": "Yes"
+    },
+    "no_label": {
+      "type": "string",
+      "default": "No"
+    },
+    "yes_price": {
+      "type": "number",
+      "default": 0
+    },
+    "no_price": {
+      "type": "number",
+      "default": 0
     },
     "menu_item_id": {
       "type": "string"
