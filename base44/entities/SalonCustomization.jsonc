@@ -11,6 +11,9 @@
     "salon_logo_url": {
       "type": "string"
     },
+    "menu_background_image": {
+      "type": "string"
+    },
     "primary_color": {
       "type": "string",
       "default": "#000000"
@@ -49,9 +52,7 @@
   ],
   "rls": {
     "create": true,
-    "read": {
-      "data.salon_id": "{{user.data.salon_id}}"
-    },
+    "read": true,
     "update": {
       "data.salon_id": "{{user.data.salon_id}}"
     },
