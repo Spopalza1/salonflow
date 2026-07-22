@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Image as UIImage } from '@/components/ui/image';
 
 const REVEAL_WIDTH = 80;
 const HOLD_DURATION = 500;
@@ -127,13 +128,20 @@ export default function ConversationItem({ stylist, isSelected, hasUnread, onSel
         onPointerMove={() => { movedRef.current = true; cancelHold(); }}
         onClick={handleClick}
         style={{ transform: `translateX(${offset}px)`, transition: dragging.current ? 'none' : 'transform 0.2s ease' }}
-        className={`relative w-full text-left px-3 py-2 rounded-lg flex items-center justify-between cursor-pointer select-none ${
+        className={`relative w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 cursor-pointer select-none ${
           isSelected ? 'bg-primary text-primary-foreground' : 'bg-transparent hover:bg-muted'
         }`}
       >
-        <span className="text-sm font-medium truncate">{name}</span>
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+          {stylist.profile_picture_url ? (
+            <UIImage src={stylist.profile_picture_url} fittingType="fill" className="w-8 h-8" />
+          ) : (
+            <User className="w-4 h-4 text-primary" />
+          )}
+        </div>
+        <span className="text-sm font-medium truncate flex-1">{name}</span>
         {hasUnread && !isSelected && (
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 ml-2" />
+          <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
         )}
       </div>
     </div>
