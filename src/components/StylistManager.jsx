@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { UserPlus, Users, Mail, Briefcase, Trash2, Copy, Link as LinkIcon, MessageSquare, Pencil } from 'lucide-react';
+import { Image as UIImage } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/AuthContext';
 import StylistMessageDialog from '@/components/StylistMessageDialog';
@@ -153,8 +154,12 @@ export default function StylistManager() {
             <Card key={s.id}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                    {s.profile_picture_url ? (
+                      <UIImage src={s.profile_picture_url} fittingType="fill" className="w-10 h-10" />
+                    ) : (
+                      <Users className="w-5 h-5 text-primary" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{s.display_name || s.full_name || s.email}</div>
