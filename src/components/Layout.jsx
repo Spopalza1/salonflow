@@ -5,18 +5,25 @@ import { Badge } from '@/components/ui/badge';
 import { Scissors, LogOut, QrCode, ClipboardList, User } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
+import { SalonCustomizationProvider, useSalonCustomization } from '@/lib/salonCustomizationContext';
+import { Image as UIImage } from '@/components/ui/image';
 
-export default function Layout() {
+function LayoutContent() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const { settings } = useSalonCustomization();
 
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="border-b bg-background sticky top-0 z-20 safe-area-top">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2">
-            <Scissors className="w-5 h-5 text-primary" />
-            <span className="font-heading font-semibold text-lg">Salonflow</span>
+            {settings?.salon_logo_url ? (
+              <UIImage src={settings.salon_logo_url} alt="logo" className="h-8 w-auto" fittingType="fit" />
+            ) : (
+              <Scissors className="w-5 h-5 text-primary" />
+            )}
+            <span className="font-heading font-semibold text-lg">{settings?.salon_display_name || 'Salonflow'}</span>
             {user?.role === 'admin' && (
               <Link to="/front-desk" className="ml-2">
                 <Button variant={location.pathname === '/front-desk' ? 'default' : 'ghost'} size="sm">
@@ -55,5 +62,13 @@ export default function Layout() {
         <Outlet />
       </main>
     </div>
+  );
+}
+
+export default function Layout() {
+  return (
+    <SalonCustomizationProvider>
+      <LayoutContent />
+    </SalonCustomizationProvider>
   );
 }

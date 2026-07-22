@@ -10,7 +10,8 @@ import QRDisplay from '@/components/QRDisplay';
 import StylistManager from '@/components/StylistManager';
 import GuestMessagesPanel from '@/components/GuestMessagesPanel';
 import DailyReport from '@/components/DailyReport';
-import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail, BarChart3 } from 'lucide-react';
+import CustomizationPanel from '@/components/CustomizationPanel';
+import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail, BarChart3, Settings } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import AnimatedTabContent from '@/components/AnimatedTabContent';
 
@@ -50,6 +51,7 @@ export default function FrontDeskDashboard() {
           <TabsTrigger value="messages" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Mail className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Messages</span></TabsTrigger>
           <TabsTrigger value="qr" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><QrCode className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">QR Code</span></TabsTrigger>
           <TabsTrigger value="report" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><BarChart3 className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Daily Report</span></TabsTrigger>
+          <TabsTrigger value="customize" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Settings className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Customize</span></TabsTrigger>
         </TabsList>
         <AnimatedTabContent value="orders" className="mt-6"><OrdersPanel /></AnimatedTabContent>
         <AnimatedTabContent value="menu" className="mt-6"><MenuManager /></AnimatedTabContent>
@@ -59,6 +61,7 @@ export default function FrontDeskDashboard() {
         <AnimatedTabContent value="messages" className="mt-6"><GuestMessagesPanel /></AnimatedTabContent>
         <AnimatedTabContent value="qr" className="mt-6"><QRDisplay /></AnimatedTabContent>
         <AnimatedTabContent value="report" className="mt-6"><DailyReport /></AnimatedTabContent>
+        <AnimatedTabContent value="customize" className="mt-6"><CustomizationPanel /></AnimatedTabContent>
       </Tabs>
     </div>
   );

@@ -1,0 +1,60 @@
+{
+  "name": "SalonCustomization",
+  "type": "object",
+  "properties": {
+    "salon_id": {
+      "type": "string"
+    },
+    "salon_display_name": {
+      "type": "string"
+    },
+    "salon_logo_url": {
+      "type": "string"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#3b82f6"
+    },
+    "secondary_color": {
+      "type": "string",
+      "default": "#facc15"
+    },
+    "accent_color": {
+      "type": "string",
+      "default": "#22c55e"
+    },
+    "card_background_color": {
+      "type": "string",
+      "default": "#ffffff"
+    },
+    "card_border_color": {
+      "type": "string",
+      "default": "#d1d5db"
+    },
+    "card_radius": {
+      "type": "number",
+      "default": 12
+    },
+    "font_heading": {
+      "type": "string",
+      "default": "Inter"
+    },
+    "font_body": {
+      "type": "string",
+      "default": "Inter"
+    }
+  },
+  "required": [
+    "salon_id"
+  ],
+  "rls": {
+    "create": true,
+    "read": true,
+    "update": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "delete": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    }
+  }
+}
