@@ -19,6 +19,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import VerifyAccount from '@/pages/VerifyAccount';
 import SalonSignUp from '@/pages/SalonSignUp';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,7 +49,15 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
+    <AnimatePresence mode="wait">
+    <motion.div
+      key={location.pathname}
+      initial={{ opacity: 0, x: 15 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -15 }}
+      transition={{ duration: 0.15 }}
+    >
+    <Routes location={location}>
       <Route path="/guest" element={<GuestMenu />} />
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
@@ -69,6 +78,8 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </motion.div>
+    </AnimatePresence>
   );
 };
 

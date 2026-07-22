@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import PullToRefresh from '@/components/PullToRefresh';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,14 +14,14 @@ export default function GuestMessagesPanel() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const loadMessages = useCallback(async () => {
+    const data = await base44.entities.GuestMessage.filter({ salon_id: user.salon_id }, '-created_date', 200);
+    setMessages(data);
+  }, [user?.salon_id]);
+
   useEffect(() => {
     if (!user?.salon_id) return;
-    const load = async () => {
-      const data = await base44.entities.GuestMessage.filter({ salon_id: user.salon_id }, '-created_date', 200);
-      setMessages(data);
-      setLoading(false);
-    };
-    load();
+    loadMessages().then(() => setLoading(false));
     const unsubscribe = base44.entities.GuestMessage.subscribe((event) => {
       if (event.data.salon_id && event.data.salon_id !== user.salon_id) return;
       if (event.type === 'create') {
@@ -32,7 +33,7 @@ export default function GuestMessagesPanel() {
       }
     });
     return unsubscribe;
-  }, [user?.salon_id]);
+  }, [loadMessages, user?.salon_id]);
 
   const handlePrint = (msg) => {
     const printWin = window.open('', '_blank');
@@ -75,6 +76,7 @@ export default function GuestMessagesPanel() {
   const unprintedCount = messages.filter(m => !m.printed).length;
 
   return (
+    <PullToRefresh onRefresh={loadMessages}>
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <h2 className="font-heading text-xl font-semibold">Client Messages</h2>
@@ -115,5 +117,6 @@ export default function GuestMessagesPanel() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

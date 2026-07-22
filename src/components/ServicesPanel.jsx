@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MobileSelect } from '@/components/ui/mobile-select';
 import { Plus, Clock, CheckCircle, StickyNote, Gift } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -246,14 +246,15 @@ export default function ServicesPanel({ mode, user }) {
           <form onSubmit={handleAddNote} className="space-y-4">
             <div className="space-y-2">
               <Label>Note Type</Label>
-              <Select value={noteForm.note_type} onValueChange={v => setNoteForm({ ...noteForm, note_type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="note">General Note</SelectItem>
-                  <SelectItem value="extension">Service Extended</SelectItem>
-                  <SelectItem value="extra_service">Extra Service Added</SelectItem>
-                </SelectContent>
-              </Select>
+              <MobileSelect
+                value={noteForm.note_type}
+                onValueChange={v => setNoteForm({ ...noteForm, note_type: v })}
+                options={[
+                  { value: 'note', label: 'General Note' },
+                  { value: 'extension', label: 'Service Extended' },
+                  { value: 'extra_service', label: 'Extra Service Added' },
+                ]}
+              />
             </div>
             <div className="space-y-2">
               <Label>Details</Label>

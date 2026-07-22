@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import PullToRefresh from '@/components/PullToRefresh';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,13 +24,13 @@ export default function OrdersPanel() {
     const saved = localStorage.getItem('salonflow_show_chair_table');
     return saved !== null ? saved === 'true' : true;
   });
+  const loadOrders = useCallback(async () => {
+    const data = await base44.entities.Order.filter({ salon_id: user?.salon_id }, '-created_date', 100);
+    setOrders(data);
+  }, [user?.salon_id]);
+
   useEffect(() => {
-    const load = async () => {
-      const data = await base44.entities.Order.filter({ salon_id: user?.salon_id }, '-created_date', 100);
-      setOrders(data);
-      setLoading(false);
-    };
-    load();
+    loadOrders().then(() => setLoading(false));
 
     const unsubscribe = base44.entities.Order.subscribe((event) => {
       if (event.type === 'create') {
@@ -42,7 +43,7 @@ export default function OrdersPanel() {
       }
     });
     return unsubscribe;
-  }, []);
+  }, [loadOrders]);
 
   const updateStatus = async (order, status) => {
     try {
@@ -64,6 +65,7 @@ export default function OrdersPanel() {
   const pendingCount = orders.filter(o => o.status === 'pending').length;
 
   return (
+    <PullToRefresh onRefresh={loadOrders}>
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
@@ -123,5 +125,6 @@ export default function OrdersPanel() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

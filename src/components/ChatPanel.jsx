@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, User, Search, Trash2 } from 'lucide-react';
+import { MessageSquare, User, Search, Trash2, ArrowLeft } from 'lucide-react';
 import MessageBubble from '@/components/chat/MessageBubble';
 import ChatInput from '@/components/chat/ChatInput';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ export default function ChatPanel({ mode, user }) {
   const [messages, setMessages] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState(null);
+  const [mobileChatActive, setMobileChatActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false);
@@ -169,8 +170,8 @@ export default function ChatPanel({ mode, user }) {
           <p>No stylists registered yet. Invite stylists from your dashboard.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-4 h-[calc(100vh-240px)]">
-          <Card className="overflow-hidden flex flex-col">
+        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-4 h-[calc(100vh-200px)] md:h-[calc(100vh-240px)]">
+          <Card className={`overflow-hidden flex-col ${mobileChatActive ? 'hidden' : 'flex'} md:flex`}>
             <div className="p-2 border-b">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -184,7 +185,7 @@ export default function ChatPanel({ mode, user }) {
               {filteredStylists.map(s => (
                 <button
                   key={s.id}
-                  onClick={() => setSelectedPartnerId(s.id)}
+                  onClick={() => { setSelectedPartnerId(s.id); setMobileChatActive(true); }}
                   className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors ${selectedPartnerId === s.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
                 >
                   <span className="text-sm font-medium truncate">{s.full_name || s.email}</span>
@@ -195,11 +196,14 @@ export default function ChatPanel({ mode, user }) {
               ))}
             </div>
           </Card>
-          <Card className="flex flex-col overflow-hidden">
+          <Card className={`flex-col overflow-hidden ${mobileChatActive ? 'flex' : 'hidden'} md:flex`}>
             {selectedPartnerId ? (
               <>
-                <div className="flex items-center justify-between px-4 py-2 border-b">
-                  <span className="text-sm font-medium truncate">
+                <div className="flex items-center gap-2 px-4 py-2 border-b">
+                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 shrink-0" onClick={() => setMobileChatActive(false)}>
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-sm font-medium truncate flex-1">
                     {stylists.find(s => s.id === selectedPartnerId)?.full_name || stylists.find(s => s.id === selectedPartnerId)?.email || 'Stylist'}
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => setShowDeleteConvConfirm(true)} className="text-destructive hover:text-destructive h-8">

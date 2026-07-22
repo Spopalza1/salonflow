@@ -13,6 +13,7 @@ import DailyReport from '@/components/DailyReport';
 import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail, BarChart3 } from 'lucide-react';
 import { useMessageNotifications } from '@/hooks/useMessageNotifications';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import AnimatedTabContent from '@/components/AnimatedTabContent';
 
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
@@ -40,28 +41,26 @@ export default function FrontDeskDashboard() {
   useAdminNotifications();
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6 pb-20 md:pb-6">
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="orders"><ClipboardList className="w-4 h-4 mr-2" />Orders</TabsTrigger>
-          <TabsTrigger value="menu"><Coffee className="w-4 h-4 mr-2" />Menu</TabsTrigger>
-          <TabsTrigger value="chat">
-            <MessageSquare className="w-4 h-4 mr-2" />Chat
-          </TabsTrigger>
-          <TabsTrigger value="services"><Scissors className="w-4 h-4 mr-2" />Services</TabsTrigger>
-          <TabsTrigger value="stylists"><Users className="w-4 h-4 mr-2" />Stylists</TabsTrigger>
-          <TabsTrigger value="messages"><Mail className="w-4 h-4 mr-2" />Messages</TabsTrigger>
-          <TabsTrigger value="qr"><QrCode className="w-4 h-4 mr-2" />QR Code</TabsTrigger>
-          <TabsTrigger value="report"><BarChart3 className="w-4 h-4 mr-2" />Daily Report</TabsTrigger>
+        <TabsList className="fixed bottom-0 left-0 right-0 z-30 h-16 bg-background border-t safe-area-bottom justify-around rounded-none flex w-full md:relative md:flex-wrap md:h-auto md:border-0 md:justify-start md:rounded-lg md:bg-muted md:w-auto">
+          <TabsTrigger value="orders" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><ClipboardList className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Orders</span></TabsTrigger>
+          <TabsTrigger value="menu" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Coffee className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Menu</span></TabsTrigger>
+          <TabsTrigger value="chat" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><MessageSquare className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Chat</span></TabsTrigger>
+          <TabsTrigger value="services" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Scissors className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Services</span></TabsTrigger>
+          <TabsTrigger value="stylists" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Users className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Stylists</span></TabsTrigger>
+          <TabsTrigger value="messages" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Mail className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Messages</span></TabsTrigger>
+          <TabsTrigger value="qr" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><QrCode className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">QR Code</span></TabsTrigger>
+          <TabsTrigger value="report" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><BarChart3 className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Daily Report</span></TabsTrigger>
         </TabsList>
-        <TabsContent value="orders" className="mt-6"><OrdersPanel /></TabsContent>
-        <TabsContent value="menu" className="mt-6"><MenuManager /></TabsContent>
-        <TabsContent value="chat" className="mt-6"><ChatPanel mode="admin" user={user} /></TabsContent>
-        <TabsContent value="services" className="mt-6"><ServicesPanel mode="admin" user={user} /></TabsContent>
-        <TabsContent value="stylists" className="mt-6"><StylistManager /></TabsContent>
-        <TabsContent value="messages" className="mt-6"><GuestMessagesPanel /></TabsContent>
-        <TabsContent value="qr" className="mt-6"><QRDisplay /></TabsContent>
-        <TabsContent value="report" className="mt-6"><DailyReport /></TabsContent>
+        <AnimatedTabContent value="orders" className="mt-6"><OrdersPanel /></AnimatedTabContent>
+        <AnimatedTabContent value="menu" className="mt-6"><MenuManager /></AnimatedTabContent>
+        <AnimatedTabContent value="chat" className="mt-6"><ChatPanel mode="admin" user={user} /></AnimatedTabContent>
+        <AnimatedTabContent value="services" className="mt-6"><ServicesPanel mode="admin" user={user} /></AnimatedTabContent>
+        <AnimatedTabContent value="stylists" className="mt-6"><StylistManager /></AnimatedTabContent>
+        <AnimatedTabContent value="messages" className="mt-6"><GuestMessagesPanel /></AnimatedTabContent>
+        <AnimatedTabContent value="qr" className="mt-6"><QRDisplay /></AnimatedTabContent>
+        <AnimatedTabContent value="report" className="mt-6"><DailyReport /></AnimatedTabContent>
       </Tabs>
     </div>
   );
