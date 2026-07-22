@@ -42,7 +42,7 @@ export default function StylistView() {
   const displayName = user?.display_name || user?.full_name || user?.email || 'Stylist';
 
   return (
-    <div className="p-4 md:p-6 pb-20 md:pb-6">
+    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
@@ -55,7 +55,7 @@ export default function StylistView() {
           <span className="hidden sm:inline">Edit Profile</span>
         </Button>
       </div>
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
         <TabsList className="fixed bottom-0 left-0 right-0 z-30 h-16 bg-background border-t safe-area-bottom justify-around rounded-none flex w-full md:relative md:flex-wrap md:h-auto md:border-0 md:justify-start md:rounded-lg md:bg-muted md:w-auto">
           <TabsTrigger value="coffee" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Coffee className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Order</span></TabsTrigger>
           <TabsTrigger value="chat" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none relative">
@@ -68,7 +68,7 @@ export default function StylistView() {
           <TabsTrigger value="service-update" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><BellRing className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Service Update</span></TabsTrigger>
         </TabsList>
         <AnimatedTabContent value="coffee" className="mt-6"><MenuBrowser mode="stylist" user={user} salonId={user?.salon_id} /></AnimatedTabContent>
-        <AnimatedTabContent value="chat" className="mt-6"><ChatPanel mode="stylist" user={user} /></AnimatedTabContent>
+        <AnimatedTabContent value="chat" className="mt-6 flex-1 min-h-0 flex flex-col"><ChatPanel mode="stylist" user={user} /></AnimatedTabContent>
         <AnimatedTabContent value="services" className="mt-6"><ServicesPanel mode="stylist" user={user} /></AnimatedTabContent>
         <AnimatedTabContent value="service-update" className="mt-6"><ServiceUpdateForm user={user} /></AnimatedTabContent>
       </Tabs>

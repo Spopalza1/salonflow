@@ -12,6 +12,7 @@ export default function AnimatedTabContent({ value, className, children }) {
   return (
     <TabsContent value={value} className={className}>
       <motion.div
+        className="flex-1 min-h-0 flex flex-col"
         initial={{ opacity: 0, x: 12 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}

@@ -20,7 +20,7 @@ function LayoutContent() {
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-muted/30">
       <header className="border-b bg-background sticky top-0 z-20 safe-area-top">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ function LayoutContent() {
           </div>
         </div>
       </header>
-      <main>
+      <main className="flex-1 min-h-0 flex flex-col">
         <Outlet />
       </main>
       <AdminProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
