@@ -77,7 +77,7 @@ export default function NotificationsDropdown() {
     service_update: 'services',
   };
 
-  const handleNotificationClick = (n) => {
+  const handleNotificationClick = async (n) => {
     if (targetRole === 'admin') {
       const tab = ADMIN_TAB_MAP[n.type];
       if (tab) navigate(`/front-desk?tab=${tab}`);
@@ -85,7 +85,9 @@ export default function NotificationsDropdown() {
       navigate(`/stylist?tab=chat`);
     }
     if (!n.read) {
-      base44.entities.Notification.update(n.id, { read: true });
+      try {
+        await base44.entities.Notification.update(n.id, { read: true });
+      } catch (e) { /* already deleted */ }
     }
     setOpen(false);
   };
