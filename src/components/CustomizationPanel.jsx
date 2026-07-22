@@ -35,7 +35,7 @@ function ColorField({ label, value, onChange }) {
 }
 
 export default function CustomizationPanel() {
-  const { settings, updateSettings } = useSalonCustomization();
+  const { settings, updateSettings, loading } = useSalonCustomization();
   const { user } = useAuth();
   const { toast } = useToast();
   const [form, setForm] = useState(DEFAULTS);
@@ -57,9 +57,9 @@ export default function CustomizationPanel() {
   useEffect(() => {
     if (!initializedRef.current) {
       setForm({ ...DEFAULTS, ...settings });
-      if (settings.id) initializedRef.current = true;
+      if (!loading) initializedRef.current = true;
     }
-  }, [settings]);
+  }, [settings, loading]);
 
   useEffect(() => {
     applyCustomization(form);
