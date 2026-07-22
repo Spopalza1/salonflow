@@ -43,8 +43,8 @@ export default function StylistManager() {
     if (!user?.salon_id) return;
     const load = async () => {
       try {
-        const all = await base44.entities.User.filter({ salon_id: user.salon_id });
-        setStylists(all.filter(u => u.role !== 'admin'));
+        const res = await base44.functions.invoke('getSalonStylists', {});
+        setStylists(res.data.stylists || []);
       } catch (err) {
         toast({ title: 'Failed to load stylists', description: err.message, variant: 'destructive' });
       } finally {
@@ -52,22 +52,9 @@ export default function StylistManager() {
       }
     };
     load();
-    const unsubscribe = base44.entities.User.subscribe((event) => {
-      if (event.type === 'create') {
-        if (event.data.role !== 'admin' && event.data.salon_id === user.salon_id) {
-          setStylists(prev => [...prev, event.data]);
-        }
-      } else if (event.type === 'update') {
-        if (event.data.role === 'admin' || event.data.salon_id !== user.salon_id) {
-          setStylists(prev => prev.filter(s => s.id !== event.data.id));
-        } else {
-          setStylists(prev => prev.map(s => s.id === event.data.id ? event.data : s));
-        }
-      } else if (event.type === 'delete') {
-        setStylists(prev => prev.filter(s => s.id !== event.id));
-      }
-    });
-    return unsubscribe;
+    // No User entity subscription — frontend User queries are restricted.
+    // Admin can refresh to see newly registered stylists.
+    return () => {};
   }, [user?.salon_id]);
 
   const handleCreate = async (e) => {

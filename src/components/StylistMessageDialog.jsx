@@ -23,6 +23,7 @@ export default function StylistMessageDialog({ stylist, user, open, onOpenChange
         thread_partner_id: stylist.id,
         thread_partner_name: stylist.full_name || stylist.email,
         body: message.trim(),
+        salon_id: user.salon_id,
       });
       toast({ title: 'Message sent', description: `Sent to ${stylist.full_name || stylist.email}` });
       setMessage('');
