@@ -23,6 +23,9 @@
     "chair_number": {
       "type": "string"
     },
+    "profile_picture_url": {
+      "type": "string"
+    },
     "salon_id": {
       "type": "string"
     }

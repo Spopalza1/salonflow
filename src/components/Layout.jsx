@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Scissors, LogOut, ClipboardList, User } from 'lucide-react';
+import { Scissors, LogOut, ClipboardList, User, UserCircle } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
+import AdminProfileDialog from '@/components/AdminProfileDialog';
 import { SalonCustomizationProvider, useSalonCustomization } from '@/lib/salonCustomizationContext';
 import { Image as UIImage } from '@/components/ui/image';
 
@@ -12,6 +14,7 @@ function LayoutContent() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const { settings } = useSalonCustomization();
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -25,12 +28,23 @@ function LayoutContent() {
             )}
             <span className="font-heading font-semibold text-lg">{settings?.salon_display_name || 'Salonflow'}</span>
             {user?.role === 'admin' && (
-              <Link to="/front-desk" className="ml-2">
-                <Button variant={location.pathname === '/front-desk' ? 'default' : 'ghost'} size="sm">
-                  <ClipboardList className="w-4 h-4 mr-1" />
-                  <span className="hidden sm:inline">Front Desk</span>
+              <>
+                <Link to="/front-desk" className="ml-2">
+                  <Button variant={location.pathname === '/front-desk' ? 'default' : 'ghost'} size="sm">
+                    <ClipboardList className="w-4 h-4 mr-1" />
+                    <span className="hidden sm:inline">Front Desk</span>
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-1"
+                  onClick={() => setProfileOpen(true)}
+                >
+                  <UserCircle className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Profile</span>
                 </Button>
-              </Link>
+              </>
             )}
             <Link to="/stylist" className="ml-1">
               <Button variant={location.pathname === '/stylist' ? 'default' : 'ghost'} size="sm">
@@ -55,6 +69,7 @@ function LayoutContent() {
       <main>
         <Outlet />
       </main>
+      <AdminProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </div>
   );
 }
