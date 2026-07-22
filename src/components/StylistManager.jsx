@@ -44,7 +44,7 @@ export default function StylistManager() {
     const load = async () => {
       try {
         const res = await base44.functions.invoke('getSalonStylists', {});
-        setStylists(res.stylists || []);
+        setStylists(res.data?.stylists || []);
       } catch (err) {
         toast({ title: 'Failed to load stylists', description: err.message, variant: 'destructive' });
       } finally {

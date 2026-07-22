@@ -7,8 +7,11 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (!user.salon_id) return Response.json({ error: 'No salon associated' }, { status: 403 });
 
+    console.log('getSalonStylists: user=', user.email, 'salon_id=', user.salon_id);
+
     // Service role bypasses User entity frontend restrictions
     const all = await base44.asServiceRole.entities.User.filter({ salon_id: user.salon_id });
+    console.log('getSalonStylists: found', all.length, 'total users with matching salon_id');
 
     // Return non-admin users (stylists) with safe fields only
     const stylists = all

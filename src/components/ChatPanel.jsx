@@ -26,7 +26,7 @@ export default function ChatPanel({ mode, user }) {
     const loadStylists = async () => {
       try {
         const res = await base44.functions.invoke('getSalonStylists', {});
-        const nonAdmins = res.stylists || [];
+        const nonAdmins = res.data?.stylists || [];
         setStylists(nonAdmins);
         if (nonAdmins.length > 0 && !selectedPartnerId) setSelectedPartnerId(nonAdmins[0].id);
       } catch (err) {
