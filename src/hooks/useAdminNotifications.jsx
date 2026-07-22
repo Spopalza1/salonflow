@@ -39,7 +39,7 @@ const orderNotificationMap = new Map(); // orderId -> notificationId
 const createdNotificationKeys = new Set();
 
 async function dedupCreateNotification(key, data) {
-  if (createdNotificationKeys.has(key)) return;
+  if (createdNotificationKeys.has(key)) return { isNew: false };
   createdNotificationKeys.add(key);
   try {
     if (data.source_id) {
@@ -48,9 +48,10 @@ async function dedupCreateNotification(key, data) {
         '-created_date',
         1
       );
-      if (existing.length > 0) return existing[0];
+      if (existing.length > 0) return { notification: existing[0], isNew: false };
     }
-    return await base44.entities.Notification.create(data);
+    const notification = await base44.entities.Notification.create(data);
+    return { notification, isNew: true };
   } catch (e) {
     createdNotificationKeys.delete(key);
     throw e;
@@ -96,8 +97,7 @@ export function useAdminNotifications() {
         knownOrderIds.add(event.data.id);
         if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
         const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
-        notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
-        const notif = await dedupCreateNotification(`order:${event.data.id}`, {
+        const notifResult = await dedupCreateNotification(`order:${event.data.id}`, {
           title: 'New Order Received',
           body: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
           type: 'order',
@@ -105,11 +105,14 @@ export function useAdminNotifications() {
           source_id: event.data.id,
           target_role: 'admin',
         });
-        orderNotificationMap.set(event.data.id, notif.id);
-        toastRef.current({
-          title: 'New Order Received',
-          description: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
-        });
+        if (notifResult.isNew) {
+          if (notifResult.notification) orderNotificationMap.set(event.data.id, notifResult.notification.id);
+          notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
+          toastRef.current({
+            title: 'New Order Received',
+            description: `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`,
+          });
+        }
       } else if (event.type === 'update' && event.data.status === 'served') {
         const notifId = orderNotificationMap.get(event.data.id);
         if (notifId) {
@@ -126,7 +129,6 @@ export function useAdminNotifications() {
         if (knownServiceIds.has(event.data.id)) return;
         knownServiceIds.add(event.data.id);
         if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
-        notify('New Service Started', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
         dedupCreateNotification(`service:${event.data.id}`, {
           title: 'New Service Started',
           body: `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`,
@@ -134,11 +136,12 @@ export function useAdminNotifications() {
           salon_id: salonIdRef.current,
           source_id: event.data.id,
           target_role: 'admin',
+        }).then(r => {
+          if (r.isNew) notify('New Service Started', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
         });
       } else if (event.type === 'update') {
         if (event.data.status === 'completed' && !completedServiceIds.has(event.data.id)) {
           completedServiceIds.add(event.data.id);
-          notify('Service Completed', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
           dedupCreateNotification(`service_completed:${event.data.id}`, {
             title: 'Service Completed',
             body: `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`,
@@ -146,6 +149,8 @@ export function useAdminNotifications() {
             salon_id: salonIdRef.current,
             source_id: event.data.id,
             target_role: 'admin',
+          }).then(r => {
+            if (r.isNew) notify('Service Completed', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
           });
         }
       }
@@ -156,7 +161,6 @@ export function useAdminNotifications() {
       if (knownNoteIds.has(event.data.id)) return;
       knownNoteIds.add(event.data.id);
       if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
-      notify(`Service Update From ${event.data.author_name}`, event.data.content);
       dedupCreateNotification(`note:${event.data.id}`, {
         title: `Service Update From ${event.data.author_name}`,
         body: event.data.content,
@@ -164,6 +168,8 @@ export function useAdminNotifications() {
         salon_id: salonIdRef.current,
         source_id: event.data.id,
         target_role: 'admin',
+      }).then(r => {
+        if (r.isNew) notify(`Service Update From ${event.data.author_name}`, event.data.content);
       });
     });
 
@@ -172,7 +178,6 @@ export function useAdminNotifications() {
       if (knownGuestMessageIds.has(event.data.id)) return;
       knownGuestMessageIds.add(event.data.id);
       if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
-      notify(`New Message From ${event.data.guest_name}`, event.data.message);
       dedupCreateNotification(`guest:${event.data.id}`, {
         title: `New Message From ${event.data.guest_name}`,
         body: event.data.message,
@@ -180,6 +185,8 @@ export function useAdminNotifications() {
         salon_id: salonIdRef.current,
         source_id: event.data.id,
         target_role: 'admin',
+      }).then(r => {
+        if (r.isNew) notify(`New Message From ${event.data.guest_name}`, event.data.message);
       });
     });
 
@@ -194,7 +201,6 @@ export function useAdminNotifications() {
         ? `Service Update From ${event.data.sender_name}`
         : `New Chat From ${event.data.sender_name}`;
       const body = event.data.body || (event.data.media_type ? `Sent a ${event.data.media_type}` : '');
-      notify(title, body);
       dedupCreateNotification(`message:${event.data.id}`, {
         title,
         body,
@@ -202,6 +208,8 @@ export function useAdminNotifications() {
         salon_id: salonIdRef.current,
         source_id: event.data.id,
         target_role: 'admin',
+      }).then(r => {
+        if (r.isNew) notify(title, body);
       });
     });
 

@@ -32,12 +32,15 @@ export default function OrdersPanel() {
   }, [user?.salon_id]);
 
   useEffect(() => {
-    loadOrders().then(() => setLoading(false));
+    loadOrders().then(() => setLoading(false)).catch(() => setLoading(false));
 
     const unsubscribe = base44.entities.Order.subscribe((event) => {
       if (event.type === 'create') {
         if (!user?.salon_id || !event.data.salon_id || event.data.salon_id !== user.salon_id) return;
-        setOrders(prev => [event.data, ...prev]);
+        setOrders(prev => {
+          if (prev.some(o => o.id === event.data.id)) return prev;
+          return [event.data, ...prev];
+        });
       } else if (event.type === 'update') {
         setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));
       } else if (event.type === 'delete') {
@@ -48,9 +51,12 @@ export default function OrdersPanel() {
   }, [loadOrders]);
 
   const updateStatus = async (order, status) => {
+    const prevStatus = order.status;
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status } : o));
     try {
       await base44.entities.Order.update(order.id, { status });
     } catch (err) {
+      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: prevStatus } : o));
       console.error(err);
     }
   };

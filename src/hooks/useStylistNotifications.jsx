@@ -32,7 +32,7 @@ const stylistKnownMessageIds = new Set();
 const stylistCreatedNotificationKeys = new Set();
 
 async function dedupCreateNotification(key, data) {
-  if (stylistCreatedNotificationKeys.has(key)) return;
+  if (stylistCreatedNotificationKeys.has(key)) return { isNew: false };
   stylistCreatedNotificationKeys.add(key);
   try {
     if (data.source_id) {
@@ -41,9 +41,10 @@ async function dedupCreateNotification(key, data) {
         '-created_date',
         1
       );
-      if (existing.length > 0) return existing[0];
+      if (existing.length > 0) return { notification: existing[0], isNew: false };
     }
-    return await base44.entities.Notification.create(data);
+    const notification = await base44.entities.Notification.create(data);
+    return { notification, isNew: true };
   } catch (e) {
     stylistCreatedNotificationKeys.delete(key);
     throw e;
@@ -86,15 +87,18 @@ export function useStylistNotifications(user) {
         : `New Message From ${event.data.sender_name}`;
       const body = event.data.body || (event.data.media_type ? `Sent a ${event.data.media_type}` : '');
 
-      notify(title, body);
       dedupCreateNotification(`stylist_message:${event.data.id}`, {
         title, body,
         type: isServiceUpdate ? 'service_update' : 'chat',
         salon_id: user.salon_id,
         source_id: event.data.id,
         target_role: 'stylist',
+      }).then(r => {
+        if (r.isNew) {
+          notify(title, body);
+          toastRef.current({ title, description: body });
+        }
       });
-      toastRef.current({ title, description: body });
     });
 
     return () => {
