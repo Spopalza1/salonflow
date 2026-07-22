@@ -41,7 +41,9 @@ export default function NotificationsDropdown() {
   const markAllRead = async () => {
     const unread = notifications.filter(n => !n.read);
     if (unread.length === 0) return;
-    await base44.entities.Notification.bulkUpdate(unread.map(n => ({ id: n.id, read: true })));
+    try {
+      await base44.entities.Notification.bulkUpdate(unread.map(n => ({ id: n.id, read: true })));
+    } catch (e) { /* notifications may have been deleted */ }
   };
 
   const clearRead = async () => {
@@ -71,7 +73,7 @@ export default function NotificationsDropdown() {
       navigate(`/front-desk?tab=${tab}`);
     }
     if (!n.read) {
-      base44.entities.Notification.update(n.id, { read: true });
+      base44.entities.Notification.update(n.id, { read: true }).catch(() => {});
     }
     setOpen(false);
   };
