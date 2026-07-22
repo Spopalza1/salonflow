@@ -168,7 +168,6 @@ export function useAdminNotifications() {
       if (knownGuestMessageIds.has(event.data.id)) return;
       knownGuestMessageIds.add(event.data.id);
       if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
-      if (event.data.sender_type === 'front_desk') return; // Don't notify for admin's own replies
       notify(`New Message From ${event.data.guest_name}`, event.data.message);
       dedupCreateNotification(`guest:${event.data.id}`, {
         title: `New Message From ${event.data.guest_name}`,
