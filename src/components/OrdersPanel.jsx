@@ -57,7 +57,7 @@ export default function OrdersPanel() {
 
   const statusOrder = { pending: 0, preparing: 1, served: 2, cancelled: 3 };
   const sorted = [...orders]
-    .filter(o => o.status !== 'served')
+    .filter(o => o.status !== 'served' && o.status !== 'cancelled')
     .sort((a, b) =>
       (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9) || new Date(b.created_date) - new Date(a.created_date)
     );
@@ -126,9 +126,6 @@ export default function OrdersPanel() {
                       <Button size="sm" onClick={() => updateStatus(order, 'served')}><Check className="w-3 h-3 mr-1" />Serve</Button>
                       <Button size="sm" variant="ghost" onClick={() => updateStatus(order, 'cancelled')}><X className="w-3 h-3" /></Button>
                     </>
-                  )}
-                  {order.status === 'cancelled' && (
-                    <Badge variant="outline" className="ml-auto">{STATUS_CONFIG[order.status]?.label}</Badge>
                   )}
                 </div>
               </CardContent>
