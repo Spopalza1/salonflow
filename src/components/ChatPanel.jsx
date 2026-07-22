@@ -25,8 +25,8 @@ export default function ChatPanel({ mode, user }) {
     if (mode !== 'admin' || !user?.salon_id) return;
     const loadStylists = async () => {
       try {
-        const res = await base44.functions.invoke('getSalonStylists', {});
-        const nonAdmins = res.data.stylists || [];
+        const all = await base44.entities.User.filter({ salon_id: user.salon_id });
+        const nonAdmins = all.filter(u => u.role !== 'admin');
         setStylists(nonAdmins);
         if (nonAdmins.length > 0 && !selectedPartnerId) setSelectedPartnerId(nonAdmins[0].id);
       } catch (err) {

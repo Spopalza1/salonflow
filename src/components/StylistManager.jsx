@@ -43,8 +43,9 @@ export default function StylistManager() {
     if (!user?.salon_id) return;
     const load = async () => {
       try {
-        const res = await base44.functions.invoke('getSalonStylists', {});
-        setStylists(res.data.stylists || []);
+        const all = await base44.entities.User.filter({ salon_id: user.salon_id });
+        const nonAdmins = all.filter(u => u.role !== 'admin');
+        setStylists(nonAdmins);
       } catch (err) {
         toast({ title: 'Failed to load stylists', description: err.message, variant: 'destructive' });
       } finally {
@@ -52,9 +53,6 @@ export default function StylistManager() {
       }
     };
     load();
-    // No User entity subscription — frontend User queries are restricted.
-    // Admin can refresh to see newly registered stylists.
-    return () => {};
   }, [user?.salon_id]);
 
   const handleCreate = async (e) => {
