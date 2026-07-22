@@ -29,6 +29,14 @@
     },
     "source_id": {
       "type": "string"
+    },
+    "target_role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "stylist"
+      ],
+      "default": "admin"
     }
   },
   "required": [

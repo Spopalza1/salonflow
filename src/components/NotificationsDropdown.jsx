@@ -12,17 +12,24 @@ export default function NotificationsDropdown() {
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
 
+  const targetRole = user?.role === 'admin' ? 'admin' : 'stylist';
+
   useEffect(() => {
-    if (!user) return;
+    if (!user?.salon_id) return;
     const load = async () => {
-      const data = await base44.entities.Notification.filter({ salon_id: user.salon_id }, '-created_date', 50);
+      const data = await base44.entities.Notification.filter(
+        { salon_id: user.salon_id, target_role: targetRole },
+        '-created_date',
+        50
+      );
       setNotifications(data);
     };
     load();
 
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
+      if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
+      if (event.data.target_role !== targetRole) return;
       if (event.type === 'create') {
-        if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
         setNotifications(prev => {
           if (prev.some(n => n.id === event.data.id)) return prev;
           return [event.data, ...prev].slice(0, 50);
@@ -34,7 +41,7 @@ export default function NotificationsDropdown() {
       }
     });
     return unsubscribe;
-  }, [user?.id]);
+  }, [user?.id, user?.salon_id, targetRole]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -44,7 +51,7 @@ export default function NotificationsDropdown() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     try {
       await base44.entities.Notification.updateMany(
-        { salon_id: user.salon_id, read: false },
+        { salon_id: user.salon_id, read: false, target_role: targetRole },
         { $set: { read: true } }
       );
     } catch (err) {
@@ -53,22 +60,15 @@ export default function NotificationsDropdown() {
   };
 
   const clearRead = async () => {
-    const readNotifs = notifications.filter(n => n.read);
-    const guestMsgSources = readNotifs
-      .filter(n => n.type === 'guest_message' && n.source_id)
-      .map(n => n.source_id);
     setNotifications(prev => prev.filter(n => !n.read));
     try {
-      await base44.entities.Notification.deleteMany({ read: true, salon_id: user.salon_id });
-      if (guestMsgSources.length > 0) {
-        await Promise.all(guestMsgSources.map(id => base44.entities.GuestMessage.delete(id).catch(() => {})));
-      }
+      await base44.entities.Notification.deleteMany({ read: true, salon_id: user.salon_id, target_role: targetRole });
     } catch (err) {
       // ignore - already removed from local state
     }
   };
 
-  const TAB_MAP = {
+  const ADMIN_TAB_MAP = {
     order: 'orders',
     service: 'services',
     service_note: 'services',
@@ -78,9 +78,11 @@ export default function NotificationsDropdown() {
   };
 
   const handleNotificationClick = (n) => {
-    const tab = TAB_MAP[n.type];
-    if (tab) {
-      navigate(`/front-desk?tab=${tab}`);
+    if (targetRole === 'admin') {
+      const tab = ADMIN_TAB_MAP[n.type];
+      if (tab) navigate(`/front-desk?tab=${tab}`);
+    } else {
+      navigate(`/stylist?tab=chat`);
     }
     if (!n.read) {
       base44.entities.Notification.update(n.id, { read: true });

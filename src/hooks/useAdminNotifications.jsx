@@ -44,7 +44,7 @@ async function dedupCreateNotification(key, data) {
   try {
     if (data.source_id) {
       const existing = await base44.entities.Notification.filter(
-        { source_id: data.source_id, type: data.type },
+        { source_id: data.source_id, type: data.type, target_role: data.target_role },
         '-created_date',
         1
       );
@@ -103,6 +103,7 @@ export function useAdminNotifications() {
           type: 'order',
           salon_id: salonIdRef.current,
           source_id: event.data.id,
+          target_role: 'admin',
         });
         orderNotificationMap.set(event.data.id, notif.id);
         toastRef.current({
@@ -132,6 +133,7 @@ export function useAdminNotifications() {
           type: 'service',
           salon_id: salonIdRef.current,
           source_id: event.data.id,
+          target_role: 'admin',
         });
       } else if (event.type === 'update') {
         if (event.data.status === 'completed' && !completedServiceIds.has(event.data.id)) {
@@ -143,6 +145,7 @@ export function useAdminNotifications() {
             type: 'service',
             salon_id: salonIdRef.current,
             source_id: event.data.id,
+            target_role: 'admin',
           });
         }
       }
@@ -160,6 +163,7 @@ export function useAdminNotifications() {
         type: 'service_note',
         salon_id: salonIdRef.current,
         source_id: event.data.id,
+        target_role: 'admin',
       });
     });
 
@@ -175,6 +179,7 @@ export function useAdminNotifications() {
         type: 'guest_message',
         salon_id: salonIdRef.current,
         source_id: event.data.id,
+        target_role: 'admin',
       });
     });
 
@@ -196,6 +201,7 @@ export function useAdminNotifications() {
         type: isServiceUpdate ? 'service_update' : 'chat',
         salon_id: salonIdRef.current,
         source_id: event.data.id,
+        target_role: 'admin',
       });
     });
 
