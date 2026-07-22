@@ -19,9 +19,15 @@ export default function GuestChat({ guestInfo, salonId }) {
         salon_id: salonId,
         guest_session: guestInfo.session,
       });
-      setMessages(response.data.messages || []);
+      const newMessages = response.data.messages || [];
+      setMessages(prev => {
+        if (prev.length === newMessages.length && (prev.length === 0 || prev[prev.length - 1].id === newMessages[newMessages.length - 1].id)) {
+          return prev;
+        }
+        return newMessages;
+      });
     } catch (e) {
-      setMessages([]);
+      // keep existing messages on poll failure
     } finally {
       setLoading(false);
     }
@@ -29,17 +35,23 @@ export default function GuestChat({ guestInfo, salonId }) {
 
   useEffect(() => {
     loadMessages();
+    // Poll every 3s as a fallback — unauthenticated guests can't receive realtime
+    // subscription events for admin replies due to RLS read rules.
+    const interval = setInterval(loadMessages, 3000);
     const unsubscribe = base44.entities.GuestMessage.subscribe((event) => {
       if (event.data.guest_session !== guestInfo.session || event.data.salon_id !== salonId) return;
       if (event.type === 'create') {
-        setMessages(prev => [...prev, event.data]);
+        setMessages(prev => prev.some(m => m.id === event.data.id) ? prev : [...prev, event.data]);
       } else if (event.type === 'update') {
         setMessages(prev => prev.map(m => m.id === event.data.id ? event.data : m));
       } else if (event.type === 'delete') {
         setMessages(prev => prev.filter(m => m.id !== event.id));
       }
     });
-    return unsubscribe;
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, [loadMessages, guestInfo?.session, salonId]);
 
   useEffect(() => {
