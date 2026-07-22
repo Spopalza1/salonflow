@@ -7,11 +7,19 @@ import { Badge } from '@/components/ui/badge';
 import { Mail, Printer, Trash2, Check } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/AuthContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export default function GuestMessagesPanel() {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMsg, setSelectedMsg] = useState(null);
   const { toast } = useToast();
 
   const loadMessages = useCallback(async () => {
@@ -91,7 +99,11 @@ export default function GuestMessagesPanel() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {messages.map(msg => (
-            <Card key={msg.id} className={!msg.printed ? 'border-destructive/50' : ''}>
+            <Card
+              key={msg.id}
+              className={`cursor-pointer hover:border-primary/50 transition-colors ${!msg.printed ? 'border-destructive/50' : ''}`}
+              onClick={() => setSelectedMsg(msg)}
+            >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div>
@@ -102,8 +114,8 @@ export default function GuestMessagesPanel() {
                     ? <Badge variant="outline" className="text-xs"><Check className="w-3 h-3 mr-1" />Printed</Badge>
                     : <Badge variant="destructive" className="text-xs">New</Badge>}
                 </div>
-                <p className="text-sm whitespace-pre-wrap mb-3">{msg.message}</p>
-                <div className="flex gap-1">
+                <p className="text-sm whitespace-pre-wrap mb-3 line-clamp-3">{msg.message}</p>
+                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                   <Button size="sm" variant="outline" onClick={() => handlePrint(msg)}>
                     <Printer className="w-3.5 h-3.5 mr-1" />Print
                   </Button>
@@ -114,9 +126,49 @@ export default function GuestMessagesPanel() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      )}
-    </div>
-    </PullToRefresh>
-  );
-}
+          </div>
+          )}
+
+          <Dialog open={!!selectedMsg} onOpenChange={(open) => !open && setSelectedMsg(null)}>
+          <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              {selectedMsg?.guest_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <div className="text-sm text-muted-foreground">
+              {selectedMsg && new Date(selectedMsg.created_date).toLocaleString()}
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">{selectedMsg?.message}</p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                handlePrint(selectedMsg);
+                setSelectedMsg(null);
+              }}
+            >
+              <Printer className="w-4 h-4 mr-2" />Print
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-destructive"
+              onClick={() => {
+                handleDelete(selectedMsg);
+                setSelectedMsg(null);
+              }}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />Delete
+            </Button>
+          </DialogFooter>
+          </DialogContent>
+          </Dialog>
+          </div>
+          </PullToRefresh>
+          );
+          }
