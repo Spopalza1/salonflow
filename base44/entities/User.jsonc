@@ -28,8 +28,8 @@
     }
   },
   "rls": {
-    "read": true,
-    "update": true,
-    "delete": true
+    "read": {
+      "data.salon_id": "{{user.data.salon_id}}"
+    }
   }
 }
