@@ -50,7 +50,7 @@ export default function NotificationsDropdown() {
       .map(n => n.source_id);
     await base44.entities.Notification.deleteMany({ read: true });
     if (guestMsgSources.length > 0) {
-      await base44.entities.GuestMessage.deleteMany({ id: { $in: guestMsgSources } });
+      await Promise.all(guestMsgSources.map(id => base44.entities.GuestMessage.delete(id).catch(() => {})));
     }
     setNotifications(prev => prev.filter(n => !n.read));
   };

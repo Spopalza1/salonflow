@@ -36,16 +36,16 @@ const knownNoteIds = new Set();
 const knownGuestMessageIds = new Set();
 const knownMessageIds = new Set();
 const orderNotificationMap = new Map(); // orderId -> notificationId
-const pendingNotifications = new Map(); // dedupKey -> Promise<notification>
+const createdNotificationKeys = new Set();
 
 async function dedupCreateNotification(key, data) {
-  if (pendingNotifications.has(key)) return pendingNotifications.get(key);
-  const promise = base44.entities.Notification.create(data);
-  pendingNotifications.set(key, promise);
+  if (createdNotificationKeys.has(key)) return;
+  createdNotificationKeys.add(key);
   try {
-    return await promise;
-  } finally {
-    setTimeout(() => pendingNotifications.delete(key), 10000);
+    return await base44.entities.Notification.create(data);
+  } catch (e) {
+    createdNotificationKeys.delete(key);
+    throw e;
   }
 }
 
