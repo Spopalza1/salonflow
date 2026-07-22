@@ -26,6 +26,7 @@ Deno.serve(async (req) => {
         display_name: u.display_name,
         username: u.username,
         chair_number: u.chair_number,
+        profile_picture_url: u.profile_picture_url,
       }));
 
     return Response.json({ stylists });
