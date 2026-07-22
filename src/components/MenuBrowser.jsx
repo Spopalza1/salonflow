@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Coffee, Plus, Check, Gift } from 'lucide-react';
+import { Coffee, Gift } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image as UIImage } from '@/components/ui/image';
+import { cn } from '@/lib/utils';
 import ItemCustomizationDialog from '@/components/ItemCustomizationDialog';
 
 export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
@@ -16,6 +15,8 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const [ordering, setOrdering] = useState(null);
   const [customItem, setCustomItem] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const sectionRefs = useRef({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,9 +65,46 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     return () => { unsubItems(); unsubCats(); unsubGroups(); };
   }, []);
 
+  const categoryOrder = categories.map(c => c.name);
+  const grouped = {};
+  items.forEach(item => {
+    if (!grouped[item.category]) grouped[item.category] = [];
+    grouped[item.category].push(item);
+  });
+  const sortedCategoryNames = Object.keys(grouped).sort((a, b) => {
+    const ia = categoryOrder.indexOf(a);
+    const ib = categoryOrder.indexOf(b);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
+  useEffect(() => {
+    if (sortedCategoryNames.length === 0) return;
+    if (!activeCategory) setActiveCategory(sortedCategoryNames[0]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveCategory(entry.target.dataset.category);
+          }
+        });
+      },
+      { rootMargin: '-15% 0px -75% 0px' }
+    );
+    sortedCategoryNames.forEach((cat) => {
+      const el = sectionRefs.current[cat];
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [sortedCategoryNames.join(',')]);
+
   const complimentarySet = new Set(categories.filter(c => c.complimentary).map(c => c.name));
 
   const itemOptionGroups = (itemId) => optionGroups.filter(g => g.menu_item_id === itemId);
+
+  const scrollToCategory = (category) => {
+    setActiveCategory(category);
+    sectionRefs.current[category]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleOrder = async (item) => {
     const groups = itemOptionGroups(item.id);
@@ -117,12 +155,6 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     setCustomOpen(false);
   };
 
-  const grouped = {};
-  items.forEach(item => {
-    if (!grouped[item.category]) grouped[item.category] = [];
-    grouped[item.category].push(item);
-  });
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -141,49 +173,104 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   }
 
   return (
-    <div className="space-y-8">
-      {Object.entries(grouped).map(([category, categoryItems]) => {
-        const isComplimentary = complimentarySet.has(category);
-        return (
-          <div key={category}>
-            <div className="flex items-center gap-2 mb-3">
-              <h2 className="font-heading text-xl font-semibold">{category}</h2>
-              {isComplimentary && <Badge variant="default"><Gift className="w-3 h-3 mr-1" />Complimentary</Badge>}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categoryItems.map(item => (
-                <Card key={item.id}>
-                  {item.image_url && (
-                    <UIImage src={item.image_url} alt={item.name} className="w-full h-36 rounded-t-lg" fittingType="fill" />
-                  )}
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between text-base">
-                      <span>{item.name}</span>
-                      {isComplimentary || item.complimentary
-                        ? <Badge className="bg-green-600">Complimentary</Badge>
-                        : item.price != null && <Badge variant="secondary">${item.price.toFixed(2)}</Badge>}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {item.description && <p className="text-sm text-muted-foreground mb-3">{item.description}</p>}
-                    <Button
-                      className="w-full"
+    <div className="flex gap-6 md:gap-8">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:block w-48 lg:w-56 shrink-0">
+        <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
+          <nav className="space-y-0.5">
+            {sortedCategoryNames.map(category => (
+              <button
+                key={category}
+                onClick={() => scrollToCategory(category)}
+                className={cn(
+                  "block w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
+                  activeCategory === category
+                    ? "font-semibold text-primary bg-primary/5"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                {category}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </aside>
+
+      <div className="flex-1 min-w-0">
+        {/* Mobile category pills */}
+        <div className="md:hidden mb-6 -mx-4 px-4 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex gap-2 pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {sortedCategoryNames.map(category => (
+              <button
+                key={category}
+                onClick={() => scrollToCategory(category)}
+                className={cn(
+                  "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+                  activeCategory === category
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {sortedCategoryNames.map(category => {
+          const categoryItems = grouped[category];
+          const isComplimentary = complimentarySet.has(category);
+          return (
+            <section
+              key={category}
+              data-category={category}
+              ref={el => sectionRefs.current[category] = el}
+              className="mb-10 scroll-mt-20"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="font-heading text-xl md:text-2xl font-bold">{category}</h2>
+                {isComplimentary && <Badge variant="secondary" className="text-xs"><Gift className="w-3 h-3 mr-1" />Complimentary</Badge>}
+              </div>
+              <hr className="border-border mb-6" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+                {categoryItems.map(item => {
+                  const itemIsComp = isComplimentary || item.complimentary;
+                  return (
+                    <button
+                      key={item.id}
                       onClick={() => handleOrder(item)}
                       disabled={ordering === item.id}
+                      className="group flex flex-col items-center text-center"
                     >
-                      {ordering === item.id
-                        ? <><Check className="w-4 h-4 mr-2" />Sending...</>
-                        : itemOptionGroups(item.id).length > 0
-                          ? <><Plus className="w-4 h-4 mr-2" />Customize</>
-                          : <><Plus className="w-4 h-4 mr-2" />Request</>}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+                      <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden bg-muted mb-3 ring-1 ring-border group-hover:ring-2 group-hover:ring-primary group-active:scale-95 transition-all">
+                        {item.image_url ? (
+                          <UIImage src={item.image_url} alt={item.name} className="w-full h-full" fittingType="fill" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Coffee className="w-8 h-8 text-muted-foreground/40" />
+                          </div>
+                        )}
+                        {ordering === item.id && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium leading-tight line-clamp-2">{item.name}</span>
+                      <span className="text-xs text-muted-foreground mt-0.5">
+                        {itemIsComp ? 'Complimentary' : item.price != null ? `$${item.price.toFixed(2)}` : ''}
+                      </span>
+                      {itemOptionGroups(item.id).length > 0 && (
+                        <span className="text-[10px] text-muted-foreground/70 mt-0.5">Customizable</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
 
       {customItem && (
         <ItemCustomizationDialog
