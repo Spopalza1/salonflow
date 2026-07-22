@@ -25,7 +25,8 @@ export default function OrdersPanel() {
     return saved !== null ? saved === 'true' : true;
   });
   const loadOrders = useCallback(async () => {
-    const data = await base44.entities.Order.filter({ salon_id: user?.salon_id }, '-created_date', 100);
+    if (!user?.salon_id) { setOrders([]); return; }
+    const data = await base44.entities.Order.filter({ salon_id: user.salon_id }, '-created_date', 100);
     setOrders(data);
   }, [user?.salon_id]);
 
@@ -34,7 +35,7 @@ export default function OrdersPanel() {
 
     const unsubscribe = base44.entities.Order.subscribe((event) => {
       if (event.type === 'create') {
-        if (event.data.salon_id && user?.salon_id && event.data.salon_id !== user.salon_id) return;
+        if (!user?.salon_id || !event.data.salon_id || event.data.salon_id !== user.salon_id) return;
         setOrders(prev => [event.data, ...prev]);
       } else if (event.type === 'update') {
         setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));

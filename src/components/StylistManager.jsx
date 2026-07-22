@@ -46,11 +46,11 @@ export default function StylistManager() {
     load();
     const unsubscribe = base44.entities.User.subscribe((event) => {
       if (event.type === 'create') {
-        if (event.data.role !== 'admin') {
+        if (event.data.role !== 'admin' && event.data.salon_id === user.salon_id) {
           setStylists(prev => [...prev, event.data]);
         }
       } else if (event.type === 'update') {
-        if (event.data.role === 'admin') {
+        if (event.data.role === 'admin' || event.data.salon_id !== user.salon_id) {
           setStylists(prev => prev.filter(s => s.id !== event.data.id));
         } else {
           setStylists(prev => prev.map(s => s.id === event.data.id ? event.data : s));

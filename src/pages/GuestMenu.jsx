@@ -56,6 +56,7 @@ export default function GuestMenu() {
     load();
     const unsubscribe = base44.entities.SalonSetting.subscribe((event) => {
       if (event.type === 'create' || event.type === 'update') {
+        if (salonId && event.data.salon_id !== salonId) return;
         setSalonName(event.data.salon_name || 'Salonflow');
       }
     });

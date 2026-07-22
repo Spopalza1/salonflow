@@ -30,6 +30,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
 
     const unsubItems = base44.entities.MenuItem.subscribe((event) => {
       if (event.type === 'create') {
+        if (salonId && event.data.salon_id !== salonId) return;
         if (event.data.available) setItems(prev => [...prev, event.data].sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
       } else if (event.type === 'update') {
         setItems(prev => prev.map(i => i.id === event.data.id ? event.data : i).filter(i => i.available).sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
@@ -39,7 +40,10 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     });
 
     const unsubCats = base44.entities.MenuCategory.subscribe((event) => {
-      if (event.type === 'create') setCategories(prev => [...prev, event.data]);
+      if (event.type === 'create') {
+        if (salonId && event.data.salon_id !== salonId) return;
+        setCategories(prev => [...prev, event.data]);
+      }
       else if (event.type === 'update') setCategories(prev => prev.map(c => c.id === event.data.id ? event.data : c));
       else if (event.type === 'delete') setCategories(prev => prev.filter(c => c.id !== event.id));
     });

@@ -36,7 +36,7 @@ export function useMessageNotifications(mode, user) {
     // Track existing message IDs so we only notify for genuinely new messages
     const loadExisting = async () => {
       try {
-        const existing = await base44.entities.Message.list('created_date', 500);
+        const existing = await base44.entities.Message.filter({ salon_id: user.salon_id }, 'created_date', 500);
         existing.forEach(m => knownIds.current.add(m.id));
       } catch (e) { /* ignore */ }
     };
@@ -48,6 +48,7 @@ export function useMessageNotifications(mode, user) {
       knownIds.current.add(event.data.id);
 
       const msg = event.data;
+      if (!user?.salon_id || msg.salon_id !== user.salon_id) return;
       if (msg.sender_id === user.id) return; // don't notify for own messages
 
       const shouldNotify =

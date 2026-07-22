@@ -11,9 +11,9 @@ export function useUnreadMessages(mode, user) {
       try {
         let filter;
         if (mode === 'admin') {
-          filter = { sender_role: { $ne: 'admin' }, read: false };
+          filter = { sender_role: { $ne: 'admin' }, read: false, salon_id: user.salon_id };
         } else {
-          filter = { sender_role: 'admin', thread_partner_id: user.id, read: false };
+          filter = { sender_role: 'admin', thread_partner_id: user.id, read: false, salon_id: user.salon_id };
         }
         const data = await base44.entities.Message.filter(filter);
         setUnreadCount(data.length);
@@ -23,6 +23,7 @@ export function useUnreadMessages(mode, user) {
     loadCount();
 
     const isRelevant = (msg) => {
+      if (!user?.salon_id || msg.salon_id !== user.salon_id) return false;
       if (mode === 'admin') return msg.sender_role !== 'admin';
       return msg.sender_role === 'admin' && msg.thread_partner_id === user.id;
     };

@@ -37,7 +37,7 @@ export default function ChatPanel({ mode, user }) {
       if (mode === 'stylist') {
         data = await base44.entities.Message.filter({ thread_partner_id: user.id }, 'created_date');
       } else {
-        data = await base44.entities.Message.list('created_date', 500);
+        data = await base44.entities.Message.filter({ salon_id: user.salon_id }, 'created_date', 500);
       }
       setMessages(data);
       setLoading(false);
@@ -46,6 +46,7 @@ export default function ChatPanel({ mode, user }) {
 
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
+        if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
         setMessages(prev => [...prev, event.data]);
       } else if (event.type === 'update') {
         setMessages(prev => prev.map(m => m.id === event.data.id ? event.data : m));

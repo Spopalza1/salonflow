@@ -30,7 +30,7 @@ export default function ServicesPanel({ mode, user }) {
 
   useEffect(() => {
     const load = async () => {
-      const filter = mode === 'stylist' ? { stylist_id: user.id } : { status: 'ongoing' };
+      const filter = mode === 'stylist' ? { stylist_id: user.id, salon_id: user.salon_id } : { status: 'ongoing', salon_id: user.salon_id };
       const data = await base44.entities.Service.filter(filter, '-created_date');
       setServices(data);
 
@@ -46,6 +46,7 @@ export default function ServicesPanel({ mode, user }) {
 
     const unsubService = base44.entities.Service.subscribe((event) => {
       if (event.type === 'create') {
+        if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
         setServices(prev => {
           if (mode === 'admin' && event.data.status !== 'ongoing') return prev;
           return [event.data, ...prev];
@@ -64,6 +65,7 @@ export default function ServicesPanel({ mode, user }) {
 
     const unsubNote = base44.entities.ServiceNote.subscribe((event) => {
       if (event.type === 'create') {
+        if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
         setNotesByService(prev => ({
           ...prev,
           [event.data.service_id]: [...(prev[event.data.service_id] || []), event.data],

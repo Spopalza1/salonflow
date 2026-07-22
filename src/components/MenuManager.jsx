@@ -61,7 +61,10 @@ export default function MenuManager() {
     });
 
     const unsubCats = base44.entities.MenuCategory.subscribe((event) => {
-      if (event.type === 'create') setCategories(prev => [...prev, event.data]);
+      if (event.type === 'create') {
+        if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
+        setCategories(prev => [...prev, event.data]);
+      }
       else if (event.type === 'update') setCategories(prev => prev.map(c => c.id === event.data.id ? event.data : c));
       else if (event.type === 'delete') setCategories(prev => prev.filter(c => c.id !== event.id));
     });

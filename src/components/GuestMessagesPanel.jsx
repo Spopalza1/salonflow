@@ -23,7 +23,7 @@ export default function GuestMessagesPanel() {
     if (!user?.salon_id) return;
     loadMessages().then(() => setLoading(false));
     const unsubscribe = base44.entities.GuestMessage.subscribe((event) => {
-      if (event.data.salon_id && event.data.salon_id !== user.salon_id) return;
+      if (!user?.salon_id || !event.data.salon_id || event.data.salon_id !== user.salon_id) return;
       if (event.type === 'create') {
         setMessages(prev => [event.data, ...prev]);
       } else if (event.type === 'update') {

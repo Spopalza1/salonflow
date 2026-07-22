@@ -76,10 +76,10 @@ export function useAdminNotifications() {
       try {
         const [orders, services, notes, guestMessages, messages] = await Promise.all([
           base44.entities.Order.filter({ salon_id: salonIdRef.current }, '-created_date', 100),
-          base44.entities.Service.filter({ status: 'ongoing' }, '-created_date'),
-          base44.entities.ServiceNote.list('created_date', 500),
+          base44.entities.Service.filter({ status: 'ongoing', salon_id: salonIdRef.current }, '-created_date'),
+          base44.entities.ServiceNote.filter({ salon_id: salonIdRef.current }, 'created_date', 500),
           base44.entities.GuestMessage.filter({ salon_id: salonIdRef.current }, '-created_date', 100),
-          base44.entities.Message.list('created_date', 100),
+          base44.entities.Message.filter({ salon_id: salonIdRef.current }, 'created_date', 100),
         ]);
         orders.forEach(o => knownOrderIds.add(o.id));
         services.forEach(s => knownServiceIds.add(s.id));
@@ -94,7 +94,7 @@ export function useAdminNotifications() {
       if (event.type === 'create') {
         if (knownOrderIds.has(event.data.id)) return;
         knownOrderIds.add(event.data.id);
-        if (event.data.salon_id && salonIdRef.current && event.data.salon_id !== salonIdRef.current) return;
+        if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
         const chair = event.data.chair_table ? ` (${event.data.chair_table})` : '';
         notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
         const notif = await dedupCreateNotification(`order:${event.data.id}`, {
@@ -124,6 +124,7 @@ export function useAdminNotifications() {
       if (event.type === 'create') {
         if (knownServiceIds.has(event.data.id)) return;
         knownServiceIds.add(event.data.id);
+        if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
         notify('New Service Started', `${event.data.stylist_name}: ${event.data.client_name} — ${event.data.service_name}`);
         dedupCreateNotification(`service:${event.data.id}`, {
           title: 'New Service Started',
@@ -151,6 +152,7 @@ export function useAdminNotifications() {
       if (event.type !== 'create') return;
       if (knownNoteIds.has(event.data.id)) return;
       knownNoteIds.add(event.data.id);
+      if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
       notify(`Service Update From ${event.data.author_name}`, event.data.content);
       dedupCreateNotification(`note:${event.data.id}`, {
         title: `Service Update From ${event.data.author_name}`,
@@ -165,7 +167,7 @@ export function useAdminNotifications() {
       if (event.type !== 'create') return;
       if (knownGuestMessageIds.has(event.data.id)) return;
       knownGuestMessageIds.add(event.data.id);
-      if (event.data.salon_id && salonIdRef.current && event.data.salon_id !== salonIdRef.current) return;
+      if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
       notify(`New Message From ${event.data.guest_name}`, event.data.message);
       dedupCreateNotification(`guest:${event.data.id}`, {
         title: `New Message From ${event.data.guest_name}`,
@@ -180,6 +182,7 @@ export function useAdminNotifications() {
       if (event.type !== 'create') return;
       if (knownMessageIds.has(event.data.id)) return;
       knownMessageIds.add(event.data.id);
+      if (!salonIdRef.current || !event.data.salon_id || event.data.salon_id !== salonIdRef.current) return;
       if (event.data.sender_role === 'admin') return; // Don't notify for admin's own messages
       const isServiceUpdate = event.data.message_type === 'service_update';
       const title = isServiceUpdate

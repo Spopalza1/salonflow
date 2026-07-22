@@ -15,13 +15,14 @@ export default function NotificationsDropdown() {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const data = await base44.entities.Notification.list('-created_date', 50);
+      const data = await base44.entities.Notification.filter({ salon_id: user.salon_id }, '-created_date', 50);
       setNotifications(data);
     };
     load();
 
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
       if (event.type === 'create') {
+        if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
         setNotifications(prev => {
           if (prev.some(n => n.id === event.data.id)) return prev;
           return [event.data, ...prev].slice(0, 50);
