@@ -41,7 +41,15 @@ export default function NotificationsDropdown() {
   const markAllRead = async () => {
     const unread = notifications.filter(n => !n.read);
     if (unread.length === 0) return;
-    await base44.entities.Notification.bulkUpdate(unread.map(n => ({ id: n.id, read: true })));
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    try {
+      await base44.entities.Notification.updateMany(
+        { salon_id: user.salon_id, read: false },
+        { $set: { read: true } }
+      );
+    } catch (err) {
+      setNotifications(prev => prev.map(n => ({ ...n, read: false })));
+    }
   };
 
   const clearRead = async () => {
@@ -49,11 +57,15 @@ export default function NotificationsDropdown() {
     const guestMsgSources = readNotifs
       .filter(n => n.type === 'guest_message' && n.source_id)
       .map(n => n.source_id);
-    await base44.entities.Notification.deleteMany({ read: true });
-    if (guestMsgSources.length > 0) {
-      await Promise.all(guestMsgSources.map(id => base44.entities.GuestMessage.delete(id).catch(() => {})));
-    }
     setNotifications(prev => prev.filter(n => !n.read));
+    try {
+      await base44.entities.Notification.deleteMany({ read: true, salon_id: user.salon_id });
+      if (guestMsgSources.length > 0) {
+        await Promise.all(guestMsgSources.map(id => base44.entities.GuestMessage.delete(id).catch(() => {})));
+      }
+    } catch (err) {
+      // ignore - already removed from local state
+    }
   };
 
   const TAB_MAP = {
