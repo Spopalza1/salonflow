@@ -40,10 +40,11 @@ export default function StylistManager() {
   };
 
   useEffect(() => {
+    if (!user?.salon_id) return;
     const load = async () => {
       try {
-        const data = await base44.entities.User.filter({ role: { $ne: 'admin' }, salon_id: user.salon_id });
-        setStylists(data);
+        const all = await base44.entities.User.filter({ salon_id: user.salon_id });
+        setStylists(all.filter(u => u.role !== 'admin'));
       } catch (err) {
         toast({ title: 'Failed to load stylists', description: err.message, variant: 'destructive' });
       } finally {
@@ -67,7 +68,7 @@ export default function StylistManager() {
       }
     });
     return unsubscribe;
-  }, []);
+  }, [user?.salon_id]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
