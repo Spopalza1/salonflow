@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { MessageSquare, User, Search, Trash2, ArrowLeft } from 'lucide-react';
 import MessageBubble from '@/components/chat/MessageBubble';
+import ConversationItem from '@/components/chat/ConversationItem';
 import ChatInput from '@/components/chat/ChatInput';
 import { Button } from '@/components/ui/button';
 import {
@@ -214,18 +215,16 @@ export default function ChatPanel({ mode, user }) {
               {filteredStylists.length === 0 ?
             <p className="text-center text-sm text-muted-foreground py-4">No stylists found</p> :
             null}
-              {filteredStylists.map((s) =>
-            <button
-              key={s.id}
-              onClick={() => {setSelectedPartnerId(s.id);setMobileChatActive(true);}}
-              className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors ${selectedPartnerId === s.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
-              
-                  <span className="text-sm font-medium truncate">{s.display_name || s.full_name || s.email}</span>
-                  {unreadByStylist.has(s.id) && selectedPartnerId !== s.id &&
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
-              }
-                </button>
-            )}
+              {filteredStylists.map((s) => (
+                <ConversationItem
+                  key={s.id}
+                  stylist={s}
+                  isSelected={selectedPartnerId === s.id}
+                  hasUnread={unreadByStylist.has(s.id)}
+                  onSelect={() => { setSelectedPartnerId(s.id); setMobileChatActive(true); }}
+                  onDelete={() => { setSelectedPartnerId(s.id); setShowDeleteConvConfirm(true); }}
+                />
+              ))}
             </div>
           </Card>
           <Card className={`flex-col overflow-hidden ${mobileChatActive ? 'flex' : 'hidden'} md:flex`}>
