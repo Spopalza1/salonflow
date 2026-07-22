@@ -22,14 +22,18 @@ export default function ChatPanel({ mode, user }) {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    if (mode !== 'admin') return;
+    if (mode !== 'admin' || !user?.salon_id) return;
     const loadStylists = async () => {
-      const data = await base44.entities.User.filter({ role: { $ne: 'admin' }, salon_id: user.salon_id });
-      setStylists(data);
-      if (data.length > 0) setSelectedPartnerId(data[0].id);
+      try {
+        const data = await base44.entities.User.filter({ role: { $ne: 'admin' }, salon_id: user.salon_id });
+        setStylists(data);
+        if (data.length > 0) setSelectedPartnerId(data[0].id);
+      } catch (err) {
+        console.error('Failed to load stylists for chat:', err);
+      }
     };
     loadStylists();
-  }, [mode]);
+  }, [mode, user?.salon_id]);
 
   useEffect(() => {
     const load = async () => {
