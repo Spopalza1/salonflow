@@ -25,7 +25,7 @@ export default function OrdersPanel() {
     const saved = localStorage.getItem('salonflow_show_chair_table');
     return saved !== null ? saved === 'true' : true;
   });
-  const pendingOptimisticUpdates = useRef(new Set());
+  const pendingOptimisticUpdates = useRef(new Map());
   const loadOrders = useCallback(async () => {
     if (!user?.salon_id) { setOrders([]); return; }
     const data = await base44.entities.Order.filter({ salon_id: user.salon_id }, '-created_date', 100);
@@ -43,8 +43,12 @@ export default function OrdersPanel() {
           return [event.data, ...prev];
         });
       } else if (event.type === 'update') {
-        if (pendingOptimisticUpdates.current.has(event.data.id)) return;
-        setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));
+        const expectedStatus = pendingOptimisticUpdates.current.get(event.data.id);
+        if (expectedStatus) {
+          setOrders(prev => prev.map(o => o.id === event.data.id ? { ...event.data, status: expectedStatus } : o));
+        } else {
+          setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));
+        }
       } else if (event.type === 'delete') {
         setOrders(prev => prev.filter(o => o.id !== event.id));
       }
@@ -54,15 +58,16 @@ export default function OrdersPanel() {
 
   const updateStatus = async (order, status) => {
     const prevStatus = order.status;
-    pendingOptimisticUpdates.current.add(order.id);
+    pendingOptimisticUpdates.current.set(order.id, status);
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status } : o));
     try {
       await base44.entities.Order.update(order.id, { status });
     } catch (err) {
+      pendingOptimisticUpdates.current.delete(order.id);
       setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: prevStatus } : o));
       console.error(err);
     } finally {
-      setTimeout(() => pendingOptimisticUpdates.current.delete(order.id), 1000);
+      setTimeout(() => pendingOptimisticUpdates.current.delete(order.id), 2000);
     }
   };
 

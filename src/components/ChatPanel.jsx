@@ -155,10 +155,15 @@ export default function ChatPanel({ mode, user }) {
 
   const handleDeleteConversation = async () => {
     const partnerId = selectedPartnerId;
-    await base44.entities.Message.deleteMany({ thread_partner_id: partnerId });
     setDeletedConversations((prev) => new Set(prev).add(partnerId));
+    setMessages((prev) => prev.filter((m) => m.thread_partner_id !== partnerId));
     setShowDeleteConvConfirm(false);
     setMobileChatActive(false);
+    try {
+      await base44.entities.Message.deleteMany({ thread_partner_id: partnerId });
+    } catch (err) {
+      console.error('Failed to delete conversation:', err);
+    }
   };
 
   if (loading) {
