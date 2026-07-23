@@ -14,6 +14,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const [optionGroups, setOptionGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(null);
+  const submitGuardRef = useRef(false);
   const [customItem, setCustomItem] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [quickViewItem, setQuickViewItem] = useState(null);
@@ -125,6 +126,8 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   };
 
   const submitOrder = async (item, customizations, adjustedPrice) => {
+    if (submitGuardRef.current) return;
+    submitGuardRef.current = true;
     setOrdering(item.id);
     try {
       const isComplimentary = complimentarySet.has(item.category) || item.complimentary;
@@ -153,6 +156,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     } catch (err) {
       toast({ title: 'Failed to send', description: err.message, variant: 'destructive' });
     } finally {
+      submitGuardRef.current = false;
       setOrdering(null);
     }
   };

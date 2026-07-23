@@ -36,6 +36,7 @@ const knownNoteIds = new Set();
 const knownGuestMessageIds = new Set();
 const knownMessageIds = new Set();
 const orderNotificationMap = new Map(); // orderId -> notificationId
+const notifiedOrderIds = new Set();
 const createdNotificationKeys = new Set();
 
 async function dedupCreateNotification(key, data) {
@@ -105,7 +106,8 @@ export function useAdminNotifications() {
           source_id: event.data.id,
           target_role: 'admin',
         });
-        if (notifResult.isNew) {
+        if (notifResult.isNew && !notifiedOrderIds.has(event.data.id)) {
+          notifiedOrderIds.add(event.data.id);
           if (notifResult.notification) orderNotificationMap.set(event.data.id, notifResult.notification.id);
           notify('New Order Received', `${event.data.requested_by_name} requested ${event.data.item_name}${chair}`);
           toastRef.current({
