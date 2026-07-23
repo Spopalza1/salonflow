@@ -7,7 +7,8 @@ const SalonCustomizationContext = createContext(null);
 
 export function SalonCustomizationProvider({ children }) {
   const { user } = useAuth();
-  const [settings, setSettings] = useState(null);
+  const [adminSettings, setAdminSettings] = useState(null);
+  const [guestSettings, setGuestSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -16,12 +17,11 @@ export function SalonCustomizationProvider({ children }) {
       return;
     }
     try {
-      const existing = await base44.entities.SalonCustomization.filter({ salon_id: user.salon_id });
-      if (existing.length > 0) {
-        setSettings(existing[0]);
-      } else {
-        setSettings(null);
-      }
+      const all = await base44.entities.SalonCustomization.filter({ salon_id: user.salon_id });
+      const admin = all.find(s => s.scope === 'admin') || all.find(s => !s.scope) || null;
+      const guest = all.find(s => s.scope === 'guest') || null;
+      setAdminSettings(admin);
+      setGuestSettings(guest);
     } catch (err) {
       console.error('Failed to load salon customization:', err);
     } finally {
@@ -37,36 +37,46 @@ export function SalonCustomizationProvider({ children }) {
     if (!user?.salon_id) return;
     const unsubscribe = base44.entities.SalonCustomization.subscribe((event) => {
       if (event.data?.salon_id !== user.salon_id) return;
-      if (event.type === 'create' || event.type === 'update') {
-        setSettings(event.data);
+      if (event.type !== 'create' && event.type !== 'update') return;
+      if (event.data.scope === 'guest') {
+        setGuestSettings(event.data);
+      } else {
+        // 'admin' or legacy unscoped → treat as admin
+        setAdminSettings(event.data);
       }
     });
     return unsubscribe;
   }, [user?.salon_id]);
 
+  // Apply admin settings to :root (this provider wraps admin/stylist pages only)
   useEffect(() => {
-    applyCustomization(settings || DEFAULTS);
-  }, [settings]);
+    applyCustomization(adminSettings || DEFAULTS);
+  }, [adminSettings]);
 
-  const updateSettings = useCallback(async (updates) => {
+  const updateSettings = useCallback(async (scope, updates) => {
     if (!user?.salon_id) return;
-    if (settings) {
-      const updated = await base44.entities.SalonCustomization.update(settings.id, updates);
-      setSettings(updated);
+    const current = scope === 'admin' ? adminSettings : guestSettings;
+    if (current) {
+      const updated = await base44.entities.SalonCustomization.update(current.id, updates);
+      if (scope === 'admin') setAdminSettings(updated);
+      else setGuestSettings(updated);
       return updated;
     }
     const created = await base44.entities.SalonCustomization.create({
       ...updates,
       salon_id: user.salon_id,
+      scope,
     });
-    setSettings(created);
+    if (scope === 'admin') setAdminSettings(created);
+    else setGuestSettings(created);
     return created;
-  }, [user?.salon_id, settings]);
+  }, [user?.salon_id, adminSettings, guestSettings]);
 
   return (
     <SalonCustomizationContext.Provider
       value={{
-        settings: settings || DEFAULTS,
+        adminSettings: adminSettings || DEFAULTS,
+        guestSettings: guestSettings || DEFAULTS,
         loading,
         updateSettings,
         reload: loadSettings,

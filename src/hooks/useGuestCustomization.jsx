@@ -22,6 +22,7 @@ export function useGuestCustomization(salonId) {
 
     const unsubscribe = base44.entities.SalonCustomization.subscribe((event) => {
       if (event.data?.salon_id !== salonId) return;
+      if (event.data?.scope === 'admin') return;
       if (event.type === 'create' || event.type === 'update') {
         setSettings({ ...DEFAULTS, ...event.data });
       }

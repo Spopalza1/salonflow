@@ -5,6 +5,14 @@
     "salon_id": {
       "type": "string"
     },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "guest"
+      ],
+      "default": "admin"
+    },
     "salon_display_name": {
       "type": "string"
     },

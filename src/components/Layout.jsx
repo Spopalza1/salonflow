@@ -15,7 +15,7 @@ import { Image as UIImage } from '@/components/ui/image';
 function LayoutContent() {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const { settings } = useSalonCustomization();
+  const { adminSettings: settings } = useSalonCustomization();
   const [profileOpen, setProfileOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
 

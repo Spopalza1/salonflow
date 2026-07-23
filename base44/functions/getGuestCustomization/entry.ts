@@ -22,10 +22,13 @@ Deno.serve(async (req) => {
     const data = await base44.asServiceRole.entities.SalonCustomization.filter(
       { salon_id },
       '-updated_date',
-      1
+      10
     );
 
-    return Response.json({ customization: data.length > 0 ? data[0] : null });
+    // Prefer guest-scoped record; fall back to legacy unscoped record for backward compat
+    const guest = data.find(s => s.scope === 'guest') || data.find(s => !s.scope) || data[0] || null;
+
+    return Response.json({ customization: guest });
   } catch (error) {
     console.error('getGuestCustomization error:', error);
     return Response.json({ error: error.message }, { status: 500 });
