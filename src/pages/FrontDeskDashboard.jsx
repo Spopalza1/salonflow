@@ -43,7 +43,7 @@ export default function FrontDeskDashboard() {
   const swipeHandlers = useSwipeNavigation(tabs, activeTab, handleTabChange);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6" {...swipeHandlers}>
+    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6 touch-pan-y" {...swipeHandlers}>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
         <TabsList className="glass-header fixed bottom-0 left-0 right-0 z-30 h-16 border-t safe-area-bottom justify-around rounded-none flex w-full md:relative md:flex-wrap md:h-auto md:border md:justify-start md:rounded-lg md:w-auto md:shadow-lg">
           <TabsTrigger value="orders" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><ClipboardList className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Orders</span></TabsTrigger>

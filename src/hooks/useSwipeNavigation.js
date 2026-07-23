@@ -1,8 +1,8 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 
 /**
- * Detects horizontal swipe gestures on touch devices and navigates
- * between tabs. Vertical scrolling is unaffected.
+ * Detects horizontal drag/swipe gestures (touch or mouse) and navigates
+ * between tabs. Uses Pointer Events for cross-device support.
  *
  * @param {string[]} tabs - Ordered list of tab values
  * @param {string} activeTab - Currently active tab value
@@ -10,41 +10,40 @@ import { useRef } from 'react';
  * @param {number} threshold - Minimum px distance to count as a swipe
  */
 export function useSwipeNavigation(tabs, activeTab, onTabChange, threshold = 60) {
-  const startX = useRef(0);
-  const startY = useRef(0);
-  const isSwiping = useRef(false);
+  const start = useRef(null);
+  const state = useRef({ tabs, activeTab, onTabChange, threshold });
+  state.current = { tabs, activeTab, onTabChange, threshold };
 
-  const handleTouchStart = (e) => {
-    startX.current = e.touches[0].clientX;
-    startY.current = e.touches[0].clientY;
-    isSwiping.current = false;
+  useEffect(() => {
+    const handleUp = (e) => {
+      if (!start.current) return;
+      const { tabs, activeTab, onTabChange, threshold } = state.current;
+      const dx = start.current.x - e.clientX;
+      const dy = start.current.y - e.clientY;
+      start.current = null;
+
+      if (Math.abs(dx) < threshold) return;
+      if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+      const i = tabs.indexOf(activeTab);
+      if (dx > 0 && i < tabs.length - 1) onTabChange(tabs[i + 1]);
+      else if (dx < 0 && i > 0) onTabChange(tabs[i - 1]);
+    };
+
+    const handleCancel = () => { start.current = null; };
+
+    window.addEventListener('pointerup', handleUp);
+    window.addEventListener('pointercancel', handleCancel);
+    return () => {
+      window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('pointercancel', handleCancel);
+    };
+  }, []);
+
+  const onPointerDown = (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    start.current = { x: e.clientX, y: e.clientY };
   };
 
-  const handleTouchMove = (e) => {
-    const diffX = Math.abs(e.touches[0].clientX - startX.current);
-    const diffY = Math.abs(e.touches[0].clientY - startY.current);
-    if (diffX > 12 && diffX > diffY * 1.5) {
-      isSwiping.current = true;
-    }
-  };
-
-  const handleTouchEnd = (e) => {
-    if (!isSwiping.current) return;
-    const endX = e.changedTouches[0].clientX;
-    const diff = startX.current - endX;
-    if (Math.abs(diff) < threshold) return;
-
-    const currentIndex = tabs.indexOf(activeTab);
-    if (diff > 0 && currentIndex < tabs.length - 1) {
-      onTabChange(tabs[currentIndex + 1]);
-    } else if (diff < 0 && currentIndex > 0) {
-      onTabChange(tabs[currentIndex - 1]);
-    }
-  };
-
-  return {
-    onTouchStart: handleTouchStart,
-    onTouchMove: handleTouchMove,
-    onTouchEnd: handleTouchEnd,
-  };
+  return { onPointerDown };
 }
