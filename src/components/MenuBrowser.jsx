@@ -227,11 +227,10 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
               ref={el => sectionRefs.current[category] = el}
               className="mb-10 scroll-mt-20"
             >
-              <div className="flex items-center gap-2 mb-1">
+              <div className="sticky top-0 z-10 mb-6 -mx-1 px-4 py-3 rounded-xl glass-card flex items-center gap-2">
                 <h2 className="font-heading text-xl md:text-2xl font-bold">{category}</h2>
                 {isComplimentary && <Badge variant="secondary" className="text-xs"><Gift className="w-3 h-3 mr-1" />Complimentary</Badge>}
               </div>
-              <hr className="border-border mb-6" />
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
                 {categoryItems.map(item => {
                   const itemIsComp = isComplimentary || item.complimentary;
@@ -242,7 +241,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
                       disabled={ordering === item.id}
                       className="group flex flex-col items-center text-center"
                     >
-                      <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden bg-muted mb-3 ring-1 ring-border group-hover:ring-2 group-hover:ring-primary group-active:scale-95 transition-all">
+                      <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden bg-muted mb-3 ring-1 ring-border shadow-lg shadow-black/10 group-hover:ring-2 group-hover:ring-primary group-hover:-translate-y-1 group-active:scale-95 transition-all">
                         {item.image_url ? (
                           <UIImage src={item.image_url} alt={item.name} className="w-full h-full" fittingType="fill" />
                         ) : (
