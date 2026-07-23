@@ -152,8 +152,8 @@ export default function GuestMenu() {
 
   if (!salonId) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-        <Card className="max-w-sm w-full">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)' }}>
+        <Card className="max-w-sm w-full glass-card">
           <CardContent className="p-6 text-center">
             <SalonLogo logoUrl={logoUrl} height={logoSize} large />
             <h1 className="font-heading text-xl font-semibold mb-2">Salon Not Found</h1>
@@ -169,7 +169,7 @@ export default function GuestMenu() {
     return (
       <GuestShell bgImage={bgImage} bgVideo={bgVideo} overlayOpacity={bgOverlayOpacity}>
         <div className="min-h-screen flex items-center justify-center p-4">
-          <Card className="max-w-sm w-full">
+          <Card className="max-w-sm w-full glass-card">
             <CardContent className="p-6">
               <div className="text-center mb-6">
                 <SalonLogo logoUrl={logoUrl} height={logoSize} large />
@@ -205,7 +205,7 @@ export default function GuestMenu() {
               <h1 className="font-heading text-xl font-semibold">Welcome, {guestInfo.firstName}!</h1>
               <p className="text-sm text-muted-foreground mt-1">What would you like to do?</p>
             </div>
-            <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => { setView('menu'); }}>
+            <Card className="cursor-pointer hover:border-primary transition-colors glass-card" onClick={() => { setView('menu'); }}>
               <CardContent className="p-6 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <Coffee className="w-6 h-6 text-primary" />
@@ -216,7 +216,7 @@ export default function GuestMenu() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => { setMessageSent(false); setView('message'); }}>
+            <Card className="cursor-pointer hover:border-primary transition-colors glass-card" onClick={() => { setMessageSent(false); setView('message'); }}>
               <CardContent className="p-6 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <Mail className="w-6 h-6 text-primary" />
@@ -238,7 +238,7 @@ export default function GuestMenu() {
     return (
       <GuestShell bgImage={bgImage} bgVideo={bgVideo} overlayOpacity={bgOverlayOpacity}>
         <div>
-          <header className="bg-background/90 backdrop-blur-sm border-b sticky top-0 z-10 safe-area-top">
+          <header className="glass-header border-b sticky top-0 z-10 safe-area-top">
             <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
               <Button variant="ghost" size="sm" onClick={() => setView('choice')}>
                 <ArrowLeft className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Back</span>
@@ -254,7 +254,7 @@ export default function GuestMenu() {
           </header>
           <div className="max-w-2xl mx-auto p-4">
             {messageSent ? (
-              <Card>
+              <Card className="glass-card">
                 <CardContent className="p-8 text-center">
                   <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-500" />
                   <h2 className="font-heading text-lg font-semibold mb-2">Message Sent!</h2>
@@ -266,7 +266,7 @@ export default function GuestMenu() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
+              <Card className="glass-card">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Mail className="w-5 h-5 text-primary" />
@@ -303,7 +303,7 @@ export default function GuestMenu() {
   return (
     <GuestShell bgImage={bgImage} bgVideo={bgVideo} overlayOpacity={bgOverlayOpacity}>
       <div>
-        <header className="bg-background/90 backdrop-blur-sm border-b sticky top-0 z-10 safe-area-top">
+        <header className="glass-header border-b sticky top-0 z-10 safe-area-top">
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
             <Button variant="ghost" size="sm" onClick={() => setView('choice')}>
               <ArrowLeft className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Back</span>
@@ -325,7 +325,7 @@ export default function GuestMenu() {
 
         {showOrders && (
           <div className="max-w-4xl mx-auto px-4 pt-4">
-            <Card>
+            <Card className="glass-card">
               <CardContent className="p-4">
                 <h3 className="font-medium mb-3">Your Requests</h3>
                 {orders.length === 0 ? (

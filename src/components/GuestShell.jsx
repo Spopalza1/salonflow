@@ -12,7 +12,16 @@ export default function GuestShell({ bgImage, bgVideo, overlayOpacity = 80, chil
   }, [bgVideo]);
 
   if (!hasMedia) {
-    return <div className="min-h-screen bg-muted/30">{children}</div>;
+    return (
+      <div
+        className="min-h-screen relative"
+        style={{
+          background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)',
+        }}
+      >
+        {children}
+      </div>
+    );
   }
 
   return (
@@ -33,7 +42,14 @@ export default function GuestShell({ bgImage, bgVideo, overlayOpacity = 80, chil
           style={{ backgroundImage: `url(${bgImage})` }}
         />
       )}
-      <div className="relative min-h-screen" style={{ backgroundColor: `hsl(var(--background) / ${opacity})` }}>
+      <div
+        className="relative min-h-screen"
+        style={{
+          backgroundColor: `hsl(var(--background) / ${opacity * 0.6})`,
+          backdropFilter: `blur(${8 + opacity * 12}px) saturate(180%)`,
+          WebkitBackdropFilter: `blur(${8 + opacity * 12}px) saturate(180%)`,
+        }}
+      >
         {children}
       </div>
     </div>

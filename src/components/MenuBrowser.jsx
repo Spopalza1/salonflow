@@ -176,7 +176,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     <div className="flex gap-6 md:gap-8">
       {/* Desktop sidebar */}
       <aside className="hidden md:block w-48 lg:w-56 shrink-0">
-        <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
+        <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 p-3 rounded-xl glass-card">
           <nav className="space-y-0.5">
             {sortedCategoryNames.map(category => (
               <button
@@ -208,7 +208,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
                   "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
                   activeCategory === category
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                    : "glass-card text-muted-foreground"
                 )}
               >
                 {category}

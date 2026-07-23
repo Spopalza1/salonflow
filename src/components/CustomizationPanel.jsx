@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MobileSelect } from '@/components/ui/mobile-select';
-import { Palette, Type, LayoutGrid, Store, Save, Loader2, Upload, X, Hash, Copy, Check, ImagePlus } from 'lucide-react';
+import { Palette, Type, LayoutGrid, Store, Save, Loader2, Upload, X, Hash, Copy, Check, ImagePlus, Globe, Wand2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSalonCustomization } from '@/lib/salonCustomizationContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -44,6 +44,9 @@ export default function CustomizationPanel() {
   const [showStoreId, setShowStoreId] = useState(false);
   const [copied, setCopied] = useState(false);
   const [editingImage, setEditingImage] = useState(null);
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
   const initializedRef = useRef(false);
   const saveTimerRef = useRef(null);
 
@@ -145,6 +148,32 @@ export default function CustomizationPanel() {
     }
   };
 
+  const handleAnalyzeWebsite = async () => {
+    if (!websiteUrl.trim()) return;
+    setAnalyzing(true);
+    try {
+      const response = await base44.functions.invoke('analyzeWebsite', { url: websiteUrl.trim() });
+      const result = response.data;
+      setAnalysisResult(result);
+      setForm(prev => ({
+        ...prev,
+        primary_color: result.primary_color,
+        secondary_color: result.secondary_color,
+        accent_color: result.accent_color,
+        font_heading: result.font_heading,
+        font_body: result.font_body,
+      }));
+      if (result.site_name && !form.salon_display_name) {
+        setForm(prev => ({ ...prev, salon_display_name: result.site_name }));
+      }
+      toast({ title: 'Website analyzed!', description: 'Colors and fonts auto-applied.' });
+    } catch (err) {
+      toast({ title: 'Analysis failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   const handleReset = () => {
     setForm(DEFAULTS);
     applyCustomization(DEFAULTS);
@@ -196,6 +225,38 @@ export default function CustomizationPanel() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5" />Auto-Style from Website</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">Enter your salon's website URL to automatically extract its color palette and fonts.</p>
+          <div className="flex gap-2">
+            <Input
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              placeholder="https://yoursalon.com"
+              disabled={analyzing}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAnalyzeWebsite(); } }}
+            />
+            <Button onClick={handleAnalyzeWebsite} disabled={analyzing || !websiteUrl.trim()} className="shrink-0">
+              {analyzing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+              {analyzing ? 'Analyzing...' : 'Analyze'}
+            </Button>
+          </div>
+          {analysisResult && analysisResult.all_colors && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {analysisResult.all_colors.slice(0, 8).map((color, i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <div className="w-10 h-10 rounded-md border border-border" style={{ background: color }} />
+                  <span className="text-[10px] font-mono text-muted-foreground">{color}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
