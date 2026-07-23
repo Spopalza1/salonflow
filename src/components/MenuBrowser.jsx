@@ -241,16 +241,18 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
                       disabled={ordering === item.id}
                       className="group flex flex-col items-center text-center"
                     >
-                      <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden bg-muted mb-3 ring-1 ring-border shadow-lg shadow-black/10 group-hover:ring-2 group-hover:ring-primary group-hover:-translate-y-1 group-active:scale-95 transition-all">
+                      <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 mb-3 group-hover:-translate-y-1 group-active:scale-95 transition-all">
                         {item.image_url ? (
-                          <UIImage src={item.image_url} alt={item.name} className="w-full h-full" fittingType="fill" />
+                          <div className="w-full h-full rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+                            <UIImage src={item.image_url} alt={item.name} className="w-full h-full" fittingType="fill" />
+                          </div>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Coffee className="w-8 h-8 text-muted-foreground/40" />
+                            <Coffee className="w-10 h-10 text-muted-foreground/40" />
                           </div>
                         )}
                         {ordering === item.id && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
                             <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           </div>
                         )}
