@@ -10,8 +10,10 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MobileSelect } from '@/components/ui/mobile-select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Coffee, FolderPlus, Gift, Upload, X, SlidersHorizontal, GripVertical } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { Plus, Pencil, Trash2, Coffee, FolderPlus, Gift, Upload, X, SlidersHorizontal } from 'lucide-react';
+import { Reorder } from 'framer-motion';
+import DraggableCategory from '@/components/DraggableCategory';
+import DraggableItemCard from '@/components/DraggableItemCard';
 import { useToast } from '@/components/ui/use-toast';
 import { Image as UIImage } from '@/components/ui/image';
 import { useAuth } from '@/lib/AuthContext';
@@ -201,40 +203,25 @@ export default function MenuManager() {
     grouped[item.category].push(item);
   });
 
-  const onCategoryDragEnd = async (result) => {
-    if (!result.destination || result.source.index === result.destination.index) return;
-    const reordered = Array.from(categories);
-    const [moved] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, moved);
+  const handleCategoryReorder = (reorderedIds) => {
+    const reordered = reorderedIds.map(id => categories.find(c => c.id === id)).filter(Boolean);
     setCategories(reordered);
-    try {
-      await base44.entities.MenuCategory.bulkUpdate(
-        reordered.map((cat, index) => ({ id: cat.id, display_order: index }))
-      );
-    } catch (err) {
-      toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' });
-    }
+    base44.entities.MenuCategory.bulkUpdate(
+      reordered.map((cat, index) => ({ id: cat.id, display_order: index }))
+    ).catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }));
   };
 
-  const onItemDragEnd = async (result) => {
-    if (!result.destination || result.source.droppableId !== result.destination.droppableId) return;
-    const categoryName = result.source.droppableId;
-    const categoryItems = [...grouped[categoryName]];
-    const [moved] = categoryItems.splice(result.source.index, 1);
-    categoryItems.splice(result.destination.index, 0, moved);
-    const updatedCategoryItems = categoryItems.map((item, index) => ({ ...item, display_order: index }));
-    const orderMap = {};
-    updatedCategoryItems.forEach(item => { orderMap[item.id] = item.display_order; });
-    setItems(prev => prev.map(item =>
-      orderMap[item.id] !== undefined ? { ...item, display_order: orderMap[item.id] } : item
-    ));
-    try {
-      await base44.entities.MenuItem.bulkUpdate(
-        updatedCategoryItems.map(item => ({ id: item.id, display_order: item.display_order }))
-      );
-    } catch (err) {
-      toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' });
-    }
+  const handleItemReorder = (categoryName, reorderedIds) => {
+    const reorderedItems = reorderedIds.map(id => items.find(i => i.id === id)).filter(Boolean);
+    const firstIndex = items.findIndex(i => i.category === categoryName);
+    if (firstIndex === -1) return;
+    const before = items.slice(0, firstIndex);
+    const after = items.slice(firstIndex).filter(i => i.category !== categoryName);
+    const reorderedWithOrder = reorderedItems.map((item, index) => ({ ...item, display_order: index }));
+    setItems([...before, ...reorderedWithOrder, ...after]);
+    base44.entities.MenuItem.bulkUpdate(
+      reorderedItems.map((item, index) => ({ id: item.id, display_order: index }))
+    ).catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }));
   };
 
   return (
@@ -248,34 +235,11 @@ export default function MenuManager() {
         {categories.length === 0 ? (
           <p className="text-sm text-muted-foreground">No categories yet. Create one to get started.</p>
         ) : (
-          <DragDropContext onDragEnd={onCategoryDragEnd}>
-            <Droppable droppableId="categories" direction="horizontal">
-              {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-2">
-                  {categories.map((cat, index) => (
-                    <Draggable key={cat.id} draggableId={cat.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div ref={provided.innerRef} {...provided.draggableProps} className={`flex items-center gap-2 px-3 py-2 rounded-lg glass-card ${snapshot.isDragging ? 'ring-2 ring-primary shadow-lg' : ''}`}>
-                          <span {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
-                            <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
-                          </span>
-                          <button onClick={() => openEditCategory(cat)} className="text-sm font-medium hover:underline">{cat.name}</button>
-                          {cat.complimentary && <Badge variant="default" className="text-xs"><Gift className="w-3 h-3 mr-1" />Free</Badge>}
-                          <div className="flex items-center gap-1.5">
-                            <Switch checked={cat.complimentary} onCheckedChange={() => toggleComplimentary(cat)} />
-                            <Label className="text-xs text-muted-foreground">Complimentary</Label>
-                          </div>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditCategory(cat)}><Pencil className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteCategory(cat)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+          <Reorder.Group axis="x" values={categories.map(c => c.id)} onReorder={handleCategoryReorder} className="flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <DraggableCategory key={cat.id} value={cat.id} cat={cat} onEdit={openEditCategory} onToggle={toggleComplimentary} onDelete={handleDeleteCategory} />
+            ))}
+          </Reorder.Group>
         )}
       </div>
 
@@ -295,63 +259,21 @@ export default function MenuManager() {
           <p>No menu items yet. Add your first item!</p>
         </div>
       ) : (
-        <DragDropContext onDragEnd={onItemDragEnd}>
+        <>
         {Object.entries(grouped).map(([category, categoryItems]) => (
           <div key={category} className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <h3 className="font-heading text-lg font-semibold">{category}</h3>
               {complimentarySet.has(category) && <Badge variant="default"><Gift className="w-3 h-3 mr-1" />Complimentary</Badge>}
             </div>
-            <Droppable droppableId={category} direction="horizontal">
-              {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {categoryItems.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div ref={provided.innerRef} {...provided.draggableProps} className={`relative ${snapshot.isDragging ? 'z-50' : ''}`}>
-                          <span {...provided.dragHandleProps} className="absolute top-2 left-2 z-10 cursor-grab active:cursor-grabbing rounded-md p-0.5 bg-background/60 backdrop-blur-sm">
-                            <GripVertical className="w-4 h-4 text-muted-foreground" />
-                          </span>
-                          <Card className={snapshot.isDragging ? 'ring-2 ring-primary shadow-lg' : ''}>
-                            <CardContent className="p-4">
-                              {item.image_url && (
-                                <UIImage src={item.image_url} alt={item.name} className="w-full h-32 rounded-lg object-cover mb-3" fittingType="fill" />
-                              )}
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{item.name}</span>
-                                    {!item.available && <Badge variant="destructive">Hidden</Badge>}
-                                  </div>
-                                  {item.description && <p className="text-sm text-muted-foreground mt-1">{item.description}</p>}
-                                  {complimentarySet.has(category) || item.complimentary
-                                    ? <p className="text-sm font-medium mt-1 text-green-600">Complimentary</p>
-                                    : item.price != null && <p className="text-sm font-medium mt-1">${item.price.toFixed(2)}</p>}
-                                </div>
-                                <div className="flex flex-col items-end gap-1.5">
-                                  <div className="flex gap-1">
-                                    <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="w-4 h-4" /></Button>
-                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <Switch checked={item.complimentary || false} onCheckedChange={() => toggleItemComplimentary(item)} />
-                                    <Label className="text-xs text-muted-foreground">Free</Label>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
+            <Reorder.Group axis="y" values={categoryItems.map(i => i.id)} onReorder={(ids) => handleItemReorder(category, ids)} className="flex flex-col gap-3">
+              {categoryItems.map(item => (
+                <DraggableItemCard key={item.id} value={item.id} item={item} isCategoryComplimentary={complimentarySet.has(category)} onEdit={openEdit} onDelete={handleDelete} onToggle={toggleItemComplimentary} />
+              ))}
+            </Reorder.Group>
           </div>
         ))}
-        </DragDropContext>
+        </>
       )}
 
       {/* Item Dialog */}
