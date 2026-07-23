@@ -11,7 +11,7 @@ import ServiceUpdateForm from '@/components/ServiceUpdateForm';
 import StylistProfileDialog from '@/components/StylistProfileDialog';
 import { useStylistNotifications } from '@/hooks/useStylistNotifications';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import Swipeable from '@/components/Swipeable';
 import AnimatedTabContent from '@/components/AnimatedTabContent';
 
 export default function StylistView() {
@@ -43,10 +43,9 @@ export default function StylistView() {
   const displayName = user?.display_name || user?.full_name || user?.email || 'Stylist';
 
   const tabs = ['coffee', 'chat', 'services', 'service-update'];
-  const swipeHandlers = useSwipeNavigation(tabs, activeTab, handleTabChange);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6 touch-pan-y" {...swipeHandlers}>
+    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-full glass-card flex items-center justify-center">
@@ -71,10 +70,12 @@ export default function StylistView() {
           <TabsTrigger value="services" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Scissors className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">My Services</span></TabsTrigger>
           <TabsTrigger value="service-update" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><BellRing className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Service Update</span></TabsTrigger>
         </TabsList>
-        <AnimatedTabContent value="coffee" className="mt-6"><MenuBrowser mode="stylist" user={user} salonId={user?.salon_id} /></AnimatedTabContent>
-        <AnimatedTabContent value="chat" className="mt-6 flex-1 min-h-0 flex flex-col"><ChatPanel mode="stylist" user={user} /></AnimatedTabContent>
-        <AnimatedTabContent value="services" className="mt-6"><ServicesPanel mode="stylist" user={user} /></AnimatedTabContent>
-        <AnimatedTabContent value="service-update" className="mt-6"><ServiceUpdateForm user={user} /></AnimatedTabContent>
+        <Swipeable tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} className="mt-6 flex-1 min-h-0 flex flex-col">
+          <AnimatedTabContent value="coffee"><MenuBrowser mode="stylist" user={user} salonId={user?.salon_id} /></AnimatedTabContent>
+          <AnimatedTabContent value="chat" className="flex-1 min-h-0 flex flex-col"><ChatPanel mode="stylist" user={user} /></AnimatedTabContent>
+          <AnimatedTabContent value="services"><ServicesPanel mode="stylist" user={user} /></AnimatedTabContent>
+          <AnimatedTabContent value="service-update"><ServiceUpdateForm user={user} /></AnimatedTabContent>
+        </Swipeable>
       </Tabs>
       <StylistProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </div>

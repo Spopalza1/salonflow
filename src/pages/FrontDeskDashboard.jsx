@@ -12,7 +12,7 @@ import GuestMessagesPanel from '@/components/GuestMessagesPanel';
 import DailyReport from '@/components/DailyReport';
 import { ClipboardList, Coffee, MessageSquare, Scissors, QrCode, Users, Mail, BarChart3 } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import Swipeable from '@/components/Swipeable';
 import AnimatedTabContent from '@/components/AnimatedTabContent';
 
 export default function FrontDeskDashboard() {
@@ -40,10 +40,9 @@ export default function FrontDeskDashboard() {
   useAdminNotifications();
 
   const tabs = ['orders', 'menu', 'chat', 'services', 'stylists', 'messages', 'qr', 'report'];
-  const swipeHandlers = useSwipeNavigation(tabs, activeTab, handleTabChange);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6 touch-pan-y" {...swipeHandlers}>
+    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
         <TabsList className="glass-header fixed bottom-0 left-0 right-0 z-30 h-16 border-t safe-area-bottom justify-around rounded-none flex w-full md:relative md:flex-wrap md:h-auto md:border md:justify-start md:rounded-lg md:w-auto md:shadow-lg">
           <TabsTrigger value="orders" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><ClipboardList className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Orders</span></TabsTrigger>
@@ -55,14 +54,16 @@ export default function FrontDeskDashboard() {
           <TabsTrigger value="qr" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><QrCode className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">QR Code</span></TabsTrigger>
           <TabsTrigger value="report" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><BarChart3 className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Daily Report</span></TabsTrigger>
         </TabsList>
-        <AnimatedTabContent value="orders" className="mt-6"><OrdersPanel /></AnimatedTabContent>
-        <AnimatedTabContent value="menu" className="mt-6"><MenuManager /></AnimatedTabContent>
-        <AnimatedTabContent value="chat" className="mt-6 flex-1 min-h-0 flex flex-col"><ChatPanel mode="admin" user={user} /></AnimatedTabContent>
-        <AnimatedTabContent value="services" className="mt-6"><ServicesPanel mode="admin" user={user} /></AnimatedTabContent>
-        <AnimatedTabContent value="stylists" className="mt-6"><StylistManager /></AnimatedTabContent>
-        <AnimatedTabContent value="messages" className="mt-6"><GuestMessagesPanel /></AnimatedTabContent>
-        <AnimatedTabContent value="qr" className="mt-6"><QRDisplay /></AnimatedTabContent>
-        <AnimatedTabContent value="report" className="mt-6"><DailyReport /></AnimatedTabContent>
+        <Swipeable tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} className="mt-6 flex-1 min-h-0 flex flex-col">
+          <AnimatedTabContent value="orders"><OrdersPanel /></AnimatedTabContent>
+          <AnimatedTabContent value="menu"><MenuManager /></AnimatedTabContent>
+          <AnimatedTabContent value="chat" className="flex-1 min-h-0 flex flex-col"><ChatPanel mode="admin" user={user} /></AnimatedTabContent>
+          <AnimatedTabContent value="services"><ServicesPanel mode="admin" user={user} /></AnimatedTabContent>
+          <AnimatedTabContent value="stylists"><StylistManager /></AnimatedTabContent>
+          <AnimatedTabContent value="messages"><GuestMessagesPanel /></AnimatedTabContent>
+          <AnimatedTabContent value="qr"><QRDisplay /></AnimatedTabContent>
+          <AnimatedTabContent value="report"><DailyReport /></AnimatedTabContent>
+        </Swipeable>
       </Tabs>
     </div>
   );
