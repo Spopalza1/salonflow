@@ -9,9 +9,10 @@ export function useGuestCustomization(salonId) {
     if (!salonId) return;
     const load = async () => {
       try {
-        const data = await base44.entities.SalonCustomization.filter({ salon_id: salonId });
-        if (data.length > 0) {
-          setSettings({ ...DEFAULTS, ...data[0] });
+        const response = await base44.functions.invoke('getGuestCustomization', { salon_id: salonId });
+        const data = response.data?.customization;
+        if (data) {
+          setSettings({ ...DEFAULTS, ...data });
         }
       } catch (err) {
         console.error('Failed to load salon customization:', err);
