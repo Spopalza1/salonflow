@@ -18,7 +18,13 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
       const initial = {};
       (optionGroups || []).forEach(g => {
         if ((g.input_type || 'options') === 'number') {
-          initial[g.id] = g.number_min ?? 0;
+          if (g.number_items && g.number_items.length > 0) {
+            const obj = {};
+            g.number_items.forEach((item, i) => { obj[i] = item.min ?? 0; });
+            initial[g.id] = obj;
+          } else {
+            initial[g.id] = g.number_min ?? 0;
+          }
         }
       });
       setSelections(initial);
@@ -33,8 +39,14 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
       const type = g.input_type || 'options';
       if (type === 'options' && Array.isArray(val)) {
         total += val.reduce((s, o) => s + (o.extra_price || 0), 0);
-      } else if (type === 'number' && typeof val === 'number') {
-        total += val * (g.number_price_per_unit || 0);
+      } else if (type === 'number') {
+        if (g.number_items && g.number_items.length > 0 && typeof val === 'object') {
+          g.number_items.forEach((item, i) => {
+            total += (val[i] ?? item.min ?? 0) * (item.price_per_unit || 0);
+          });
+        } else if (typeof val === 'number') {
+          total += val * (g.number_price_per_unit || 0);
+        }
       } else if (type === 'yesno' && (val === 'yes' || val === 'no')) {
         total += val === 'yes' ? (g.yes_price || 0) : (g.no_price || 0);
       }
@@ -63,6 +75,13 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
     setSelections(prev => ({ ...prev, [groupId]: value }));
   };
 
+  const setNumberItemValue = (groupId, itemIndex, value) => {
+    setSelections(prev => {
+      const current = prev[groupId] || {};
+      return { ...prev, [groupId]: { ...current, [itemIndex]: value } };
+    });
+  };
+
   const setYesNoValue = (groupId, value) => {
     setSelections(prev => ({ ...prev, [groupId]: value }));
   };
@@ -86,9 +105,17 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
       const type = g.input_type || 'options';
       if (type === 'options' && Array.isArray(val) && val.length > 0) {
         parts.push(`${g.name}: ${val.map(o => o.name).join(', ')}`);
-      } else if (type === 'number' && val !== undefined && val !== null) {
-        const unit = g.number_unit ? ` ${g.number_unit}` : '';
-        parts.push(`${g.name}: ${val}${unit}`);
+      } else if (type === 'number') {
+        if (g.number_items && g.number_items.length > 0 && typeof val === 'object') {
+          g.number_items.forEach((item, i) => {
+            const v = val[i] ?? item.min ?? 0;
+            const unit = item.unit_label ? ` ${item.unit_label}` : '';
+            parts.push(`${item.name || g.name}: ${v}${unit}`);
+          });
+        } else if (val !== undefined && val !== null) {
+          const unit = g.number_unit ? ` ${g.number_unit}` : '';
+          parts.push(`${g.name}: ${val}${unit}`);
+        }
       } else if (type === 'yesno' && (val === 'yes' || val === 'no')) {
         const label = val === 'yes' ? (g.yes_label || 'Yes') : (g.no_label || 'No');
         parts.push(`${g.name}: ${label}`);
@@ -102,6 +129,58 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
     const type = group.input_type || 'options';
 
     if (type === 'number') {
+      // Multi-item mode: each item has its own name, unit label, and config
+      if (group.number_items && group.number_items.length > 0) {
+        const groupSel = selections[group.id] || {};
+        return (
+          <div className="space-y-3">
+            {group.number_items.map((item, i) => {
+              const min = item.min ?? 0;
+              const max = item.max;
+              const step = item.step ?? 1;
+              const unit = item.unit_label;
+              const pricePerUnit = item.price_per_unit || 0;
+              const currentVal = groupSel[i] ?? min;
+
+              const clamp = (v) => {
+                if (v < min) return min;
+                if (max !== undefined && max !== null && v > max) return max;
+                return v;
+              };
+
+              return (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-sm font-medium w-24 shrink-0">{item.name || `Item ${i + 1}`}</span>
+                  <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => setNumberItemValue(group.id, i, clamp(currentVal - step))}>
+                    <Minus className="w-4 h-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    value={currentVal}
+                    min={min}
+                    max={max}
+                    step={step}
+                    onChange={e => {
+                      const v = e.target.value === '' ? min : parseFloat(e.target.value);
+                      setNumberItemValue(group.id, i, isNaN(v) ? min : clamp(v));
+                    }}
+                    className="w-20 text-center"
+                  />
+                  <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => setNumberItemValue(group.id, i, clamp(currentVal + step))}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                  {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+                  {pricePerUnit > 0 && (
+                    <span className="text-sm text-muted-foreground ml-auto">+${(pricePerUnit * currentVal).toFixed(2)}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+
+      // Single-item mode (backward compatible)
       const min = group.number_min ?? 0;
       const max = group.number_max;
       const step = group.number_step ?? 1;

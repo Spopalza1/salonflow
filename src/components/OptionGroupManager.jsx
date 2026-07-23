@@ -145,6 +145,21 @@ function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddO
     }
   };
 
+  const updateNumberItem = (idx, changes) => {
+    const items = (group.number_items || []).map((it, i) => i === idx ? { ...it, ...changes } : it);
+    onUpdate({ number_items: items });
+  };
+
+  const addNumberItem = () => {
+    const items = [...(group.number_items || []), { name: '', unit_label: '', price_per_unit: 0, min: 0, step: 1 }];
+    onUpdate({ number_items: items });
+  };
+
+  const removeNumberItem = (idx) => {
+    const items = (group.number_items || []).filter((_, i) => i !== idx);
+    onUpdate({ number_items: items });
+  };
+
   const inputType = group.input_type || 'options';
 
   const handleAdd = () => {
@@ -231,33 +246,82 @@ function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddO
             </>
           )}
 
-          {/* Number config */}
+          {/* Number config - multiple items with unit labels */}
           {inputType === 'number' && (
             <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Unit label</Label>
-                  <Input value={group.number_unit || ''} onChange={e => onUpdate({ number_unit: e.target.value })} placeholder="e.g. sugars, shots" className="text-sm h-8" />
+              {(group.number_items || []).map((item, idx) => (
+                <div key={idx} className="space-y-2 rounded-md border p-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={item.name || ''}
+                      onChange={e => updateNumberItem(idx, { name: e.target.value })}
+                      placeholder="Item name (e.g. Sugar)"
+                      className="text-sm h-8 flex-1"
+                    />
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeNumberItem(idx)}>
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Unit label</Label>
+                      <Input
+                        value={item.unit_label || ''}
+                        onChange={e => updateNumberItem(idx, { unit_label: e.target.value })}
+                        placeholder="e.g. tsp, shots"
+                        className="text-sm h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Price per unit</Label>
+                      <Input
+                        value={item.price_per_unit ?? 0}
+                        onChange={e => updateNumberItem(idx, { price_per_unit: e.target.value ? parseFloat(e.target.value) : 0 })}
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="text-sm h-8"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Min</Label>
+                      <Input
+                        value={item.min ?? 0}
+                        onChange={e => updateNumberItem(idx, { min: e.target.value ? parseFloat(e.target.value) : 0 })}
+                        type="number"
+                        step="1"
+                        className="text-sm h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Max</Label>
+                      <Input
+                        value={item.max ?? ''}
+                        onChange={e => updateNumberItem(idx, { max: e.target.value ? parseFloat(e.target.value) : undefined })}
+                        type="number"
+                        step="1"
+                        placeholder="—"
+                        className="text-sm h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Step</Label>
+                      <Input
+                        value={item.step ?? 1}
+                        onChange={e => updateNumberItem(idx, { step: e.target.value ? parseFloat(e.target.value) : 1 })}
+                        type="number"
+                        step="0.5"
+                        className="text-sm h-8"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Price per unit</Label>
-                  <Input value={group.number_price_per_unit ?? ''} onChange={e => onUpdate({ number_price_per_unit: e.target.value ? parseFloat(e.target.value) : 0 })} type="number" step="0.01" placeholder="0.00" className="text-sm h-8" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Min</Label>
-                  <Input value={group.number_min ?? 0} onChange={e => onUpdate({ number_min: e.target.value ? parseFloat(e.target.value) : 0 })} type="number" step="1" className="text-sm h-8" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Max</Label>
-                  <Input value={group.number_max ?? ''} onChange={e => onUpdate({ number_max: e.target.value ? parseFloat(e.target.value) : undefined })} type="number" step="1" placeholder="—" className="text-sm h-8" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Step</Label>
-                  <Input value={group.number_step ?? 1} onChange={e => onUpdate({ number_step: e.target.value ? parseFloat(e.target.value) : 1 })} type="number" step="0.5" className="text-sm h-8" />
-                </div>
-              </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" className="w-full" onClick={addNumberItem}>
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add item
+              </Button>
             </div>
           )}
 

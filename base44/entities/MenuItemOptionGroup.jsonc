@@ -54,6 +54,35 @@
       "type": "number",
       "default": 0
     },
+    "number_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "unit_label": {
+            "type": "string"
+          },
+          "price_per_unit": {
+            "type": "number",
+            "default": 0
+          },
+          "min": {
+            "type": "number",
+            "default": 0
+          },
+          "max": {
+            "type": "number"
+          },
+          "step": {
+            "type": "number",
+            "default": 1
+          }
+        }
+      }
+    },
     "yes_label": {
       "type": "string",
       "default": "Yes"
