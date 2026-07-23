@@ -13,7 +13,7 @@ export default function DraggableCategory({ value, cat, onEdit, onToggle, onDele
       value={value}
       dragListener={false}
       dragControls={controls}
-      whileDrag={{ scale: 1.05, zIndex: 50 }}
+      whileDrag={{ scale: 1.02, zIndex: 50 }}
       className="flex items-center gap-2 px-3 py-2 rounded-lg glass-card"
     >
       <span

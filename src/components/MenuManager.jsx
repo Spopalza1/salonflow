@@ -279,7 +279,7 @@ export default function MenuManager() {
         {categories.length === 0 ? (
           <p className="text-sm text-muted-foreground">No categories yet. Create one to get started.</p>
         ) : (
-          <Reorder.Group axis="x" values={categories.map(c => c.id)} onReorder={handleCategoryReorder} className="flex flex-wrap gap-2">
+          <Reorder.Group axis="y" values={categories.map(c => c.id)} onReorder={handleCategoryReorder} className="flex flex-col gap-2">
             {categories.map(cat => (
               <DraggableCategory key={cat.id} value={cat.id} cat={cat} onEdit={openEditCategory} onToggle={toggleComplimentary} onDelete={handleDeleteCategory} />
             ))}
