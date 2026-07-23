@@ -1,5 +1,19 @@
 import { useRef, useState, useEffect } from 'react';
 
+function getScrollableAncestor(el) {
+  let node = el;
+  while (node && node !== document.body) {
+    if (node.scrollHeight > node.clientHeight) {
+      const style = window.getComputedStyle(node);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+        return node;
+      }
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
 export default function PullToRefresh({ onRefresh, children }) {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -8,12 +22,22 @@ export default function PullToRefresh({ onRefresh, children }) {
   const pullDistRef = useRef(0);
   const refreshingRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
+  const containerRef = useRef(null);
 
   useEffect(() => { onRefreshRef.current = onRefresh; });
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     const handleTouchStart = (e) => {
-      if (window.scrollY <= 0 && !refreshingRef.current) {
+      if (refreshingRef.current) {
+        pulling.current = false;
+        return;
+      }
+      const scrollable = getScrollableAncestor(e.target);
+      const isAtTop = scrollable ? scrollable.scrollTop <= 0 : window.scrollY <= 0;
+      if (isAtTop) {
         startY.current = e.touches[0].clientY;
         pulling.current = true;
       } else {
@@ -46,18 +70,18 @@ export default function PullToRefresh({ onRefresh, children }) {
       setPullDistance(0);
     };
 
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: true });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
 
   return (
-    <>
+    <div ref={containerRef}>
       {(pullDistance > 0 || isRefreshing) && (
         <div
           style={{ height: isRefreshing ? 40 : pullDistance }}
@@ -67,6 +91,6 @@ export default function PullToRefresh({ onRefresh, children }) {
         </div>
       )}
       {children}
-    </>
+    </div>
   );
 }
