@@ -45,15 +45,38 @@
     "type"
   ],
   "rls": {
-    "create": true,
-    "read": {
+    "create": {
       "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "read": {
+      "$and": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}"
+        },
+        {
+          "data.target_role": "{{user.role}}"
+        }
+      ]
     },
     "update": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$and": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}"
+        },
+        {
+          "data.target_role": "{{user.role}}"
+        }
+      ]
     },
     "delete": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$and": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}"
+        },
+        {
+          "data.target_role": "{{user.role}}"
+        }
+      ]
     }
   }
 }

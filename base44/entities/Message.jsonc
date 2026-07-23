@@ -59,15 +59,50 @@
     "body"
   ],
   "rls": {
-    "create": true,
-    "read": {
+    "create": {
       "data.salon_id": "{{user.data.salon_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.thread_partner_id": "{{user.id}}"
+        },
+        {
+          "data.salon_id": "{{user.data.salon_id}}",
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "update": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.salon_id": "{{user.data.salon_id}}",
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.salon_id": "{{user.data.salon_id}}",
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }

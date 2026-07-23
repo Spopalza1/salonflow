@@ -58,13 +58,41 @@
   "rls": {
     "create": true,
     "read": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$or": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}",
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.requested_by_user_id": "{{user.id}}"
+        }
+      ]
     },
     "update": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$and": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$and": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }

@@ -11,13 +11,42 @@
   },
   "required": [],
   "rls": {
-    "create": true,
+    "create": {
+      "$and": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "read": true,
     "update": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$and": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
-      "data.salon_id": "{{user.data.salon_id}}"
+      "$and": [
+        {
+          "data.salon_id": "{{user.data.salon_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }

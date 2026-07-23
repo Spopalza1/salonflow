@@ -16,7 +16,7 @@
     "name"
   ],
   "rls": {
-    "create": true,
+    "create": false,
     "read": {
       "data.owner_user_id": "{{user.id}}"
     },
