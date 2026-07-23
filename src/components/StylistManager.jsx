@@ -9,6 +9,7 @@ import { UserPlus, Users, Mail, Briefcase, Trash2, Copy, Link as LinkIcon, Messa
 import { Image as UIImage } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/AuthContext';
+import { getPublishedAppUrl } from '@/lib/appUrl';
 import StylistMessageDialog from '@/components/StylistMessageDialog';
 import StylistEditDialog from '@/components/StylistEditDialog';
 import InviteQRShare from '@/components/InviteQRShare';
@@ -28,7 +29,7 @@ export default function StylistManager() {
   const { user } = useAuth();
 
   const getSignUpLink = (emailAddr) => {
-    return `${window.location.origin}/register?email=${encodeURIComponent(emailAddr)}`;
+    return `${getPublishedAppUrl()}/register?email=${encodeURIComponent(emailAddr)}`;
   };
 
   const copyToClipboard = async (text) => {
