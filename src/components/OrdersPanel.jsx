@@ -127,7 +127,10 @@ export default function OrdersPanel() {
                     <div className="font-medium">{order.item_name}</div>
                     <div className="text-sm text-muted-foreground">{order.category}</div>
                   </div>
-                  <Badge variant={STATUS_CONFIG[order.status]?.variant}>{STATUS_CONFIG[order.status]?.label}</Badge>
+                  <div className="flex items-center gap-1.5">
+                    {order.is_pre_order && <Badge className="bg-amber-500 text-xs"><Clock className="w-3 h-3 mr-0.5" />Pre-Arrival</Badge>}
+                    <Badge variant={STATUS_CONFIG[order.status]?.variant}>{STATUS_CONFIG[order.status]?.label}</Badge>
+                  </div>
                 </div>
                 <div className="text-sm space-y-0.5 mb-3">
                   <div>From: <span className="font-medium">{order.requested_by_name}</span></div>
