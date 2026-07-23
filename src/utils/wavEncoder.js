@@ -1,40 +1,15 @@
 /**
- * Encodes an AudioBuffer as a 16-bit PCM WAV blob (mono, downsampled to 22.05 kHz).
- * WAV is playable on ALL browsers including iOS Safari.
+ * Encodes an AudioBuffer as a 16-bit PCM WAV blob at the original sample rate
+ * and channel count (HD quality). WAV is playable on ALL browsers including iOS Safari.
  */
-export function audioBufferToWav(audioBuffer, targetSampleRate = 22050) {
-  const numChannels = 1; // force mono
-  const sampleRate = Math.min(targetSampleRate, audioBuffer.sampleRate);
-
-  // Mix down to mono
-  const src = audioBuffer.getChannelData(0);
-  let channelData;
-  if (audioBuffer.numberOfChannels > 1) {
-    const right = audioBuffer.getChannelData(1);
-    channelData = new Float32Array(src.length);
-    for (let i = 0; i < src.length; i++) {
-      channelData[i] = (src[i] + right[i]) / 2;
-    }
-  } else {
-    channelData = src;
-  }
-
-  // Downsample
-  const ratio = audioBuffer.sampleRate / sampleRate;
-  const newLength = Math.round(channelData.length / ratio);
-  const data = new Float32Array(newLength);
-  for (let i = 0; i < newLength; i++) {
-    const start = Math.floor(i * ratio);
-    const end = Math.min(Math.floor((i + 1) * ratio), channelData.length);
-    let sum = 0;
-    for (let j = start; j < end; j++) sum += channelData[j];
-    data[i] = sum / (end - start);
-  }
-
+export function audioBufferToWav(audioBuffer) {
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const numSamples = audioBuffer.length;
   const bitDepth = 16;
   const blockAlign = numChannels * bitDepth / 8;
   const byteRate = sampleRate * blockAlign;
-  const dataSize = newLength * blockAlign;
+  const dataSize = numSamples * blockAlign;
   const bufferSize = 44 + dataSize;
 
   const arrayBuffer = new ArrayBuffer(bufferSize);
@@ -63,12 +38,19 @@ export function audioBufferToWav(audioBuffer, targetSampleRate = 22050) {
   writeString(36, 'data');
   view.setUint32(40, dataSize, true);
 
-  // PCM samples
+  // Interleaved PCM samples (all channels preserved)
+  const channels = [];
+  for (let ch = 0; ch < numChannels; ch++) {
+    channels.push(audioBuffer.getChannelData(ch));
+  }
+
   let offset = 44;
-  for (let i = 0; i < newLength; i++) {
-    const s = Math.max(-1, Math.min(1, data[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    offset += 2;
+  for (let i = 0; i < numSamples; i++) {
+    for (let ch = 0; ch < numChannels; ch++) {
+      const s = Math.max(-1, Math.min(1, channels[ch][i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      offset += 2;
+    }
   }
 
   return new Blob([arrayBuffer], { type: 'audio/wav' });
