@@ -4,20 +4,35 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { order_id, item_name, salon_id, guest_name, arrival_time } = body;
+    const { order_id } = body;
 
-    if (!item_name || !salon_id || !arrival_time) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!order_id) {
+      return Response.json({ error: 'Missing order_id' }, { status: 400 });
     }
 
-    const arrivalDate = new Date(arrival_time);
+    // Fetch the actual order from the database instead of trusting request body.
+    // This ensures the notification is only created for a real pre-arrival order
+    // and all content (item_name, salon_id, guest_name, arrival_time) comes from
+    // the verified record — not from an unauthenticated caller.
+    let order;
+    try {
+      order = await base44.asServiceRole.entities.Order.get(order_id);
+    } catch {
+      return Response.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    if (!order.is_pre_order || !order.arrival_time) {
+      return Response.json({ error: 'Order is not a pre-arrival order' }, { status: 400 });
+    }
+
+    const arrivalDate = new Date(order.arrival_time);
     const arrivalStr = arrivalDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
     await base44.asServiceRole.entities.Notification.create({
       title: 'Pre-Arrival Order Alert',
-      body: `${guest_name || 'Guest'} arrives at ${arrivalStr} — pre-ordered: ${item_name}`,
+      body: `${order.requested_by_name || 'Guest'} arrives at ${arrivalStr} — pre-ordered: ${order.item_name}`,
       type: 'order',
-      salon_id,
+      salon_id: order.salon_id,
       source_id: order_id,
       target_role: 'admin',
       read: false,

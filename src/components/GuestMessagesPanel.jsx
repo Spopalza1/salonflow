@@ -43,20 +43,32 @@ export default function GuestMessagesPanel() {
     return unsubscribe;
   }, [loadMessages, user?.salon_id]);
 
+  const escapeHtml = (str) => {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
   const handlePrint = (msg) => {
     const printWin = window.open('', '_blank');
+    const safeName = escapeHtml(msg.guest_name);
+    const safeMessage = escapeHtml(msg.message);
     printWin.document.write(`
-      <html><head><title>Guest Message - ${msg.guest_name}</title>
+      <html><head><title>Guest Message - ${safeName}</title>
       <style>
         body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
         h2 { margin-bottom: 4px; }
         .date { color: hsl(var(--muted-foreground)); font-size: 14px; margin-bottom: 20px; }
         .message { font-size: 16px; line-height: 1.6; white-space: pre-wrap; }
       </style></head><body>
-        <h2>Message from ${msg.guest_name}</h2>
+        <h2>Message from ${safeName}</h2>
         <p class="date">${new Date(msg.created_date).toLocaleString()}</p>
         <hr/>
-        <p class="message">${msg.message}</p>
+        <p class="message">${safeMessage}</p>
       </body></html>
     `);
     printWin.document.close();
