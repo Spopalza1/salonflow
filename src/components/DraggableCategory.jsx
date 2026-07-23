@@ -14,7 +14,7 @@ export default function DraggableCategory({ value, cat, onEdit, onToggle, onDele
       dragListener={false}
       dragControls={controls}
       whileDrag={{ scale: 1.02, zIndex: 50 }}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg glass-card"
+      className="flex items-center gap-2 px-3 py-2 rounded-lg glass-card touch-pan-y"
     >
       <span
         data-reorder-grip
@@ -29,8 +29,8 @@ export default function DraggableCategory({ value, cat, onEdit, onToggle, onDele
         <Switch checked={cat.complimentary} onCheckedChange={() => onToggle(cat)} />
         <Label className="text-xs text-muted-foreground">Complimentary</Label>
       </div>
-      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(cat)}><Pencil className="w-3.5 h-3.5" /></Button>
-      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(cat)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+      <Button variant="ghost" size="icon" className="h-7 w-7 touch-target" onClick={() => onEdit(cat)}><Pencil className="w-3.5 h-3.5" /></Button>
+      <Button variant="ghost" size="icon" className="h-7 w-7 touch-target" onClick={() => onDelete(cat)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
     </Reorder.Item>
   );
 }

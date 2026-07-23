@@ -279,7 +279,7 @@ export default function MenuManager() {
         {categories.length === 0 ? (
           <p className="text-sm text-muted-foreground">No categories yet. Create one to get started.</p>
         ) : (
-          <Reorder.Group axis="y" values={categories.map(c => c.id)} onReorder={handleCategoryReorder} className="flex flex-col gap-2">
+          <Reorder.Group axis="y" values={categories.map(c => c.id)} onReorder={handleCategoryReorder} className="flex flex-col gap-2 touch-pan-y">
             {categories.map(cat => (
               <DraggableCategory key={cat.id} value={cat.id} cat={cat} onEdit={openEditCategory} onToggle={toggleComplimentary} onDelete={handleDeleteCategory} />
             ))}
@@ -312,7 +312,7 @@ export default function MenuManager() {
               <h3 className="font-heading text-lg font-semibold">{category}</h3>
               {complimentarySet.has(category) && <Badge variant="default"><Gift className="w-3 h-3 mr-1" />Complimentary</Badge>}
             </div>
-            <Reorder.Group axis="y" values={categoryItems.map(i => i.id)} onReorder={(ids) => handleItemReorder(category, ids)} className="flex flex-col gap-3">
+            <Reorder.Group axis="y" values={categoryItems.map(i => i.id)} onReorder={(ids) => handleItemReorder(category, ids)} className="flex flex-col gap-3 touch-pan-y">
               {categoryItems.map(item => (
                 <DraggableItemCard key={item.id} value={item.id} item={item} isCategoryComplimentary={complimentarySet.has(category)} onEdit={openEdit} onDelete={handleDelete} onToggle={toggleItemComplimentary} />
               ))}

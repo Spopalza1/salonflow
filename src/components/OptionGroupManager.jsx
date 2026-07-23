@@ -190,7 +190,7 @@ function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddO
           {group.required && <Badge variant="default" className="text-xs">Required</Badge>}
           {inputType === 'options' && group.allow_multiple && <Badge variant="secondary" className="text-xs">Multi</Badge>}
         </div>
-        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onDelete}>
+        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 touch-target" onClick={onDelete}>
           <Trash2 className="w-3.5 h-3.5 text-destructive" />
         </Button>
       </div>
@@ -239,7 +239,7 @@ function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddO
               <div className="flex items-center gap-2">
                 <Input value={optName} onChange={e => setOptName(e.target.value)} placeholder="Option name" className="text-sm h-8" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }} />
                 <Input value={optPrice} onChange={e => setOptPrice(e.target.value)} placeholder="0.00" type="number" step="0.01" className="text-sm h-8 w-20" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }} />
-                <Button type="button" size="sm" variant="outline" className="h-8" onClick={handleAdd}>
+                <Button type="button" size="sm" variant="outline" className="h-8 touch-target" onClick={handleAdd}>
                   <Plus className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -258,7 +258,7 @@ function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddO
                       placeholder="Item name (e.g. Sugar)"
                       className="text-sm h-8 flex-1"
                     />
-                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeNumberItem(idx)}>
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0 touch-target" onClick={() => removeNumberItem(idx)}>
                       <Trash2 className="w-3.5 h-3.5 text-destructive" />
                     </Button>
                   </div>

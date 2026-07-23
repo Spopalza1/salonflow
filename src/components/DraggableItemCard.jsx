@@ -16,7 +16,7 @@ export default function DraggableItemCard({ value, item, isCategoryComplimentary
       dragListener={false}
       dragControls={controls}
       whileDrag={{ scale: 1.02, zIndex: 50, boxShadow: '0 12px 32px rgba(0,0,0,0.15)' }}
-      className="relative"
+      className="relative touch-pan-y"
     >
       <span
         data-reorder-grip
@@ -43,8 +43,8 @@ export default function DraggableItemCard({ value, item, isCategoryComplimentary
             </div>
             <div className="flex flex-col items-end gap-1.5">
               <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => onEdit(item)}><Pencil className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => onDelete(item)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                <Button variant="ghost" size="icon" className="touch-target" onClick={() => onEdit(item)}><Pencil className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" className="touch-target" onClick={() => onDelete(item)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
               </div>
               <div className="flex items-center gap-1.5">
                 <Switch checked={item.complimentary || false} onCheckedChange={() => onToggle(item)} />

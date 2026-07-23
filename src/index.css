@@ -159,7 +159,8 @@
 
 /* 44px minimum touch targets on mobile */
 @media (pointer: coarse) {
-  button.h-9.w-9 {
+  button.h-9.w-9,
+  .touch-target {
     min-width: 44px;
     min-height: 44px;
   }
