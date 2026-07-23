@@ -13,6 +13,7 @@ import { useStylistNotifications } from '@/hooks/useStylistNotifications';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import Swipeable from '@/components/Swipeable';
 import AnimatedTabContent from '@/components/AnimatedTabContent';
+import { useTabScrollRestoration } from '@/hooks/useTabScrollRestoration';
 
 export default function StylistView() {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export default function StylistView() {
 
   useStylistNotifications(user);
   const unreadCount = useUnreadMessages('stylist', user);
+  const scrollRef = useTabScrollRestoration(activeTab);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -45,7 +47,7 @@ export default function StylistView() {
   const tabs = ['coffee', 'chat', 'services', 'service-update'];
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
+    <div ref={scrollRef} className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-full glass-card flex items-center justify-center">

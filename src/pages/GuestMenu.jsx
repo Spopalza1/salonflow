@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +48,16 @@ export default function GuestMenu() {
   const [guestInfo, setGuestInfo] = useState(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [view, setView] = useState('choice');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = searchParams.get('view') || 'choice';
+  const navigateToView = (newView) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (newView === 'choice') next.delete('view');
+      else next.set('view', newView);
+      return next;
+    }, { replace: newView === 'choice' });
+  };
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
@@ -127,7 +137,7 @@ export default function GuestMenu() {
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
     setGuestInfo(info);
-    setView('choice');
+    navigateToView('choice');
   };
 
   const handleSendMessage = async (e) => {
@@ -205,7 +215,7 @@ export default function GuestMenu() {
               <h1 className="font-heading text-xl font-semibold">Welcome, {guestInfo.firstName}!</h1>
               <p className="text-sm text-muted-foreground mt-1">What would you like to do?</p>
             </div>
-            <Card className="cursor-pointer hover:border-primary transition-colors glass-card" onClick={() => { setView('menu'); }}>
+            <Card className="cursor-pointer hover:border-primary transition-colors glass-card" onClick={() => { navigateToView('menu'); }}>
               <CardContent className="p-6 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <Coffee className="w-6 h-6 text-primary" />
@@ -216,7 +226,7 @@ export default function GuestMenu() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:border-primary transition-colors glass-card" onClick={() => { setMessageSent(false); setView('message'); }}>
+            <Card className="cursor-pointer hover:border-primary transition-colors glass-card" onClick={() => { setMessageSent(false); navigateToView('message'); }}>
               <CardContent className="p-6 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <Mail className="w-6 h-6 text-primary" />
@@ -240,7 +250,7 @@ export default function GuestMenu() {
         <div>
           <header className="glass-header border-b sticky top-0 z-10 safe-area-top">
             <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setView('choice')}>
+              <Button variant="ghost" size="sm" onClick={() => navigateToView('choice')}>
                 <ArrowLeft className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Back</span>
               </Button>
               <div className="flex items-center gap-2 min-w-0">
@@ -260,8 +270,8 @@ export default function GuestMenu() {
                   <h2 className="font-heading text-lg font-semibold mb-2">Message Sent!</h2>
                   <p className="text-sm text-muted-foreground mb-6">The front desk has received your message.</p>
                   <div className="flex flex-col gap-2">
-                    <Button onClick={() => { setMessageSent(false); setView('message'); }}>Send Another Message</Button>
-                    <Button variant="outline" onClick={() => setView('choice')}>Back to Home</Button>
+                    <Button onClick={() => { setMessageSent(false); navigateToView('message'); }}>Send Another Message</Button>
+                    <Button variant="outline" onClick={() => navigateToView('choice')}>Back to Home</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -305,7 +315,7 @@ export default function GuestMenu() {
       <div>
         <header className="glass-header border-b sticky top-0 z-10 safe-area-top">
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setView('choice')}>
+            <Button variant="ghost" size="sm" onClick={() => navigateToView('choice')}>
               <ArrowLeft className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Back</span>
             </Button>
             <div className="flex items-center gap-2 min-w-0">

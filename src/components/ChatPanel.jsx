@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,10 @@ export default function ChatPanel({ mode, user }) {
   const [messages, setMessages] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState(null);
-  const [mobileChatActive, setMobileChatActive] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mobileChatActive = searchParams.get('chat') === 'open';
+  const openChat = () => setSearchParams(prev => { const next = new URLSearchParams(prev); next.set('chat', 'open'); return next; });
+  const closeChat = () => setSearchParams(prev => { const next = new URLSearchParams(prev); next.delete('chat'); return next; }, { replace: true });
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false);
@@ -88,7 +92,14 @@ export default function ChatPanel({ mode, user }) {
         }
         setMessages((prev) => {
           if (prev.some((m) => m.id === event.data.id)) return prev;
-          return [...prev, event.data];
+          // Replace any matching pending temp message with the real record
+          const withoutPending = prev.filter(m => !(
+            m._pending &&
+            m.body === event.data.body &&
+            m.sender_id === event.data.sender_id &&
+            m.thread_partner_id === event.data.thread_partner_id
+          ));
+          return [...withoutPending, event.data];
         });
       } else if (event.type === 'update') {
         setMessages((prev) => prev.map((m) => m.id === event.data.id ? event.data : m));
@@ -132,17 +143,47 @@ export default function ChatPanel({ mode, user }) {
       partnerId = selectedPartnerId;
       partnerName = partner?.display_name || partner?.full_name || partner?.email || 'Stylist';
     }
-    await base44.entities.Message.create({
+    const senderName = user.display_name || user.full_name || user.email;
+    const senderRole = mode === 'admin' ? 'admin' : 'stylist';
+
+    // Optimistic: render a temp message immediately with a pending state
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const tempMessage = {
+      id: tempId,
+      _pending: true,
       sender_id: user.id,
-      sender_name: user.display_name || user.full_name || user.email,
-      sender_role: mode === 'admin' ? 'admin' : 'stylist',
+      sender_name: senderName,
+      sender_role: senderRole,
       thread_partner_id: partnerId,
       thread_partner_name: partnerName,
       body: body || '',
       media_url,
       media_type,
-      salon_id: user.salon_id
-    });
+      salon_id: user.salon_id,
+      created_date: new Date().toISOString(),
+      read: false,
+    };
+    setMessages(prev => [...prev, tempMessage]);
+
+    try {
+      const created = await base44.entities.Message.create({
+        sender_id: user.id,
+        sender_name: senderName,
+        sender_role: senderRole,
+        thread_partner_id: partnerId,
+        thread_partner_name: partnerName,
+        body: body || '',
+        media_url,
+        media_type,
+        salon_id: user.salon_id
+      });
+      // Replace the temp message with the real record
+      setMessages(prev => prev.map(m => m.id === tempId ? created : m));
+    } catch (err) {
+      // Remove the temp message on failure
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      console.error('Failed to send message:', err);
+    }
   };
 
   const handleDeleteMessage = async (messageId) => {
@@ -158,7 +199,7 @@ export default function ChatPanel({ mode, user }) {
     setDeletedConversations((prev) => new Set(prev).add(partnerId));
     setMessages((prev) => prev.filter((m) => m.thread_partner_id !== partnerId));
     setShowDeleteConvConfirm(false);
-    setMobileChatActive(false);
+    closeChat();
     try {
       await base44.entities.Message.deleteMany({ thread_partner_id: partnerId });
     } catch (err) {
@@ -187,7 +228,7 @@ export default function ChatPanel({ mode, user }) {
 
             <div className="space-y-3">
                 {conversationMessages.map((msg) =>
-              <div key={msg.id} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'} ${msg._pending ? 'opacity-60' : ''}`}>
                     <MessageBubble msg={msg} isOwn={msg.sender_id === user.id} canDownload={mode === 'admin'} />
                   </div>
               )}
@@ -240,7 +281,7 @@ export default function ChatPanel({ mode, user }) {
                   stylist={s}
                   isSelected={selectedPartnerId === s.id}
                   hasUnread={unreadByStylist.has(s.id)}
-                  onSelect={() => { setSelectedPartnerId(s.id); setMobileChatActive(true); }}
+                  onSelect={() => { setSelectedPartnerId(s.id); openChat(); }}
                   onDelete={() => { setSelectedPartnerId(s.id); setShowDeleteConvConfirm(true); }}
                 />
               ))}
@@ -250,7 +291,7 @@ export default function ChatPanel({ mode, user }) {
             {selectedPartnerId ?
           <>
                 <div className="flex items-center gap-2 px-4 py-2 border-b">
-                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 shrink-0" onClick={() => setMobileChatActive(false)}>
+                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 shrink-0" onClick={() => closeChat()}>
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
                   <span className="text-sm font-medium truncate flex-1">
@@ -269,7 +310,7 @@ export default function ChatPanel({ mode, user }) {
 
               <div className="space-y-3">
                       {conversationMessages.map((msg) =>
-                <div key={msg.id} className={`group flex items-center gap-1.5 ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                <div key={msg.id} className={`group flex items-center gap-1.5 ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'} ${msg._pending ? 'opacity-60' : ''}`}>
                           <MessageBubble msg={msg} isOwn={msg.sender_role === 'admin'} canDownload={mode === 'admin'} />
                           <button
                     onClick={() => handleDeleteMessage(msg.id)}
