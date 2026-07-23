@@ -11,6 +11,7 @@ import ServiceUpdateForm from '@/components/ServiceUpdateForm';
 import StylistProfileDialog from '@/components/StylistProfileDialog';
 import { useStylistNotifications } from '@/hooks/useStylistNotifications';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import AnimatedTabContent from '@/components/AnimatedTabContent';
 
 export default function StylistView() {
@@ -41,8 +42,11 @@ export default function StylistView() {
 
   const displayName = user?.display_name || user?.full_name || user?.email || 'Stylist';
 
+  const tabs = ['coffee', 'chat', 'services', 'service-update'];
+  const swipeHandlers = useSwipeNavigation(tabs, activeTab, handleTabChange);
+
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
+    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6" {...swipeHandlers}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-full glass-card flex items-center justify-center">
