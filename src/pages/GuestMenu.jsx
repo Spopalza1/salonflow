@@ -212,7 +212,7 @@ export default function GuestMenu() {
           <div className="max-w-md w-full space-y-4">
             <div className="text-center mb-6">
               <SalonLogo logoUrl={logoUrl} height={logoSize} large />
-              <h1 className="font-heading text-xl font-semibold">Welcome, {guestInfo.firstName}!</h1>
+              <h1 className="font-heading text-xl font-semibold">Welcome to {displayName}, {guestInfo.firstName}!</h1>
               <p className="text-sm text-muted-foreground mt-1">What would you like to do?</p>
             </div>
             <Card className="cursor-pointer hover:border-primary transition-colors glass-card" onClick={() => { navigateToView('menu'); }}>
