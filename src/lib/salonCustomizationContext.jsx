@@ -53,6 +53,17 @@ export function SalonCustomizationProvider({ children }) {
     applyCustomization(adminSettings || DEFAULTS);
   }, [adminSettings]);
 
+  // Re-apply customization when the theme (light/dark) toggles so that
+  // dark mode uses the standardized navy theme and light mode restores branding.
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      applyCustomization(adminSettings || DEFAULTS);
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, [adminSettings]);
+
   const updateSettings = useCallback(async (scope, updates) => {
     if (!user?.salon_id) return;
     const current = scope === 'admin' ? adminSettings : guestSettings;

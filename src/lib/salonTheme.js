@@ -43,12 +43,13 @@ export function ensureFontLoaded(fontName) {
   loadedFonts[fontName] = true;
 }
 
-export function hexToHsl(hex) {
+function hexToHslObject(hex) {
   if (!hex) return null;
   hex = hex.replace('#', '');
   if (hex.length === 3) {
     hex = hex.split('').map(c => c + c).join('');
   }
+  if (hex.length !== 6) return null;
   const r = parseInt(hex.substring(0, 2), 16) / 255;
   const g = parseInt(hex.substring(2, 4), 16) / 255;
   const b = parseInt(hex.substring(4, 6), 16) / 255;
@@ -67,7 +68,13 @@ export function hexToHsl(hex) {
     }
     h *= 60;
   }
-  return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+export function hexToHsl(hex) {
+  const hsl = hexToHslObject(hex);
+  if (!hsl) return null;
+  return `${hsl.h} ${hsl.s}% ${hsl.l}%`;
 }
 
 function foregroundFor(hslStr) {
@@ -76,10 +83,66 @@ function foregroundFor(hslStr) {
   return lightness < 0.5 ? '0 0% 100%' : '0 0% 9%';
 }
 
+/**
+ * Converts the admin's primary brand color into an accessible accent for dark mode.
+ * Preserves the hue, boosts saturation to at least 55%, and sets lightness to 68%
+ * so the color reads clearly on deep navy backgrounds without inverting.
+ */
+export function generateDarkAccent(hex) {
+  const hsl = hexToHslObject(hex);
+  if (!hsl) return null;
+  const s = Math.max(hsl.s, 55);
+  return `${hsl.h} ${s}% 68%`;
+}
+
+// CSS variables that admin branding can override in light mode.
+// In dark mode these are cleared so the standardized navy theme takes effect.
+const BRANDING_VARS = [
+  '--primary', '--primary-foreground',
+  '--secondary', '--secondary-foreground',
+  '--accent', '--accent-foreground',
+  '--foreground',
+  '--card', '--card-foreground',
+  '--border', '--input',
+  '--ring',
+];
+
 export function applyCustomization(settings) {
   const root = document.documentElement;
   const s = { ...DEFAULTS, ...settings };
+  const isDark = root.classList.contains('dark');
 
+  // Fonts and radius are theme-independent
+  if (s.card_radius != null) {
+    root.style.setProperty('--radius', `${s.card_radius / 16}rem`);
+  }
+  if (s.font_heading) {
+    ensureFontLoaded(s.font_heading);
+    root.style.setProperty('--font-heading', `'${s.font_heading}', ui-sans-serif, system-ui, sans-serif`);
+  }
+  if (s.font_body) {
+    ensureFontLoaded(s.font_body);
+    root.style.setProperty('--font-body', `'${s.font_body}', ui-sans-serif, system-ui, sans-serif`);
+  }
+
+  // Clear all branding overrides from the previous application so that
+  // switching themes doesn't leave stale inline values.
+  BRANDING_VARS.forEach(v => root.style.removeProperty(v));
+
+  if (isDark) {
+    // Dark mode: standardized navy theme across all tenants.
+    // Only the accessible accent (derived from the brand primary) is applied;
+    // all other colors come from the CSS .dark rules.
+    const darkAccent = generateDarkAccent(s.primary_color);
+    if (darkAccent) {
+      root.style.setProperty('--primary', darkAccent);
+      root.style.setProperty('--primary-foreground', '222 47% 11%');
+      root.style.setProperty('--ring', darkAccent);
+    }
+    return;
+  }
+
+  // Light mode: apply all admin branding colors
   const primary = hexToHsl(s.primary_color);
   if (primary) {
     root.style.setProperty('--primary', primary);
@@ -112,18 +175,4 @@ export function applyCustomization(settings) {
 
   const cardBorder = hexToHsl(s.card_border_color);
   if (cardBorder) root.style.setProperty('--border', cardBorder);
-
-  if (s.card_radius != null) {
-    root.style.setProperty('--radius', `${s.card_radius / 16}rem`);
-  }
-
-  if (s.font_heading) {
-    ensureFontLoaded(s.font_heading);
-    root.style.setProperty('--font-heading', `'${s.font_heading}', ui-sans-serif, system-ui, sans-serif`);
-  }
-
-  if (s.font_body) {
-    ensureFontLoaded(s.font_body);
-    root.style.setProperty('--font-body', `'${s.font_body}', ui-sans-serif, system-ui, sans-serif`);
-  }
 }
