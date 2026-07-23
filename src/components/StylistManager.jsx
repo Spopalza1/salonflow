@@ -83,8 +83,7 @@ export default function StylistManager() {
         title: title.trim(),
         salonId: user.salon_id,
       });
-      const link = `${window.location.origin}/register?email=${encodeURIComponent(email.trim())}&salon_id=${encodeURIComponent(user.salon_id)}&title=${encodeURIComponent(title.trim())}`;
-      setInviteLink(link);
+      setInviteLink(response.data?.link);
       setInviteEmail(email.trim());
       toast({ title: 'Invitation sent!', description: 'Share the QR code or link below with your stylist.' });
       setEmail('');

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createInvitationToken } from '../../shared/invitationToken.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -17,13 +18,15 @@ Deno.serve(async (req) => {
     }
 
     // Invite the user — platform sends the invitation email
-    // The user record is created when they register, not now
     await base44.users.inviteUser(email.trim(), 'user');
 
-    // Build the registration link with salon_id and title params
-    // These are applied to the user's profile after they complete registration
+    // Generate a signed invitation token so salon_id/title are verified on the backend
+    // during registration — not trusted from client-supplied URL params.
+    const secret = Deno.env.get('BASE44_APP_ID') || '';
+    const token = await createInvitationToken(email.trim(), salonId, title.trim(), secret);
+
     const origin = req.headers.get('origin') || '';
-    const link = `${origin}/register?email=${encodeURIComponent(email.trim())}&salon_id=${encodeURIComponent(salonId)}&title=${encodeURIComponent(title.trim())}`;
+    const link = `${origin}/register?email=${encodeURIComponent(email.trim())}&invite_token=${encodeURIComponent(token)}`;
 
     return Response.json({ success: true, link });
   } catch (error) {

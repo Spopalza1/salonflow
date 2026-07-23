@@ -3,6 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Verify the request is authenticated — prevents unauthenticated external callers
+    // from triggering notifications. The workflow engine provides auth context.
+    const isAuth = await base44.auth.isAuthenticated();
+    if (!isAuth) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { order_id } = body;
 

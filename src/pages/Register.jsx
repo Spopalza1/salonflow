@@ -62,18 +62,14 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
 
-        // Apply salon_id and title from the invitation link
+        // Securely accept the invitation via backend-verified signed token
         const urlParams = new URLSearchParams(window.location.search);
-        const salonId = urlParams.get("salon_id");
-        const titleParam = urlParams.get("title");
-        if (salonId || titleParam) {
+        const inviteToken = urlParams.get("invite_token");
+        if (inviteToken) {
           try {
-            await base44.auth.updateMe({
-              ...(salonId && { salon_id: salonId }),
-              ...(titleParam && { title: titleParam }),
-            });
+            await base44.functions.invoke("acceptInvitation", { invite_token: inviteToken });
           } catch (e) {
-            console.error("Failed to set salon/title:", e);
+            console.error("Failed to accept invitation:", e);
           }
         }
       }
