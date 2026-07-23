@@ -20,12 +20,11 @@ export function useGuestCustomization(salonId) {
     };
     load();
 
+    // Re-fetch merged customization whenever any SalonCustomization record changes
+    // (admin or guest scope) so the guest menu always reflects the latest branding.
     const unsubscribe = base44.entities.SalonCustomization.subscribe((event) => {
       if (event.data?.salon_id !== salonId) return;
-      if (event.data?.scope === 'admin') return;
-      if (event.type === 'create' || event.type === 'update') {
-        setSettings({ ...DEFAULTS, ...event.data });
-      }
+      load();
     });
     return unsubscribe;
   }, [salonId]);

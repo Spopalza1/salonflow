@@ -120,7 +120,7 @@ export default function GuestMenu() {
       if (event.type === 'create' && event.data.guest_session === guestInfo.session && event.data.salon_id === salonId) {
         setOrders(prev => [event.data, ...prev]);
       } else if (event.type === 'update' && event.data.guest_session === guestInfo.session && event.data.salon_id === salonId) {
-        setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));
+        setOrders(prev => prev.map(o => o.id === event.data.id ? { ...o, ...event.data } : o));
       }
     });
     return unsubscribe;
