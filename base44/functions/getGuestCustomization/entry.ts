@@ -27,8 +27,12 @@ Deno.serve(async (req) => {
 
     // Prefer guest-scoped record; fall back to legacy unscoped record for backward compat
     const guest = data.find(s => s.scope === 'guest') || data.find(s => !s.scope) || data[0] || null;
+    // Use admin-scoped record as a fallback for any fields the guest record is missing
+    // (e.g. salon_display_name set only on the admin tab)
+    const admin = data.find(s => s.scope === 'admin');
+    const merged = guest && admin ? { ...admin, ...guest } : guest;
 
-    return Response.json({ customization: guest });
+    return Response.json({ customization: merged });
   } catch (error) {
     console.error('getGuestCustomization error:', error);
     return Response.json({ error: error.message }, { status: 500 });
