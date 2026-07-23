@@ -21,7 +21,7 @@ export default function DraggableCategory({ value, cat, onEdit, onToggle, onDele
         onPointerDown={(e) => { e.stopPropagation(); controls.start(e); }}
         className="cursor-grab active:cursor-grabbing touch-none flex items-center"
       >
-        <GripVertical className="w-4 h-4 text-muted-foreground" />
+        <GripVertical className="w-4 h-4 text-muted-foreground/40" />
       </span>
       <button onClick={() => onEdit(cat)} className="text-sm font-medium hover:underline">{cat.name}</button>
       {cat.complimentary && <Badge variant="default" className="text-xs"><Gift className="w-3 h-3 mr-1" />Free</Badge>}
