@@ -51,7 +51,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
         if (salonId && event.data.salon_id !== salonId) return;
         setCategories(prev => [...prev, event.data]);
       }
-      else if (event.type === 'update') setCategories(prev => prev.map(c => c.id === event.data.id ? event.data : c));
+      else if (event.type === 'update') setCategories(prev => prev.map(c => c.id === event.data.id ? event.data : c).sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
       else if (event.type === 'delete') setCategories(prev => prev.filter(c => c.id !== event.id));
     });
 

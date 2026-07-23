@@ -47,11 +47,14 @@ export default function MenuManager() {
     }
   };
 
+  const salonId = user?.salon_id;
+
   useEffect(() => {
+    if (!salonId) return;
     const load = async () => {
       const [itemData, catData] = await Promise.all([
-        base44.entities.MenuItem.filter({ salon_id: user?.salon_id }, 'display_order'),
-        base44.entities.MenuCategory.filter({ salon_id: user?.salon_id }, 'display_order')
+        base44.entities.MenuItem.filter({ salon_id: salonId }, 'display_order'),
+        base44.entities.MenuCategory.filter({ salon_id: salonId }, 'display_order')
       ]);
       setItems(itemData);
       setCategories(catData);
@@ -61,6 +64,7 @@ export default function MenuManager() {
 
     const unsubItems = base44.entities.MenuItem.subscribe((event) => {
       if (reorderingRef.current) return;
+      if (event.data?.salon_id && event.data.salon_id !== salonId) return;
       if (event.type === 'create') setItems(prev => [...prev, event.data]);
       else if (event.type === 'update') setItems(prev => prev.map(i => i.id === event.data.id ? event.data : i));
       else if (event.type === 'delete') setItems(prev => prev.filter(i => i.id !== event.id));
@@ -68,16 +72,16 @@ export default function MenuManager() {
 
     const unsubCats = base44.entities.MenuCategory.subscribe((event) => {
       if (reorderingRef.current) return;
+      if (event.data?.salon_id && event.data.salon_id !== salonId) return;
       if (event.type === 'create') {
-        if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
         setCategories(prev => [...prev, event.data]);
       }
-      else if (event.type === 'update') setCategories(prev => prev.map(c => c.id === event.data.id ? event.data : c));
+      else if (event.type === 'update') setCategories(prev => prev.map(c => c.id === event.data.id ? event.data : c).sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
       else if (event.type === 'delete') setCategories(prev => prev.filter(c => c.id !== event.id));
     });
 
     return () => { unsubItems(); unsubCats(); };
-  }, []);
+  }, [salonId]);
 
   const existingCategoryNames = categories.map(c => c.name);
   const complimentarySet = new Set(categories.filter(c => c.complimentary).map(c => c.name));
@@ -208,6 +212,8 @@ export default function MenuManager() {
   Object.keys(grouped).forEach(cat => {
     grouped[cat].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
   });
+  // Render categories in their display_order, not insertion order
+  const sortedCategoryNames = categories.map(c => c.name).filter(name => grouped[name]);
 
   const handleCategoryReorder = (reorderedIds) => {
     const reordered = reorderedIds.map(id => categories.find(c => c.id === id)).filter(Boolean);
@@ -270,7 +276,9 @@ export default function MenuManager() {
         </div>
       ) : (
         <>
-        {Object.entries(grouped).map(([category, categoryItems]) => (
+        {sortedCategoryNames.map(category => {
+          const categoryItems = grouped[category];
+          return (
           <div key={category} className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <h3 className="font-heading text-lg font-semibold">{category}</h3>
@@ -282,7 +290,8 @@ export default function MenuManager() {
               ))}
             </Reorder.Group>
           </div>
-        ))}
+          );
+        })}
         </>
       )}
 
