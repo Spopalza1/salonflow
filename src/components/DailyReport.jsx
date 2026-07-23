@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Coffee, TrendingUp, Users, Utensils, Printer, FileDown, Loader2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { useAuth } from '@/lib/AuthContext';
+import { generateDailyReportPDF } from '@/utils/dailyReportPdf';
 
 function parseDate(dateStr) {
   if (!dateStr) return null;
@@ -43,7 +42,6 @@ export default function DailyReport() {
 
   const [error, setError] = useState(null);
   const [exporting, setExporting] = useState(false);
-  const reportRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
@@ -140,84 +138,45 @@ export default function DailyReport() {
 
   const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const MARGIN = 10; // mm
-  const PAGE_W = 210;
-  const PAGE_H = 297;
-  const CONTENT_W = PAGE_W - 2 * MARGIN; // 190mm
-  const CONTENT_H = PAGE_H - 2 * MARGIN; // 277mm
+  const servedLog = todaysOrders
+    .slice()
+    .sort((a, b) => (parseDate(servedTime(b))?.getTime() || 0) - (parseDate(servedTime(a))?.getTime() || 0))
+    .map(o => ({
+      item_name: o.item_name,
+      requested_by_name: o.requested_by_name,
+      requested_by_type: o.requested_by_type,
+      chair_table: o.chair_table,
+      price: o.price,
+      time: formatTime(servedTime(o)),
+    }));
 
-  const captureReport = async () => {
-    const bgColor = window.getComputedStyle(document.body).backgroundColor || '#ffffff';
-    return await html2canvas(reportRef.current, {
-      scale: 2,
-      backgroundColor: bgColor,
-      useCORS: true,
-      onclone: (doc) => {
-        doc.querySelectorAll('.no-export').forEach(el => el.style.display = 'none');
-      }
-    });
+  const reportData = {
+    todayStr,
+    totalItems,
+    totalRevenue,
+    stylistCount,
+    guestCount,
+    categoryBreakdown,
+    personBreakdown,
+    itemBreakdown,
+    servedLog,
   };
 
-  // Splits a tall canvas into page-sized vertical chunks (one per A4 page).
-  const splitCanvasIntoPages = (canvas) => {
-    const pxPerMm = canvas.width / CONTENT_W;
-    const pageHeightPx = Math.floor(CONTENT_H * pxPerMm);
-    const pages = [];
-    let y = 0;
-    while (y < canvas.height) {
-      const sliceHeight = Math.min(pageHeightPx, canvas.height - y);
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = sliceHeight;
-      const ctx = pageCanvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-      ctx.drawImage(canvas, 0, y, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
-      pages.push(pageCanvas.toDataURL('image/png'));
-      y += pageHeightPx;
-    }
-    return pages;
-  };
-
-  const handlePrint = async () => {
-    if (!reportRef.current) return;
+  const handlePrint = () => {
     setExporting(true);
     try {
-      const canvas = await captureReport();
-      const pages = splitCanvasIntoPages(canvas);
-      const printWindow = window.open('', '_blank');
-      const imgs = pages
-        .map((p, i) => `<img src="${p}" style="width:100%;${i < pages.length - 1 ? 'page-break-after:always;' : ''}" />`)
-        .join('');
-      printWindow.document.write(
-        `<html><head><title>Daily Report - ${todayStr}</title>` +
-        `<style>@page{margin:${MARGIN}mm;}body{margin:0;padding:0;}img{display:block;}</style>` +
-        `</head><body>${imgs}</body></html>`
-      );
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => {
-        printWindow.print();
-        setTimeout(() => printWindow.close(), 300);
-      }, 500);
-    } catch {
-      window.print();
+      const pdf = generateDailyReportPDF(reportData);
+      pdf.autoPrint();
+      window.open(pdf.output('bloburl'), '_blank');
     } finally {
       setExporting(false);
     }
   };
 
-  const handleSavePDF = async () => {
-    if (!reportRef.current) return;
+  const handleSavePDF = () => {
     setExporting(true);
     try {
-      const canvas = await captureReport();
-      const pages = splitCanvasIntoPages(canvas);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      pages.forEach((pageImg, i) => {
-        if (i > 0) pdf.addPage();
-        pdf.addImage(pageImg, 'PNG', MARGIN, MARGIN, CONTENT_W, CONTENT_H);
-      });
+      const pdf = generateDailyReportPDF(reportData);
       pdf.save(`daily-report-${new Date().toISOString().split('T')[0]}.pdf`);
     } finally {
       setExporting(false);
@@ -225,7 +184,7 @@ export default function DailyReport() {
   };
 
   return (
-    <div ref={reportRef} className="space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <h2 className="font-heading text-xl font-semibold">Daily Report</h2>
