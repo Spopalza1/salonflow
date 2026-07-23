@@ -34,5 +34,16 @@ export function useGuestCustomization(salonId) {
     applyCustomization(settings);
   }, [settings]);
 
+  // Re-apply customization when the theme (light/dark) toggles so that
+  // dark mode uses the standardized navy theme and light mode restores branding.
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      applyCustomization(settings);
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, [settings]);
+
   return settings;
 }
