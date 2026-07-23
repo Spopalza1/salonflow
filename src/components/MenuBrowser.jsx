@@ -46,19 +46,25 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     load();
 
     const unsubItems = base44.entities.MenuItem.subscribe((event) => {
+      if (salonId && event.data?.salon_id !== salonId) return;
       if (event.type === 'create') {
-        if (salonId && event.data.salon_id !== salonId) return;
         if (event.data.available) setItems(prev => [...prev, event.data].sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
       } else if (event.type === 'update') {
-        setItems(prev => prev.map(i => i.id === event.data.id ? event.data : i).filter(i => i.available).sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
+        setItems(prev => {
+          const exists = prev.some(i => i.id === event.data.id);
+          const next = exists
+            ? prev.map(i => i.id === event.data.id ? event.data : i)
+            : [...prev, event.data];
+          return next.filter(i => i.available).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+        });
       } else if (event.type === 'delete') {
         setItems(prev => prev.filter(i => i.id !== event.id));
       }
     });
 
     const unsubCats = base44.entities.MenuCategory.subscribe((event) => {
+      if (salonId && event.data?.salon_id !== salonId) return;
       if (event.type === 'create') {
-        if (salonId && event.data.salon_id !== salonId) return;
         setCategories(prev => [...prev, event.data]);
       }
       else if (event.type === 'update') setCategories(prev => prev.map(c => c.id === event.data.id ? event.data : c).sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
