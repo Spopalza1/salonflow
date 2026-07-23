@@ -103,31 +103,31 @@
 }
 
 @layer utilities {
-  /* Light mode glass: milky white layers with strong drop shadows */
+  /* Light mode glass: translucent milky layers with strong drop shadows */
   .glass-card {
-    background-color: rgba(255, 255, 255, 0.72) !important;
+    background-color: rgba(255, 255, 255, 0.48) !important;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(0, 0, 0, 0.04) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
   }
   .glass-header {
-    background-color: rgba(255, 255, 255, 0.78) !important;
+    background-color: rgba(255, 255, 255, 0.55) !important;
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-color: rgba(0, 0, 0, 0.05) !important;
   }
 
-  /* Dark mode glass: Telegram-inspired blue-gray tinted layers */
+  /* Dark mode glass: Telegram-inspired translucent blue-gray layers */
   .dark .glass-card {
-    background-color: rgba(34, 48, 61, 0.55) !important;
+    background-color: rgba(34, 48, 61, 0.35) !important;
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
   }
   .dark .glass-header {
-    background-color: rgba(24, 34, 45, 0.7) !important;
+    background-color: rgba(24, 34, 45, 0.45) !important;
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-color: rgba(255, 255, 255, 0.06) !important;
