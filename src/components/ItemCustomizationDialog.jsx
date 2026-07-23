@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Clock } from 'lucide-react';
 
 export default function ItemCustomizationDialog({ item, optionGroups, open, onOpenChange, onConfirm, basePrice }) {
   const [selections, setSelections] = useState({});
   const [notes, setNotes] = useState('');
+  const [preOrderMode, setPreOrderMode] = useState(false);
+  const [arrivalTime, setArrivalTime] = useState('');
 
   const itemKey = item?.id;
   useEffect(() => {
@@ -29,6 +31,8 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
       });
       setSelections(initial);
       setNotes('');
+      setPreOrderMode(false);
+      setArrivalTime('');
     }
   }, [itemKey, open]);
 
@@ -122,7 +126,7 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
       }
     });
     if (notes.trim()) parts.push(`Notes: ${notes.trim()}`);
-    onConfirm(parts.join(' | '), totalPrice);
+    onConfirm(parts.join(' | '), totalPrice, preOrderMode ? arrivalTime : null);
   };
 
   const renderGroup = (group) => {
@@ -285,6 +289,13 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
     );
   };
 
+  const minDateTime = () => {
+    const d = new Date(Date.now() + 10 * 60 * 1000);
+    d.setSeconds(0, 0);
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
@@ -320,10 +331,33 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
             />
           </div>
         </div>
+        {preOrderMode && (
+          <div className="space-y-2">
+            <Label htmlFor="cust-arrival">Arrival Time</Label>
+            <Input
+              id="cust-arrival"
+              type="datetime-local"
+              value={arrivalTime}
+              min={minDateTime()}
+              onChange={(e) => setArrivalTime(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              The front desk will be alerted 10 minutes before your arrival.
+            </p>
+          </div>
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleConfirm} disabled={!canConfirm}>
-            {canConfirm ? `Add · $${totalPrice.toFixed(2)}` : 'Select required'}
+          <Button
+            variant={preOrderMode ? "outline" : "secondary"}
+            onClick={() => setPreOrderMode(!preOrderMode)}
+          >
+            <Clock className="w-4 h-4 mr-1" /> {preOrderMode ? 'Standard Order' : 'Pre-Arrival'}
+          </Button>
+          <Button onClick={handleConfirm} disabled={!canConfirm || (preOrderMode && !arrivalTime)}>
+            {preOrderMode
+              ? `Confirm Pre-Arrival · $${totalPrice.toFixed(2)}`
+              : canConfirm ? `Add · $${totalPrice.toFixed(2)}` : 'Select required'}
           </Button>
         </DialogFooter>
       </DialogContent>

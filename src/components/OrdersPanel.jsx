@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Coffee, Utensils, Check, X } from 'lucide-react';
+import { Coffee, Utensils, Check, X, Clock } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -71,6 +71,12 @@ export default function OrdersPanel() {
     }
   };
 
+  const isArrivingSoon = (order) => {
+    if (!order.is_pre_order || !order.arrival_time) return false;
+    const diff = new Date(order.arrival_time).getTime() - Date.now();
+    return diff <= 10 * 60 * 1000 && diff > 0;
+  };
+
   const statusOrder = { pending: 0, preparing: 1, served: 2, cancelled: 3 };
   const sorted = [...orders]
     .filter(o => o.status !== 'served' && o.status !== 'cancelled')
@@ -114,7 +120,7 @@ export default function OrdersPanel() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.4 } }}
             >
-            <Card className={order.status === 'pending' ? 'border-destructive/50' : ''}>
+            <Card className={`${order.status === 'pending' ? 'border-destructive/50' : ''} ${isArrivingSoon(order) ? 'border-amber-400 ring-1 ring-amber-400' : ''}`}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -128,6 +134,13 @@ export default function OrdersPanel() {
                   <div>Type: <Badge variant="outline" className="capitalize text-xs">{order.requested_by_type}</Badge></div>
                   {showChairTable && order.chair_table && <div>Chair/Table: {order.chair_table}</div>}
                   {order.customizations && <div className="text-muted-foreground italic">Custom: {order.customizations}</div>}
+                  {order.is_pre_order && order.arrival_time && (
+                    <div className="flex items-center gap-1 text-amber-600 font-medium">
+                      <Clock className="w-3 h-3" />
+                      Arrives: {new Date(order.arrival_time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                      {isArrivingSoon(order) && <Badge className="ml-1 text-xs bg-amber-500">Soon</Badge>}
+                    </div>
+                  )}
                   {order.notes && <div className="text-muted-foreground">Note: {order.notes}</div>}
                 </div>
                 <div className="flex gap-1">

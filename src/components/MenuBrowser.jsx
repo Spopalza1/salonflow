@@ -132,13 +132,13 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     setQuickViewItem(item);
   };
 
-  const handleQuickViewConfirm = () => {
+  const handleQuickViewConfirm = (arrivalTime) => {
     const item = quickViewItem;
     setQuickViewItem(null);
-    submitOrder(item, null, item.price);
+    submitOrder(item, null, item.price, arrivalTime);
   };
 
-  const submitOrder = async (item, customizations, adjustedPrice) => {
+  const submitOrder = async (item, customizations, adjustedPrice, arrivalTime) => {
     if (submitGuardRef.current) return;
     submitGuardRef.current = true;
     setOrdering(item.id);
@@ -152,6 +152,10 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
         salon_id: salonId,
       };
       if (customizations) orderData.customizations = customizations;
+      if (arrivalTime) {
+        orderData.is_pre_order = true;
+        orderData.arrival_time = new Date(arrivalTime).toISOString();
+      }
       if (mode === 'stylist') {
         orderData.requested_by_type = 'stylist';
         orderData.requested_by_name = user?.display_name || user?.full_name || user?.email || 'Stylist';
@@ -165,7 +169,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
         orderData.guest_session = guestInfo?.session || '';
       }
       await base44.entities.Order.create(orderData);
-      toast({ title: 'Request sent!', description: `${item.name} request sent to front desk.` });
+      toast({ title: arrivalTime ? 'Pre-arrival order sent!' : 'Request sent!', description: arrivalTime ? `${item.name} pre-order sent. Front desk will be alerted 10 min before your arrival.` : `${item.name} request sent to front desk.` });
     } catch (err) {
       toast({ title: 'Failed to send', description: err.message, variant: 'destructive' });
     } finally {
@@ -174,9 +178,9 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     }
   };
 
-  const handleCustomConfirm = (customizations, adjustedPrice) => {
+  const handleCustomConfirm = (customizations, adjustedPrice, arrivalTime) => {
     const isComplimentary = customItem && (complimentarySet.has(customItem.category) || customItem.complimentary);
-    submitOrder(customItem, customizations, isComplimentary ? null : adjustedPrice);
+    submitOrder(customItem, customizations, isComplimentary ? null : adjustedPrice, arrivalTime);
     setCustomOpen(false);
   };
 
