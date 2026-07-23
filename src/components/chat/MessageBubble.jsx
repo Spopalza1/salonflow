@@ -4,6 +4,17 @@ import { Play } from 'lucide-react';
 import VoiceMessagePlayer from '@/components/chat/VoiceMessagePlayer';
 import MediaViewer from '@/components/chat/MediaViewer';
 
+const formatMessageTime = (dateStr) => {
+  if (!dateStr) return '';
+  const s = String(dateStr);
+  // If ISO string without timezone designation, treat as UTC
+  let normalized = s;
+  if (s.includes('T') && !s.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(s)) {
+    normalized = s + 'Z';
+  }
+  return new Date(normalized).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
 export default function MessageBubble({ msg, isOwn, canDownload }) {
   const [viewerMedia, setViewerMedia] = useState(null);
   const hasMedia = msg.media_url && msg.media_type;
@@ -45,7 +56,7 @@ export default function MessageBubble({ msg, isOwn, canDownload }) {
           <VoiceMessagePlayer src={msg.media_url} isOwn={isOwn} />
         )}
         {msg.body && !isAudio && <p className="text-sm whitespace-pre-wrap select-text">{msg.body}</p>}
-        <p className="text-[10px] opacity-60 mt-1 text-right">{new Date(msg.created_date).toLocaleTimeString()}</p>
+        <p className="text-[10px] opacity-60 mt-1 text-right">{formatMessageTime(msg.created_date)}</p>
       </div>
       {viewerMedia && (
         <MediaViewer media={viewerMedia} canDownload={canDownload} onClose={() => setViewerMedia(null)} />

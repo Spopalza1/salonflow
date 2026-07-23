@@ -76,11 +76,27 @@ export default function ChatInput({ onSend }) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const getSupportedMimeType = () => {
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4;codecs=mp4a.40.2',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+    ];
+    for (const type of types) {
+      if (MediaRecorder.isTypeSupported(type)) return type;
+    }
+    return '';
+  };
+
   const startRecording = async (clientY) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
-      const recorder = new MediaRecorder(stream);
+      const mimeType = getSupportedMimeType();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const actualType = recorder.mimeType || mimeType || 'audio/webm';
       audioChunksRef.current = [];
       cancelledRef.current = false;
 
@@ -108,14 +124,20 @@ export default function ChatInput({ onSend }) {
           return;
         }
 
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualType });
+        if (audioBlob.size === 0) {
+          setVoiceState('idle');
+          setRecordTime(0);
+          toast({ variant: 'destructive', title: 'Error', description: 'Recording failed — no audio captured.' });
+          return;
+        }
         recordedBlobRef.current = audioBlob;
         setPreviewUrl(URL.createObjectURL(audioBlob));
         setRecordTime(duration);
         setVoiceState('preview');
       };
 
-      recorder.start();
+      recorder.start(100);
       mediaRecorderRef.current = recorder;
       startTimeRef.current = Date.now();
       startYRef.current = clientY;
@@ -180,7 +202,9 @@ export default function ChatInput({ onSend }) {
     if (previewAudioRef.current) previewAudioRef.current.pause();
     setUploading(true);
     try {
-      const file = new File([recordedBlobRef.current], 'voice-message.webm', { type: 'audio/webm' });
+      const audioType = recordedBlobRef.current.type || 'audio/webm';
+      const ext = audioType.includes('mp4') ? 'm4a' : audioType.includes('ogg') ? 'ogg' : 'webm';
+      const file = new File([recordedBlobRef.current], `voice-message.${ext}`, { type: audioType });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       await onSend({
         body: '🎤 Voice message',
