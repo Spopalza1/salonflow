@@ -91,6 +91,11 @@ function foregroundFor(hslStr) {
 export function generateDarkAccent(hex) {
   const hsl = hexToHslObject(hex);
   if (!hsl) return null;
+  // If the brand color is near-grayscale (black, white, grey), fall back to
+  // the standard Telegram-inspired blue accent.
+  if (hsl.s < 12) {
+    return '204 70% 63%';
+  }
   const s = Math.max(hsl.s, 55);
   return `${hsl.h} ${s}% 68%`;
 }
@@ -136,7 +141,7 @@ export function applyCustomization(settings) {
     const darkAccent = generateDarkAccent(s.primary_color);
     if (darkAccent) {
       root.style.setProperty('--primary', darkAccent);
-      root.style.setProperty('--primary-foreground', '222 47% 11%');
+      root.style.setProperty('--primary-foreground', '210 30% 14%');
       root.style.setProperty('--ring', darkAccent);
     }
     return;
