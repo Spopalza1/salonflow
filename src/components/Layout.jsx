@@ -21,9 +21,9 @@ function LayoutContent() {
   const [customizeOpen, setCustomizeOpen] = useUrlModal('customize');
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden safe-area-left safe-area-right">
-      <header className="glass-header border-b sticky top-0 z-20 safe-area-top">
-        <div className="flex items-center justify-between px-6 py-3">
+    <div className="h-[100dvh] flex flex-col overflow-hidden safe-area-top safe-area-left safe-area-right">
+      <header className="glass-header z-20 mx-3 mt-3 rounded-2xl shrink-0">
+        <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             {settings?.salon_logo_url ? (
               <UIImage src={settings.salon_logo_url} alt="logo" style={{ height: `${settings.logo_size || 32}px`, width: 'auto' }} fittingType="fit" />
@@ -59,7 +59,7 @@ function LayoutContent() {
           </div>
         </div>
       </header>
-      <main className="flex-1 min-h-0 flex flex-col">
+      <main className="flex-1 min-h-0 flex flex-col px-3 pt-3 pb-3">
         <Outlet />
       </main>
       <AdminProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
