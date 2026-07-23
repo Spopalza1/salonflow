@@ -19,7 +19,8 @@ export default function DraggableItemCard({ value, item, isCategoryComplimentary
       className="relative"
     >
       <span
-        onPointerDown={(e) => controls.start(e)}
+        data-reorder-grip
+        onPointerDown={(e) => { e.stopPropagation(); controls.start(e); }}
         className="absolute top-2 left-2 z-10 cursor-grab active:cursor-grabbing rounded-md p-1 bg-background/60 backdrop-blur-sm touch-none"
       >
         <GripVertical className="w-4 h-4 text-muted-foreground" />

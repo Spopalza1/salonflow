@@ -17,7 +17,8 @@ export default function DraggableCategory({ value, cat, onEdit, onToggle, onDele
       className="flex items-center gap-2 px-3 py-2 rounded-lg glass-card"
     >
       <span
-        onPointerDown={(e) => controls.start(e)}
+        data-reorder-grip
+        onPointerDown={(e) => { e.stopPropagation(); controls.start(e); }}
         className="cursor-grab active:cursor-grabbing touch-none flex items-center"
       >
         <GripVertical className="w-4 h-4 text-muted-foreground" />
