@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Mic, Paperclip, Trash2, Play, Pause, Lock, Square, X, ChevronUp } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { audioBufferToWav } from '@/utils/wavEncoder';
 
 const LOCK_THRESHOLD = 60;
 const MIN_DURATION = 1.5;
@@ -104,7 +105,7 @@ export default function ChatInput({ onSend }) {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
 
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         if (mediaStreamRef.current) {
           mediaStreamRef.current.getTracks().forEach(t => t.stop());
           mediaStreamRef.current = null;
@@ -124,17 +125,28 @@ export default function ChatInput({ onSend }) {
           return;
         }
 
-        const audioBlob = new Blob(audioChunksRef.current, { type: actualType });
-        if (audioBlob.size === 0) {
+        try {
+          const rawBlob = new Blob(audioChunksRef.current, { type: actualType });
+          if (rawBlob.size === 0) throw new Error('empty');
+
+          const arrayBuffer = await rawBlob.arrayBuffer();
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          const audioContext = new AudioCtx();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          audioContext.close();
+
+          const wavBlob = audioBufferToWav(audioBuffer);
+          if (wavBlob.size === 0) throw new Error('encode failed');
+
+          recordedBlobRef.current = wavBlob;
+          setPreviewUrl(URL.createObjectURL(wavBlob));
+          setRecordTime(duration);
+          setVoiceState('preview');
+        } catch {
           setVoiceState('idle');
           setRecordTime(0);
-          toast({ variant: 'destructive', title: 'Error', description: 'Recording failed — no audio captured.' });
-          return;
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to process voice message.' });
         }
-        recordedBlobRef.current = audioBlob;
-        setPreviewUrl(URL.createObjectURL(audioBlob));
-        setRecordTime(duration);
-        setVoiceState('preview');
       };
 
       recorder.start(100);
@@ -202,9 +214,7 @@ export default function ChatInput({ onSend }) {
     if (previewAudioRef.current) previewAudioRef.current.pause();
     setUploading(true);
     try {
-      const audioType = recordedBlobRef.current.type || 'audio/webm';
-      const ext = audioType.includes('mp4') ? 'm4a' : audioType.includes('ogg') ? 'ogg' : 'webm';
-      const file = new File([recordedBlobRef.current], `voice-message.${ext}`, { type: audioType });
+      const file = new File([recordedBlobRef.current], 'voice-message.wav', { type: 'audio/wav' });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       await onSend({
         body: '🎤 Voice message',
