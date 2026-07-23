@@ -141,9 +141,10 @@ export default function DailyReport() {
   const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   const captureReport = async () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor || '#ffffff';
     return await html2canvas(reportRef.current, {
       scale: 2,
-      backgroundColor: 'hsl(var(--background))',
+      backgroundColor: bgColor,
       useCORS: true,
       onclone: (doc) => {
         doc.querySelectorAll('.no-export').forEach(el => el.style.display = 'none');
