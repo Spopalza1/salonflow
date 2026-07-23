@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ export default function MenuManager() {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: '', category: '', price: '', description: '', image_url: '', available: true, complimentary: false });
   const [uploading, setUploading] = useState(false);
+  const reorderingRef = useRef(false);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -59,12 +60,14 @@ export default function MenuManager() {
     load();
 
     const unsubItems = base44.entities.MenuItem.subscribe((event) => {
+      if (reorderingRef.current) return;
       if (event.type === 'create') setItems(prev => [...prev, event.data]);
       else if (event.type === 'update') setItems(prev => prev.map(i => i.id === event.data.id ? event.data : i));
       else if (event.type === 'delete') setItems(prev => prev.filter(i => i.id !== event.id));
     });
 
     const unsubCats = base44.entities.MenuCategory.subscribe((event) => {
+      if (reorderingRef.current) return;
       if (event.type === 'create') {
         if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
         setCategories(prev => [...prev, event.data]);
@@ -196,19 +199,24 @@ export default function MenuManager() {
     }
   };
 
-  // Group items by category
+  // Group items by category, sorted by display_order within each
   const grouped = {};
   items.forEach(item => {
     if (!grouped[item.category]) grouped[item.category] = [];
     grouped[item.category].push(item);
   });
+  Object.keys(grouped).forEach(cat => {
+    grouped[cat].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+  });
 
   const handleCategoryReorder = (reorderedIds) => {
     const reordered = reorderedIds.map(id => categories.find(c => c.id === id)).filter(Boolean);
     setCategories(reordered);
+    reorderingRef.current = true;
     base44.entities.MenuCategory.bulkUpdate(
       reordered.map((cat, index) => ({ id: cat.id, display_order: index }))
-    ).catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }));
+    ).catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }))
+     .finally(() => { reorderingRef.current = false; });
   };
 
   const handleItemReorder = (categoryName, reorderedIds) => {
@@ -219,9 +227,11 @@ export default function MenuManager() {
     const after = items.slice(firstIndex).filter(i => i.category !== categoryName);
     const reorderedWithOrder = reorderedItems.map((item, index) => ({ ...item, display_order: index }));
     setItems([...before, ...reorderedWithOrder, ...after]);
+    reorderingRef.current = true;
     base44.entities.MenuItem.bulkUpdate(
       reorderedItems.map((item, index) => ({ id: item.id, display_order: index }))
-    ).catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }));
+    ).catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }))
+     .finally(() => { reorderingRef.current = false; });
   };
 
   return (
