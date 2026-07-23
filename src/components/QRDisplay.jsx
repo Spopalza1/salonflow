@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { QrCode, Download, Save } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/AuthContext';
+import { appParams } from '@/lib/app-params';
 
 export default function QRDisplay() {
   const { user } = useAuth();
@@ -15,7 +16,8 @@ export default function QRDisplay() {
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  const guestUrl = `${window.location.origin}/guest${user?.salon_id ? `?salon=${user.salon_id}` : ''}`;
+  const baseUrl = appParams.appBaseUrl || window.location.origin;
+  const guestUrl = `${baseUrl}/guest${user?.salon_id ? `?salon=${user.salon_id}` : ''}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(guestUrl)}`;
 
   useEffect(() => {
