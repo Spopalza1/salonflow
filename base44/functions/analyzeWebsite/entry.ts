@@ -15,92 +15,64 @@ Deno.serve(async (req) => {
       targetUrl = 'https://' + targetUrl;
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    // Use LLM with web search to analyze the website — direct fetch() from the
+    // server gets blocked (429/403) by most sites (Cloudflare, rate limits, etc.).
+    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: `Visit the website at ${targetUrl} and analyze its visual design. Extract the brand's color palette and typography.
 
-    let response;
-    try {
-      response = await fetch(targetUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml',
-          'Accept-Language': 'en-US,en;q=0.9',
+Identify:
+1. primary_color — the most prominent brand color (used for buttons, headers, logo, or primary branding). Return as a hex code.
+2. secondary_color — a secondary brand color used for secondary UI elements. Return as a hex code.
+3. accent_color — a color used for highlights, links, or calls-to-action. Return as a hex code.
+4. font_heading — the font family name used for headings/titles.
+5. font_body — the font family name used for body text.
+6. site_name — the business or website name shown on the page.
+7. all_colors — up to 8 hex color codes found in the site's design (exclude pure black #000000 and white #ffffff).
+
+Return exact hex codes. If a font is a generic family (sans-serif, serif), return "Inter" instead.`,
+      add_context_from_internet: true,
+      model: 'gemini_3_flash',
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          primary_color: { type: 'string', description: 'Hex color code e.g. #1a2b3c' },
+          secondary_color: { type: 'string', description: 'Hex color code' },
+          accent_color: { type: 'string', description: 'Hex color code' },
+          font_heading: { type: 'string', description: 'Font family name for headings' },
+          font_body: { type: 'string', description: 'Font family name for body text' },
+          site_name: { type: 'string', description: 'Business or website name' },
+          all_colors: { type: 'array', items: { type: 'string' }, description: 'Up to 8 hex color codes' },
         },
-        redirect: 'follow',
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeout);
-    }
-
-    if (!response.ok) {
-      return Response.json({ error: 'Failed to fetch website (HTTP ' + response.status + ')' }, { status: 502 });
-    }
-
-    const html = await response.text();
-    const hexColors = [];
-
-    const colorRegex = /#([0-9a-fA-F]{6})\b/g;
-    let match;
-    while ((match = colorRegex.exec(html)) !== null) {
-      hexColors.push('#' + match[1].toLowerCase());
-    }
-
-    const rgbRegex = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g;
-    while ((match = rgbRegex.exec(html)) !== null) {
-      const hex = '#' + [match[1], match[2], match[3]]
-        .map(function(n) { return parseInt(n).toString(16).padStart(2, '0'); })
-        .join('');
-      hexColors.push(hex);
-    }
-
-    const skipColors = ['#000000', '#ffffff'];
-    const colorCounts = {};
-    hexColors.forEach(function(c) {
-      if (skipColors.indexOf(c) !== -1) return;
-      colorCounts[c] = (colorCounts[c] || 0) + 1;
+        required: ['primary_color', 'secondary_color', 'accent_color', 'font_heading', 'font_body'],
+      },
     });
-    const sortedColors = Object.entries(colorCounts)
-      .sort(function(a, b) { return b[1] - a[1]; })
-      .map(function(c) { return c[0]; });
 
-    const fontRegex = /font-family\s*:\s*([^;}"']+)/g;
-    const fonts = [];
-    while ((match = fontRegex.exec(html)) !== null) {
-      const font = match[1].split(',')[0].trim().replace(/['"]/g, '');
-      if (font && ['inherit', 'initial', 'serif', 'sans-serif', 'monospace'].indexOf(font.toLowerCase()) === -1) {
-        fonts.push(font);
-      }
-    }
-    const fontCounts = {};
-    fonts.forEach(function(f) { fontCounts[f] = (fontCounts[f] || 0) + 1; });
-    const sortedFonts = Object.entries(fontCounts)
-      .sort(function(a, b) { return b[1] - a[1]; })
-      .map(function(f) { return f[0]; });
+    const data = result || {};
 
-    const themeColorMatch = html.match(/<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i);
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const siteName = titleMatch ? titleMatch[1].trim().slice(0, 60) : null;
+    const fixColor = (c) => {
+      if (!c) return '#000000';
+      c = String(c).trim();
+      if (!c.startsWith('#')) c = '#' + c;
+      if (!/^#[0-9a-f]{6}$/i.test(c)) return '#000000';
+      return c.toLowerCase();
+    };
 
-    const primaryColor = sortedColors[0] || (themeColorMatch ? themeColorMatch[1] : '#000000');
-    const secondaryColor = sortedColors[1] || '#333333';
-    const accentColor = sortedColors[2] || sortedColors[0] || '#666666';
-    const headingFont = sortedFonts[0] || 'Inter';
-    const bodyFont = sortedFonts[0] || 'Inter';
+    const colors = Array.isArray(data.all_colors) ? data.all_colors.map(fixColor).filter((c) => c !== '#000000' && c !== '#ffffff').slice(0, 8) : [];
 
     return Response.json({
-      primary_color: primaryColor,
-      secondary_color: secondaryColor,
-      accent_color: accentColor,
-      font_heading: headingFont,
-      font_body: bodyFont,
+      primary_color: fixColor(data.primary_color),
+      secondary_color: fixColor(data.secondary_color),
+      accent_color: fixColor(data.accent_color),
+      font_heading: data.font_heading || 'Inter',
+      font_body: data.font_body || 'Inter',
       card_background_color: '#ffffff',
       card_border_color: '#e5e7eb',
-      site_name: siteName,
-      all_colors: sortedColors.slice(0, 10),
-      all_fonts: sortedFonts.slice(0, 5),
+      site_name: data.site_name || null,
+      all_colors: colors,
+      all_fonts: [data.font_heading, data.font_body].filter(Boolean).slice(0, 5),
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('analyzeWebsite error:', error.message || error);
+    return Response.json({ error: error.message || 'Failed to analyze website' }, { status: 500 });
   }
 });
