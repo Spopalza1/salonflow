@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import PullToRefresh from '@/components/PullToRefresh';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,7 +25,6 @@ export default function OrdersPanel() {
     const saved = localStorage.getItem('salonflow_show_chair_table');
     return saved !== null ? saved === 'true' : true;
   });
-  const pendingOptimisticUpdates = useRef(new Map());
   const loadOrders = useCallback(async () => {
     if (!user?.salon_id) { setOrders([]); return; }
     const data = await base44.entities.Order.filter({ salon_id: user.salon_id }, '-created_date', 100);
@@ -36,38 +35,29 @@ export default function OrdersPanel() {
     loadOrders().then(() => setLoading(false)).catch(() => setLoading(false));
 
     const unsubscribe = base44.entities.Order.subscribe((event) => {
+      if (!user?.salon_id || !event.data?.salon_id || event.data.salon_id !== user.salon_id) return;
       if (event.type === 'create') {
-        if (!user?.salon_id || !event.data.salon_id || event.data.salon_id !== user.salon_id) return;
         setOrders(prev => {
           if (prev.some(o => o.id === event.data.id)) return prev;
           return [event.data, ...prev];
         });
       } else if (event.type === 'update') {
-        const expectedStatus = pendingOptimisticUpdates.current.get(event.data.id);
-        if (expectedStatus) {
-          setOrders(prev => prev.map(o => o.id === event.data.id ? { ...event.data, status: expectedStatus } : o));
-        } else {
-          setOrders(prev => prev.map(o => o.id === event.data.id ? event.data : o));
-        }
+        setOrders(prev => prev.map(o => o.id === event.data.id ? { ...o, ...event.data } : o));
       } else if (event.type === 'delete') {
         setOrders(prev => prev.filter(o => o.id !== event.id));
       }
     });
     return unsubscribe;
-  }, [loadOrders]);
+  }, [loadOrders, user?.salon_id]);
 
   const updateStatus = async (order, status) => {
     const prevStatus = order.status;
-    pendingOptimisticUpdates.current.set(order.id, status);
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status } : o));
     try {
       await base44.entities.Order.update(order.id, { status });
     } catch (err) {
-      pendingOptimisticUpdates.current.delete(order.id);
       setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: prevStatus } : o));
       console.error(err);
-    } finally {
-      setTimeout(() => pendingOptimisticUpdates.current.delete(order.id), 2000);
     }
   };
 
