@@ -19,6 +19,7 @@ export function generateDailyReportPDF(data) {
     totalRevenue,
     stylistCount,
     guestCount,
+    freeItemsCount,
     categoryBreakdown,
     personBreakdown,
     itemBreakdown,
@@ -132,6 +133,7 @@ export function generateDailyReportPDF(data) {
   const stats = [
     { label: 'Items Served', value: String(totalItems) },
     { label: 'Total Value', value: `$${totalRevenue.toFixed(2)}` },
+    { label: 'Free Items', value: String(freeItemsCount) },
     { label: 'Stylist Orders', value: String(stylistCount) },
     { label: 'Guest Orders', value: String(guestCount) },
   ];
@@ -267,8 +269,9 @@ export function generateDailyReportPDF(data) {
     pdf.text(truncate(item.name, colWidths[0] - 4), colX[0] + 2, y);
     pdf.text(truncate(item.category || '-', colWidths[1] - 4), colX[1] + 2, y);
     pdf.text(String(item.count), colX[2] + 2, y);
-    pdf.text(`$${(item.revenue / item.count).toFixed(2)}`, colX[3] + 2, y);
-    pdf.text(`$${item.revenue.toFixed(2)}`, colX[4] + 2, y);
+    const isFreeItem = item.revenue === 0;
+    pdf.text(isFreeItem ? 'FREE' : `$${(item.revenue / item.count).toFixed(2)}`, colX[3] + 2, y);
+    pdf.text(isFreeItem ? 'FREE' : `$${item.revenue.toFixed(2)}`, colX[4] + 2, y);
     y += 5;
     drawLine(y, LIGHTER);
     y += 3;
@@ -326,7 +329,7 @@ export function generateDailyReportPDF(data) {
     const byStr = `${order.requested_by_name} (${order.requested_by_type})`;
     pdf.text(truncate(byStr, logCols[1] - 4), logX[1] + 2, y);
     pdf.text(truncate(order.chair_table || '-', logCols[2] - 4), logX[2] + 2, y);
-    pdf.text(`$${(order.price || 0).toFixed(2)}`, logX[3] + 2, y);
+    pdf.text(order.price == null ? 'FREE' : `$${(order.price || 0).toFixed(2)}`, logX[3] + 2, y);
     pdf.text(order.time || '', logX[4] + 2, y);
     y += 5;
     drawLine(y, LIGHTER);

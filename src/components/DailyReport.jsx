@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Coffee, TrendingUp, Users, Utensils, Printer, FileDown, Loader2 } from 'lucide-react';
+import { Coffee, TrendingUp, Users, Utensils, Printer, FileDown, Loader2, Gift } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useSalonCustomization } from '@/lib/salonCustomizationContext';
 import { generateDailyReportPDF } from '@/utils/dailyReportPdf';
@@ -138,10 +138,13 @@ export default function DailyReport() {
   const personBreakdown = Object.values(personMap).sort((a, b) => b.count - a.count);
 
   // Stats
+  const isFree = (o) => o.price == null;
+  const freeItemsCount = todaysOrders.filter(isFree).length;
   const totalItems = todaysOrders.length;
   const totalRevenue = todaysOrders.reduce((sum, o) => sum + (o.price || 0), 0);
   const stylistCount = todaysOrders.filter(o => o.requested_by_type === 'stylist').length;
   const guestCount = todaysOrders.filter(o => o.requested_by_type === 'guest').length;
+  const priceLabel = (price) => price == null ? 'FREE' : `$${price.toFixed(2)}`;
 
   const chartData = itemBreakdown.slice(0, 10).map(i => ({ name: i.name, count: i.count }));
 
@@ -166,6 +169,7 @@ export default function DailyReport() {
     totalRevenue,
     stylistCount,
     guestCount,
+    freeItemsCount,
     categoryBreakdown,
     personBreakdown,
     itemBreakdown,
@@ -255,6 +259,7 @@ export default function DailyReport() {
                     {[
                       { label: 'Items Served', value: totalItems, icon: Utensils },
                       { label: 'Total Value', value: `$${totalRevenue.toFixed(2)}`, icon: TrendingUp },
+                      { label: 'Free Items', value: freeItemsCount, icon: Gift },
                       { label: 'Stylist Orders', value: stylistCount, icon: Users },
                       { label: 'Guest Orders', value: guestCount, icon: Coffee },
                     ].map((stat) => (
@@ -339,8 +344,8 @@ export default function DailyReport() {
                           <td className="py-2.5 font-medium" style={{ color: REPORT_COLORS.dark }}>{item.name}</td>
                           <td className="py-2.5" style={{ color: REPORT_COLORS.dark, opacity: 0.6 }}>{item.category}</td>
                           <td className="py-2.5 text-center" style={{ color: REPORT_COLORS.dark }}>{item.count}</td>
-                          <td className="py-2.5 text-right" style={{ color: REPORT_COLORS.dark }}>${(item.revenue / item.count).toFixed(2)}</td>
-                          <td className="py-2.5 text-right font-medium" style={{ color: REPORT_COLORS.dark }}>${item.revenue.toFixed(2)}</td>
+                          <td className="py-2.5 text-right" style={{ color: REPORT_COLORS.dark }}>{item.revenue === 0 ? 'FREE' : `$${(item.revenue / item.count).toFixed(2)}`}</td>
+                          <td className="py-2.5 text-right font-medium" style={{ color: REPORT_COLORS.dark }}>{item.revenue === 0 ? 'FREE' : `$${item.revenue.toFixed(2)}`}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -375,7 +380,7 @@ export default function DailyReport() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium" style={{ color: REPORT_COLORS.dark }}>${(o.price || 0).toFixed(2)}</div>
+                        <div className="text-sm font-medium" style={{ color: REPORT_COLORS.dark }}>{priceLabel(o.price)}</div>
                         <div className="text-xs" style={{ color: REPORT_COLORS.dark, opacity: 0.5 }}>{formatTime(servedTime(o))}</div>
                       </div>
                     </div>
