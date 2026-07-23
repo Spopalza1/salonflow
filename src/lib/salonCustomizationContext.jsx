@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { applyCustomization, applyDarkTheme, DEFAULTS } from '@/lib/salonTheme';
+import { applyCustomization, DEFAULTS } from '@/lib/salonTheme';
 
 const SalonCustomizationContext = createContext(null);
 
@@ -48,27 +48,10 @@ export function SalonCustomizationProvider({ children }) {
     return unsubscribe;
   }, [user?.salon_id]);
 
-  // Track dark mode to switch between admin branding (light) and standardized dark theme
-  const [isDark, setIsDark] = useState(() =>
-    typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
-  );
-
+  // Apply admin settings to :root (this provider wraps admin/stylist pages only)
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  // Light mode = admin branding; dark mode = standardized navy with derived accent
-  useEffect(() => {
-    if (isDark) {
-      applyDarkTheme(adminSettings || DEFAULTS);
-    } else {
-      applyCustomization(adminSettings || DEFAULTS);
-    }
-  }, [adminSettings, isDark]);
+    applyCustomization(adminSettings || DEFAULTS);
+  }, [adminSettings]);
 
   const updateSettings = useCallback(async (scope, updates) => {
     if (!user?.salon_id) return;
