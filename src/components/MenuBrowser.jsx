@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Image as UIImage } from '@/components/ui/image';
 import { cn } from '@/lib/utils';
 import ItemCustomizationDialog from '@/components/ItemCustomizationDialog';
+import ItemQuickView from '@/components/ItemQuickView';
 
 export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const [items, setItems] = useState([]);
@@ -15,6 +16,7 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const [ordering, setOrdering] = useState(null);
   const [customItem, setCustomItem] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
+  const [quickViewItem, setQuickViewItem] = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
   const sectionRefs = useRef({});
   const { toast } = useToast();
@@ -106,14 +108,20 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
     sectionRefs.current[category]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleOrder = async (item) => {
+  const handleOrder = (item) => {
     const groups = itemOptionGroups(item.id);
     if (groups.length > 0) {
       setCustomItem(item);
       setCustomOpen(true);
       return;
     }
-    await submitOrder(item, null, item.price);
+    setQuickViewItem(item);
+  };
+
+  const handleQuickViewConfirm = () => {
+    const item = quickViewItem;
+    setQuickViewItem(null);
+    submitOrder(item, null, item.price);
   };
 
   const submitOrder = async (item, customizations, adjustedPrice) => {
@@ -284,6 +292,15 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
           onOpenChange={setCustomOpen}
           onConfirm={handleCustomConfirm}
           basePrice={customItem.complimentary || complimentarySet.has(customItem.category) ? 0 : customItem.price}
+        />
+      )}
+      {quickViewItem && (
+        <ItemQuickView
+          item={quickViewItem}
+          open={!!quickViewItem}
+          onOpenChange={(v) => { if (!v) setQuickViewItem(null); }}
+          onConfirm={handleQuickViewConfirm}
+          isComplimentary={complimentarySet.has(quickViewItem.category) || quickViewItem.complimentary}
         />
       )}
     </div>

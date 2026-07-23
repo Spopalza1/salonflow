@@ -294,6 +294,9 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
             <Badge variant="secondary">${totalPrice.toFixed(2)}</Badge>
           </DialogTitle>
         </DialogHeader>
+        {item.description && (
+          <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+        )}
         <div className="space-y-5">
           {optionGroups.map(group => (
             <div key={group.id} className="space-y-2">
