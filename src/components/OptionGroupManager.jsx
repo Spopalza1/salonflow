@@ -131,6 +131,19 @@ export default function OptionGroupManager({ menuItemId, salonId }) {
 function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddOption, onRemoveOption }) {
   const [optName, setOptName] = useState('');
   const [optPrice, setOptPrice] = useState('');
+  const [editName, setEditName] = useState(group.name);
+
+  useEffect(() => {
+    setEditName(group.name);
+  }, [group.name]);
+
+  const handleNameBlur = () => {
+    if (editName.trim() && editName !== group.name) {
+      onUpdate({ name: editName.trim() });
+    } else {
+      setEditName(group.name);
+    }
+  };
 
   const inputType = group.input_type || 'options';
 
@@ -146,14 +159,22 @@ function OptionGroupCard({ group, expanded, onToggle, onUpdate, onDelete, onAddO
   return (
     <div className="rounded-lg border">
       <div className="flex items-center justify-between p-3">
-        <button type="button" onClick={onToggle} className="flex items-center gap-2 flex-1 text-left">
+        <div onClick={onToggle} className="flex items-center gap-2 flex-1 text-left cursor-pointer">
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          <span className="text-sm font-medium">{group.name}</span>
+          <input
+            type="text"
+            value={editName}
+            onChange={e => setEditName(e.target.value)}
+            onBlur={handleNameBlur}
+            onClick={e => e.stopPropagation()}
+            onKeyDown={e => { if (e.key === 'Enter') { e.target.blur(); } }}
+            className="text-sm font-medium bg-transparent border-none focus:outline-none focus:underline px-0 max-w-[160px]"
+          />
           <Badge variant="outline" className="text-xs">{typeLabel}</Badge>
           {inputType === 'options' && <Badge variant="outline" className="text-xs">{(group.options || []).length} opts</Badge>}
           {group.required && <Badge variant="default" className="text-xs">Required</Badge>}
           {inputType === 'options' && group.allow_multiple && <Badge variant="secondary" className="text-xs">Multi</Badge>}
-        </button>
+        </div>
         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onDelete}>
           <Trash2 className="w-3.5 h-3.5 text-destructive" />
         </Button>
