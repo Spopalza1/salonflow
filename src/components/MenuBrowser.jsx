@@ -261,6 +261,9 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
                       <span className="text-xs text-muted-foreground mt-0.5">
                         {itemIsComp ? 'Complimentary' : item.price != null ? `$${item.price.toFixed(2)}` : ''}
                       </span>
+                      {item.description && (
+                        <span className="text-[11px] text-muted-foreground/80 mt-0.5 line-clamp-2 leading-tight">{item.description}</span>
+                      )}
                       {itemOptionGroups(item.id).length > 0 && (
                         <span className="text-[10px] text-muted-foreground/70 mt-0.5">Customizable</span>
                       )}
