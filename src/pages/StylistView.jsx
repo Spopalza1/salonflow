@@ -45,7 +45,7 @@ export default function StylistView() {
     <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-full glass-card flex items-center justify-center">
             <User className="w-5 h-5 text-primary" />
           </div>
           <h1 className="font-heading text-xl font-semibold">{displayName}</h1>
@@ -56,7 +56,7 @@ export default function StylistView() {
         </Button>
       </div>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
-        <TabsList className="fixed bottom-0 left-0 right-0 z-30 h-16 bg-background border-t safe-area-bottom justify-around rounded-none flex w-full md:relative md:flex-wrap md:h-auto md:border-0 md:justify-start md:rounded-lg md:bg-muted md:w-auto">
+        <TabsList className="glass-header fixed bottom-0 left-0 right-0 z-30 h-16 border-t safe-area-bottom justify-around rounded-none flex w-full md:relative md:flex-wrap md:h-auto md:border md:justify-start md:rounded-lg md:w-auto md:shadow-lg">
           <TabsTrigger value="coffee" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none"><Coffee className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Order</span></TabsTrigger>
           <TabsTrigger value="chat" className="flex-col gap-0.5 h-full flex-1 md:flex-row md:gap-0 md:h-auto md:flex-none relative">
             <MessageSquare className="w-5 h-5 md:w-4 md:h-4 md:mr-2" /><span className="hidden md:inline">Chat</span>

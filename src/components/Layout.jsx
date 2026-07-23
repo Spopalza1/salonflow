@@ -20,8 +20,8 @@ function LayoutContent() {
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden bg-muted/30">
-      <header className="border-b bg-background sticky top-0 z-20 safe-area-top">
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
+      <header className="glass-header border-b sticky top-0 z-20 safe-area-top">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2">
             {settings?.salon_logo_url ? (

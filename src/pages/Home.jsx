@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/40 flex flex-col">
       <div className="flex-1 max-w-4xl mx-auto px-6 pt-20 pb-12 text-center flex flex-col justify-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 self-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass-card mb-6 self-center">
           <Scissors className="w-8 h-8 text-primary" />
         </div>
         <h1 className="font-heading text-4xl sm:text-5xl font-bold tracking-tight mb-4">
@@ -40,21 +40,21 @@ export default function Home() {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 pb-20 grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
-        <div className="text-center">
+        <div className="text-center glass-card p-6">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
             <Coffee className="w-6 h-6 text-primary" />
           </div>
           <h3 className="font-heading font-semibold mb-1">Drink Ordering</h3>
           <p className="text-sm text-muted-foreground">Stylists and guests request drinks that arrive instantly at the front desk.</p>
         </div>
-        <div className="text-center">
+        <div className="text-center glass-card p-6">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
             <MessageSquare className="w-6 h-6 text-primary" />
           </div>
           <h3 className="font-heading font-semibold mb-1">Real-Time Chat</h3>
           <p className="text-sm text-muted-foreground">Stylists message the front desk directly with updates and requests.</p>
         </div>
-        <div className="text-center">
+        <div className="text-center glass-card p-6">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
             <QrCode className="w-6 h-6 text-primary" />
           </div>
