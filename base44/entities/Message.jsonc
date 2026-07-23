@@ -71,10 +71,16 @@
           "data.thread_partner_id": "{{user.id}}"
         },
         {
-          "data.salon_id": "{{user.data.salon_id}}",
-          "user_condition": {
-            "role": "admin"
-          }
+          "$and": [
+            {
+              "data.salon_id": "{{user.data.salon_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
         }
       ]
     },
@@ -84,10 +90,16 @@
           "data.sender_id": "{{user.id}}"
         },
         {
-          "data.salon_id": "{{user.data.salon_id}}",
-          "user_condition": {
-            "role": "admin"
-          }
+          "$and": [
+            {
+              "data.salon_id": "{{user.data.salon_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
         }
       ]
     },
@@ -97,10 +109,16 @@
           "data.sender_id": "{{user.id}}"
         },
         {
-          "data.salon_id": "{{user.data.salon_id}}",
-          "user_condition": {
-            "role": "admin"
-          }
+          "$and": [
+            {
+              "data.salon_id": "{{user.data.salon_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
         }
       ]
     }
