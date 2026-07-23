@@ -37,6 +37,10 @@
       "type": "string",
       "default": "#000000"
     },
+    "text_color": {
+      "type": "string",
+      "default": "#1a1a1a"
+    },
     "card_background_color": {
       "type": "string",
       "default": "#ffffff"
@@ -44,6 +48,10 @@
     "card_border_color": {
       "type": "string",
       "default": "#000000"
+    },
+    "card_text_color": {
+      "type": "string",
+      "default": "#1a1a1a"
     },
     "card_radius": {
       "type": "number",

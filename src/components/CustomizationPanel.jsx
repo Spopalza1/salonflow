@@ -358,10 +358,11 @@ export default function CustomizationPanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Palette className="w-5 h-5" />Theme Colors</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ColorField label="Primary" value={form.primary_color} onChange={(v) => handleChange('primary_color', v)} />
           <ColorField label="Secondary" value={form.secondary_color} onChange={(v) => handleChange('secondary_color', v)} />
           <ColorField label="Accent" value={form.accent_color} onChange={(v) => handleChange('accent_color', v)} />
+          <ColorField label="Font Color" value={form.text_color} onChange={(v) => handleChange('text_color', v)} />
         </CardContent>
       </Card>
 
@@ -396,9 +397,10 @@ export default function CustomizationPanel() {
           <CardTitle className="flex items-center gap-2"><LayoutGrid className="w-5 h-5" />Card Styling</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <ColorField label="Card Background" value={form.card_background_color} onChange={(v) => handleChange('card_background_color', v)} />
             <ColorField label="Card Border" value={form.card_border_color} onChange={(v) => handleChange('card_border_color', v)} />
+            <ColorField label="Card Text" value={form.card_text_color} onChange={(v) => handleChange('card_text_color', v)} />
           </div>
           <div className="space-y-2">
             <Label>Card Border Radius: {form.card_radius}px</Label>

@@ -8,8 +8,10 @@ export const DEFAULTS = {
   primary_color: '#000000',
   secondary_color: '#000000',
   accent_color: '#000000',
+  text_color: '#1a1a1a',
   card_background_color: '#ffffff',
   card_border_color: '#000000',
+  card_text_color: '#1a1a1a',
   card_radius: 12,
   font_heading: 'Inter',
   font_body: 'Inter',
@@ -99,8 +101,14 @@ export function applyCustomization(settings) {
     if (accentFg) root.style.setProperty('--accent-foreground', accentFg);
   }
 
+  const textColor = hexToHsl(s.text_color);
+  if (textColor) root.style.setProperty('--foreground', textColor);
+
   const cardBg = hexToHsl(s.card_background_color);
   if (cardBg) root.style.setProperty('--card', cardBg);
+
+  const cardText = hexToHsl(s.card_text_color);
+  if (cardText) root.style.setProperty('--card-foreground', cardText);
 
   const cardBorder = hexToHsl(s.card_border_color);
   if (cardBorder) root.style.setProperty('--border', cardBorder);
