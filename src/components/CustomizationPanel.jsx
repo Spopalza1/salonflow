@@ -79,12 +79,18 @@ export default function CustomizationPanel() {
     if (!initializedRef.current) return;
     skipSaveRef.current = true;
     setForm({ ...DEFAULTS, ...(scope === 'admin' ? adminSettings : guestSettings) });
+    // When switching to guest, restore saved admin settings so the admin dashboard is unaffected
+    if (scope === 'guest') {
+      applyCustomization(adminSettings);
+    }
   }, [scope]);
 
-  // Live preview
+  // Live preview — only for admin scope; guest edits must not affect the admin dashboard
   useEffect(() => {
-    applyCustomization(form);
-  }, [form]);
+    if (scope === 'admin') {
+      applyCustomization(form);
+    }
+  }, [form, scope]);
 
   // Restore admin settings when panel unmounts (so guest preview doesn't persist)
   useEffect(() => {
