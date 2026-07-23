@@ -175,26 +175,45 @@ export default function CustomizationPanel() {
   const handleAnalyzeWebsite = async () => {
     if (!websiteUrl.trim()) return;
     setAnalyzing(true);
+    setAnalysisResult(null);
     try {
       const response = await base44.functions.invoke('analyzeWebsite', { url: websiteUrl.trim() });
-      const result = response.data;
-      setAnalysisResult(result);
-      setForm(prev => ({
-        ...prev,
-        primary_color: result.primary_color,
-        secondary_color: result.secondary_color,
-        accent_color: result.accent_color,
-        font_heading: result.font_heading,
-        font_body: result.font_body,
-      }));
-      if (result.site_name && !form.salon_display_name) {
-        setForm(prev => ({ ...prev, salon_display_name: result.site_name }));
-      }
-      toast({ title: 'Website analyzed!', description: 'Colors and fonts auto-applied.' });
+      setAnalysisResult(response.data);
+      toast({ title: 'Website analyzed!', description: 'Choose where to apply the style below.' });
     } catch (err) {
       toast({ title: 'Analysis failed', description: err.message, variant: 'destructive' });
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const applyAnalysisToScope = async (targetScope) => {
+    if (!analysisResult) return;
+    const updates = {
+      primary_color: analysisResult.primary_color,
+      secondary_color: analysisResult.secondary_color,
+      accent_color: analysisResult.accent_color,
+      font_heading: analysisResult.font_heading,
+      font_body: analysisResult.font_body,
+    };
+    try {
+      await updateSettings(targetScope, updates);
+      // If applying to the currently-visible scope, update the form for live preview
+      if (targetScope === scope) {
+        setForm(prev => ({ ...prev, ...updates }));
+      }
+      if (analysisResult.site_name) {
+        const settings = targetScope === 'admin' ? adminSettings : guestSettings;
+        if (!settings?.salon_display_name) {
+          await updateSettings(targetScope, { salon_display_name: analysisResult.site_name });
+          if (targetScope === scope) {
+            setForm(prev => ({ ...prev, salon_display_name: analysisResult.site_name }));
+          }
+        }
+      }
+      toast({ title: `Style applied to ${targetScope === 'admin' ? 'Admin Panel' : 'Guest Menu'}` });
+    } catch (err) {
+      toast({ title: 'Apply failed', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -281,14 +300,26 @@ export default function CustomizationPanel() {
               {analyzing ? 'Analyzing...' : 'Analyze'}
             </Button>
           </div>
-          {analysisResult && analysisResult.all_colors && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {analysisResult.all_colors.slice(0, 8).map((color, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <div className="w-10 h-10 rounded-md border border-border" style={{ background: color }} />
-                  <span className="text-[10px] font-mono text-muted-foreground">{color}</span>
+          {analysisResult && (
+            <div className="space-y-3 mt-2">
+              {analysisResult.all_colors && analysisResult.all_colors.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {analysisResult.all_colors.slice(0, 8).map((color, i) => (
+                    <div key={i} className="flex flex-col items-center gap-1">
+                      <div className="w-10 h-10 rounded-md border border-border" style={{ background: color }} />
+                      <span className="text-[10px] font-mono text-muted-foreground">{color}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button size="sm" onClick={() => applyAnalysisToScope('admin')} className="flex-1">
+                  <Wand2 className="w-4 h-4 mr-2" />Apply to Admin Panel
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => applyAnalysisToScope('guest')} className="flex-1">
+                  <Wand2 className="w-4 h-4 mr-2" />Apply to Guest Menu
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
