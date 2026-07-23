@@ -291,13 +291,13 @@ export default function ChatPanel({ mode, user }) {
             {selectedPartnerId ?
           <>
                 <div className="flex items-center gap-2 px-4 py-2 border-b">
-                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 shrink-0" onClick={() => closeChat()}>
-                    <ArrowLeft className="w-4 h-4" />
+                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 shrink-0 min-h-[44px] min-w-[44px]" onClick={() => closeChat()}>
+                     <ArrowLeft className="w-4 h-4" />
                   </Button>
                   <span className="text-sm font-medium truncate flex-1">
                     {stylists.find((s) => s.id === selectedPartnerId)?.display_name || stylists.find((s) => s.id === selectedPartnerId)?.full_name || stylists.find((s) => s.id === selectedPartnerId)?.email || 'Stylist'}
                   </span>
-                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConvConfirm(true)} className="text-destructive hover:text-destructive h-8">
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConvConfirm(true)} className="text-destructive hover:text-destructive h-8 min-h-[44px]">
                     <Trash2 className="w-3.5 h-3.5 mr-1" />
                     Delete Chat
                   </Button>
@@ -313,10 +313,9 @@ export default function ChatPanel({ mode, user }) {
                 <div key={msg.id} className={`group flex items-center gap-1.5 ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'} ${msg._pending ? 'opacity-60' : ''}`}>
                           <MessageBubble msg={msg} isOwn={msg.sender_role === 'admin'} canDownload={mode === 'admin'} />
                           <button
-                    onClick={() => handleDeleteMessage(msg.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0 p-1">
-                    
-                            <Trash2 className="w-3.5 h-3.5" />
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg">
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                 )}

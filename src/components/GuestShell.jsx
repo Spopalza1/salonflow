@@ -14,7 +14,7 @@ export default function GuestShell({ bgImage, bgVideo, overlayOpacity = 80, chil
   if (!hasMedia) {
     return (
       <div
-        className="min-h-screen relative"
+        className="min-h-screen relative safe-area-left safe-area-right"
         style={{
           background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%)',
         }}
@@ -25,7 +25,7 @@ export default function GuestShell({ bgImage, bgVideo, overlayOpacity = 80, chil
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative safe-area-left safe-area-right">
       {bgVideo ? (
         <video
           ref={videoRef}

@@ -7,6 +7,7 @@ import { Image as UIImage } from '@/components/ui/image';
 import { cn } from '@/lib/utils';
 import ItemCustomizationDialog from '@/components/ItemCustomizationDialog';
 import ItemQuickView from '@/components/ItemQuickView';
+import { useUrlModal } from '@/hooks/useUrlModal';
 
 export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const [items, setItems] = useState([]);
@@ -16,8 +17,14 @@ export default function MenuBrowser({ mode, user, guestInfo, salonId }) {
   const [ordering, setOrdering] = useState(null);
   const submitGuardRef = useRef(false);
   const [customItem, setCustomItem] = useState(null);
-  const [customOpen, setCustomOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useUrlModal('customize-item');
   const [quickViewItem, setQuickViewItem] = useState(null);
+
+  useEffect(() => {
+    if (!customOpen && customItem) {
+      setCustomItem(null);
+    }
+  }, [customOpen, customItem]);
   const [activeCategory, setActiveCategory] = useState(null);
   const sectionRefs = useRef({});
   const { toast } = useToast();

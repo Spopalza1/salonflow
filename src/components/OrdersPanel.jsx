@@ -135,13 +135,13 @@ export default function OrdersPanel() {
                     <>
                       <Button size="sm" onClick={() => updateStatus(order, 'preparing')}><Utensils className="w-3 h-3 mr-1" />Start</Button>
                       <Button size="sm" variant="outline" onClick={() => updateStatus(order, 'served')}><Check className="w-3 h-3 mr-1" />Serve</Button>
-                      <Button size="sm" variant="ghost" onClick={() => updateStatus(order, 'cancelled')}><X className="w-3 h-3" /></Button>
+                      <Button size="sm" variant="ghost" className="min-h-[44px] min-w-[44px]" onClick={() => updateStatus(order, 'cancelled')}><X className="w-3 h-3" /></Button>
                     </>
                   )}
                   {order.status === 'preparing' && (
                     <>
                       <Button size="sm" onClick={() => updateStatus(order, 'served')}><Check className="w-3 h-3 mr-1" />Serve</Button>
-                      <Button size="sm" variant="ghost" onClick={() => updateStatus(order, 'cancelled')}><X className="w-3 h-3" /></Button>
+                      <Button size="sm" variant="ghost" className="min-h-[44px] min-w-[44px]" onClick={() => updateStatus(order, 'cancelled')}><X className="w-3 h-3" /></Button>
                     </>
                   )}
                 </div>

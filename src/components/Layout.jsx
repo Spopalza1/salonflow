@@ -11,16 +11,17 @@ import AdminMenu from '@/components/AdminMenu';
 import StylistMenu from '@/components/StylistMenu';
 import { SalonCustomizationProvider, useSalonCustomization } from '@/lib/salonCustomizationContext';
 import { Image as UIImage } from '@/components/ui/image';
+import { useUrlModal } from '@/hooks/useUrlModal';
 
 function LayoutContent() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const { adminSettings: settings } = useSalonCustomization();
   const [profileOpen, setProfileOpen] = useState(false);
-  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useUrlModal('customize');
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden">
+    <div className="h-[100dvh] flex flex-col overflow-hidden safe-area-left safe-area-right">
       <header className="glass-header border-b sticky top-0 z-20 safe-area-top">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2">

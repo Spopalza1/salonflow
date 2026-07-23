@@ -14,12 +14,13 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import Swipeable from '@/components/Swipeable';
 import AnimatedTabContent from '@/components/AnimatedTabContent';
 import { useTabScrollRestoration } from '@/hooks/useTabScrollRestoration';
+import { useUrlModal } from '@/hooks/useUrlModal';
 
 export default function StylistView() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useUrlModal('edit-profile');
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(location.search);
     return params.get('tab') || 'coffee';
