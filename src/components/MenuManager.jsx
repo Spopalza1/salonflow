@@ -32,6 +32,9 @@ export default function MenuManager() {
   const [form, setForm] = useState({ name: '', category: '', price: '', description: '', image_url: '', available: true, complimentary: false });
   const [uploading, setUploading] = useState(false);
   const reorderingRef = useRef(false);
+  const reorderTimerRef = useRef(null);
+  const pendingCatReorderRef = useRef(null);
+  const pendingItemReorderRef = useRef(null);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -215,14 +218,41 @@ export default function MenuManager() {
   // Render categories in their display_order, not insertion order
   const sortedCategoryNames = categories.map(c => c.name).filter(name => grouped[name]);
 
+  const flushReorder = () => {
+    if (pendingCatReorderRef.current) {
+      const payload = pendingCatReorderRef.current;
+      pendingCatReorderRef.current = null;
+      base44.entities.MenuCategory.bulkUpdate(payload)
+        .catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }))
+        .finally(() => {
+          if (!pendingCatReorderRef.current && !pendingItemReorderRef.current) reorderingRef.current = false;
+        });
+    }
+    if (pendingItemReorderRef.current) {
+      const payload = pendingItemReorderRef.current;
+      pendingItemReorderRef.current = null;
+      base44.entities.MenuItem.bulkUpdate(payload)
+        .catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }))
+        .finally(() => {
+          if (!pendingCatReorderRef.current && !pendingItemReorderRef.current) reorderingRef.current = false;
+        });
+    }
+  };
+
+  const scheduleReorderFlush = () => {
+    if (reorderTimerRef.current) clearTimeout(reorderTimerRef.current);
+    reorderTimerRef.current = setTimeout(() => {
+      reorderTimerRef.current = null;
+      flushReorder();
+    }, 600);
+  };
+
   const handleCategoryReorder = (reorderedIds) => {
     const reordered = reorderedIds.map(id => categories.find(c => c.id === id)).filter(Boolean);
     setCategories(reordered);
     reorderingRef.current = true;
-    base44.entities.MenuCategory.bulkUpdate(
-      reordered.map((cat, index) => ({ id: cat.id, display_order: index }))
-    ).catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }))
-     .finally(() => { reorderingRef.current = false; });
+    pendingCatReorderRef.current = reordered.map((cat, index) => ({ id: cat.id, display_order: index }));
+    scheduleReorderFlush();
   };
 
   const handleItemReorder = (categoryName, reorderedIds) => {
@@ -234,10 +264,8 @@ export default function MenuManager() {
     const reorderedWithOrder = reorderedItems.map((item, index) => ({ ...item, display_order: index }));
     setItems([...before, ...reorderedWithOrder, ...after]);
     reorderingRef.current = true;
-    base44.entities.MenuItem.bulkUpdate(
-      reorderedItems.map((item, index) => ({ id: item.id, display_order: index }))
-    ).catch(err => toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' }))
-     .finally(() => { reorderingRef.current = false; });
+    pendingItemReorderRef.current = reorderedItems.map((item, index) => ({ id: item.id, display_order: index }));
+    scheduleReorderFlush();
   };
 
   return (
