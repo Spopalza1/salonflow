@@ -140,6 +140,12 @@ export default function DailyReport() {
 
   const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
+  const MARGIN = 10; // mm
+  const PAGE_W = 210;
+  const PAGE_H = 297;
+  const CONTENT_W = PAGE_W - 2 * MARGIN; // 190mm
+  const CONTENT_H = PAGE_H - 2 * MARGIN; // 277mm
+
   const captureReport = async () => {
     const bgColor = window.getComputedStyle(document.body).backgroundColor || '#ffffff';
     return await html2canvas(reportRef.current, {
@@ -152,20 +158,48 @@ export default function DailyReport() {
     });
   };
 
+  // Splits a tall canvas into page-sized vertical chunks (one per A4 page).
+  const splitCanvasIntoPages = (canvas) => {
+    const pxPerMm = canvas.width / CONTENT_W;
+    const pageHeightPx = Math.floor(CONTENT_H * pxPerMm);
+    const pages = [];
+    let y = 0;
+    while (y < canvas.height) {
+      const sliceHeight = Math.min(pageHeightPx, canvas.height - y);
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      const ctx = pageCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.drawImage(canvas, 0, y, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+      pages.push(pageCanvas.toDataURL('image/png'));
+      y += pageHeightPx;
+    }
+    return pages;
+  };
+
   const handlePrint = async () => {
     if (!reportRef.current) return;
     setExporting(true);
     try {
       const canvas = await captureReport();
-      const imgData = canvas.toDataURL('image/png');
+      const pages = splitCanvasIntoPages(canvas);
       const printWindow = window.open('', '_blank');
-      printWindow.document.write(`<html><head><title>Daily Report - ${todayStr}</title></head><body style="margin:0;padding:0;"><img src="${imgData}" style="width:100%;" /></body></html>`);
+      const imgs = pages
+        .map((p, i) => `<img src="${p}" style="width:100%;${i < pages.length - 1 ? 'page-break-after:always;' : ''}" />`)
+        .join('');
+      printWindow.document.write(
+        `<html><head><title>Daily Report - ${todayStr}</title>` +
+        `<style>@page{margin:${MARGIN}mm;}body{margin:0;padding:0;}img{display:block;}</style>` +
+        `</head><body>${imgs}</body></html>`
+      );
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => {
         printWindow.print();
-        setTimeout(() => printWindow.close(), 200);
-      }, 300);
+        setTimeout(() => printWindow.close(), 300);
+      }, 500);
     } catch {
       window.print();
     } finally {
@@ -178,21 +212,12 @@ export default function DailyReport() {
     setExporting(true);
     try {
       const canvas = await captureReport();
-      const imgData = canvas.toDataURL('image/png');
+      const pages = splitCanvasIntoPages(canvas);
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
+      pages.forEach((pageImg, i) => {
+        if (i > 0) pdf.addPage();
+        pdf.addImage(pageImg, 'PNG', MARGIN, MARGIN, CONTENT_W, CONTENT_H);
+      });
       pdf.save(`daily-report-${new Date().toISOString().split('T')[0]}.pdf`);
     } finally {
       setExporting(false);
