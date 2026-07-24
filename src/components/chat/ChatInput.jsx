@@ -31,7 +31,6 @@ export default function ChatInput({ onSend }) {
   const recordedBlobRef = useRef(null);
   const { toast } = useToast();
 
-  // Stable document-level pointer handlers (survive re-renders)
   const handleDocPointerMoveRef = useRef((e) => {
     if (lockedRef.current) return;
     const deltaY = startYRef.current - e.clientY;
@@ -282,7 +281,7 @@ export default function ChatInput({ onSend }) {
   };
 
   return (
-    <div className="p-3 border-t safe-area-bottom">
+    <div className="px-3 pb-3 safe-area-bottom">
       {uploading && (
         <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
           <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" />
@@ -291,7 +290,7 @@ export default function ChatInput({ onSend }) {
       )}
 
       {voiceState === 'preview' ? (
-        <div className="flex items-center gap-2">
+        <div className="glass-card rounded-2xl flex items-center gap-2 p-2">
           <audio
             ref={previewAudioRef}
             src={previewUrl}
@@ -304,7 +303,7 @@ export default function ChatInput({ onSend }) {
             }}
             className="hidden"
           />
-          <Button type="button" size="icon" variant="ghost" onClick={togglePlayPreview}>
+          <Button type="button" size="icon" variant="ghost" onClick={togglePlayPreview} className="rounded-full shrink-0">
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </Button>
           <div className="flex-1 flex items-center gap-2">
@@ -313,60 +312,60 @@ export default function ChatInput({ onSend }) {
               <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${playbackProgress * 100}%` }} />
             </div>
           </div>
-          <Button type="button" size="icon" variant="ghost" onClick={handleDeletePreview}>
+          <Button type="button" size="icon" variant="ghost" onClick={handleDeletePreview} className="rounded-full shrink-0">
             <Trash2 className="w-5 h-5 text-destructive" />
           </Button>
-          <Button type="button" size="icon" onClick={handleSendVoice} disabled={uploading}>
+          <Button type="button" size="icon" onClick={handleSendVoice} disabled={uploading} className="rounded-full shrink-0 transition-transform hover:scale-105 active:scale-95 motion-reduce:transition-none">
             <Send className="w-4 h-4" />
           </Button>
         </div>
       ) : voiceState === 'recording' ? (
-        <div className="flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-md bg-red-50 text-red-600">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+        <div className="glass-card rounded-2xl flex items-center gap-2 p-2">
+          <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-destructive/10 text-destructive">
+            <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
             <span className="text-sm tabular-nums">{formatTime(recordTime)}</span>
             <span className="text-xs ml-2 flex items-center gap-0.5">
               <ChevronUp className="w-3 h-3" /> Slide up to lock
             </span>
           </div>
-          <Button type="button" size="icon" variant="destructive" className="touch-none">
+          <Button type="button" size="icon" variant="destructive" className="touch-none rounded-full shrink-0">
             <Mic className="w-5 h-5" />
           </Button>
         </div>
       ) : voiceState === 'locked' ? (
-        <div className="flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-md bg-red-50 text-red-600">
+        <div className="glass-card rounded-2xl flex items-center gap-2 p-2">
+          <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-destructive/10 text-destructive">
             <Lock className="w-4 h-4" />
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
             <span className="text-sm tabular-nums">{formatTime(recordTime)}</span>
             <span className="text-xs ml-1">Locked</span>
           </div>
-          <Button type="button" size="icon" variant="ghost" onClick={cancelRecording}>
+          <Button type="button" size="icon" variant="ghost" onClick={cancelRecording} className="rounded-full shrink-0">
             <X className="w-5 h-5 text-destructive" />
           </Button>
-          <Button type="button" size="icon" variant="destructive" onClick={stopRecording}>
+          <Button type="button" size="icon" variant="destructive" onClick={stopRecording} className="rounded-full shrink-0">
             <Square className="w-4 h-4" />
           </Button>
         </div>
       ) : (
-        <form onSubmit={handleTextSend} className="flex gap-2 items-center">
+        <form onSubmit={handleTextSend} className="glass-card rounded-2xl flex items-center gap-1 p-1.5">
           <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileSelect} className="hidden" />
-          <Button type="button" size="icon" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+          <Button type="button" size="icon" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="rounded-full shrink-0 min-h-[44px] min-w-[44px] touch-target">
             <Paperclip className="w-4 h-4" />
           </Button>
-          <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message..." disabled={uploading} />
+          <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message..." disabled={uploading} className="flex-1 border-0 shadow-none bg-transparent focus-visible:ring-0 h-10" />
           <Button
             type="button"
             size="icon"
             variant="ghost"
             onPointerDown={handleMicPointerDown}
             onContextMenu={(e) => e.preventDefault()}
-            className="touch-none"
+            className="touch-none rounded-full shrink-0 min-h-[44px] min-w-[44px] touch-target"
             disabled={uploading}
           >
             <Mic className="w-4 h-4" />
           </Button>
-          <Button type="submit" size="icon" disabled={!input.trim() || uploading}>
+          <Button type="submit" size="icon" disabled={!input.trim() || uploading} className="rounded-full shrink-0 transition-transform hover:scale-105 active:scale-95 motion-reduce:transition-none min-h-[44px] min-w-[44px] touch-target">
             <Send className="w-4 h-4" />
           </Button>
         </form>

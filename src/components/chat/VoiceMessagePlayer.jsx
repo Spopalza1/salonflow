@@ -21,7 +21,6 @@ export default function VoiceMessagePlayer({ src, isOwn }) {
       if (audio.duration && isFinite(audio.duration)) {
         setDuration(audio.duration);
       } else {
-        // Workaround for webm files that report Infinity duration
         audio.currentTime = 1e101;
         const onSeeked = () => {
           if (audio.duration && isFinite(audio.duration)) {
@@ -118,35 +117,37 @@ export default function VoiceMessagePlayer({ src, isOwn }) {
   const displayTime = isPlaying ? currentTime : (duration || 0);
 
   return (
-    <div className="flex items-center gap-2 min-w-[200px] py-0.5">
+    <div className="flex items-center gap-2.5 min-w-[200px] py-0.5">
       <audio ref={audioRef} src={src} preload="metadata" className="hidden" />
       <button
         onClick={togglePlay}
-        className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${isOwn ? 'bg-white/20 hover:bg-white/30' : 'bg-black/10 hover:bg-black/20'}`}
+        className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-95 ${
+          isOwn ? 'bg-white/20 hover:bg-white/30' : 'bg-primary/10 hover:bg-primary/20'
+        }`}
       >
         {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
       </button>
-      <div className="flex-1 flex flex-col gap-1 min-w-0">
+      <div className="flex-1 flex flex-col gap-1.5 min-w-0">
         <div
           ref={progressBarRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          className={`relative h-1.5 rounded-full cursor-pointer touch-none ${isOwn ? 'bg-white/25' : 'bg-black/15'}`}
+          className={`relative h-1.5 rounded-full cursor-pointer touch-none ${isOwn ? 'bg-white/25' : 'bg-primary/15'}`}
         >
           <div
-            className={`absolute inset-y-0 left-0 rounded-full ${isOwn ? 'bg-white/90' : 'bg-black/70'}`}
+            className={`absolute inset-y-0 left-0 rounded-full transition-all ${isOwn ? 'bg-white/90' : 'bg-primary'}`}
             style={{ width: `${progress}%` }}
           >
-            <div className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2.5 h-2.5 rounded-full ${isOwn ? 'bg-white' : 'bg-black'}`} />
+            <div className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2.5 h-2.5 rounded-full ${isOwn ? 'bg-white' : 'bg-primary'}`} />
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[11px] tabular-nums opacity-80">{formatTime(displayTime)}</span>
+          <span className="text-[11px] tabular-nums opacity-70">{formatTime(displayTime)}</span>
           <button
             onClick={cycleSpeed}
-            className={`text-[11px] font-semibold px-1.5 py-0.5 rounded transition-colors ${isOwn ? 'bg-white/15 hover:bg-white/25' : 'bg-black/10 hover:bg-black/20'}`}
+            className={`text-[11px] font-semibold px-1.5 py-0.5 rounded transition-colors ${isOwn ? 'bg-white/15 hover:bg-white/25' : 'bg-primary/10 hover:bg-primary/20'}`}
           >
             {speed}x
           </button>

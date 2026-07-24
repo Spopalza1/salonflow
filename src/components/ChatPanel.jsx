@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, User, Search, Trash2, ArrowLeft } from 'lucide-react';
+import { MessageSquare, User, Search, Trash2, ArrowLeft, Scissors, MessagesSquare } from 'lucide-react';
+import { Image as UIImage } from '@/components/ui/image';
 import MessageBubble from '@/components/chat/MessageBubble';
 import ConversationItem from '@/components/chat/ConversationItem';
 import ChatInput from '@/components/chat/ChatInput';
@@ -47,7 +48,6 @@ export default function ChatPanel({ mode, user }) {
     loadStylists();
   }, [loadStylists]);
 
-  // Auto-refresh stylist list when a user updates their profile
   useEffect(() => {
     if (mode !== 'admin' || !user?.salon_id) return;
     const unsubscribe = base44.entities.User.subscribe((event) => {
@@ -81,7 +81,6 @@ export default function ChatPanel({ mode, user }) {
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
-        // Restore a deleted conversation if a new message arrives for it
         if (event.data.thread_partner_id) {
           setDeletedConversations((prev) => {
             if (!prev.has(event.data.thread_partner_id)) return prev;
@@ -92,7 +91,6 @@ export default function ChatPanel({ mode, user }) {
         }
         setMessages((prev) => {
           if (prev.some((m) => m.id === event.data.id)) return prev;
-          // Replace any matching pending temp message with the real record
           const withoutPending = prev.filter(m => !(
             m._pending &&
             m.body === event.data.body &&
@@ -123,7 +121,6 @@ export default function ChatPanel({ mode, user }) {
   map((m) => m.id).
   join(',');
 
-  // Mark incoming messages as read when the conversation is viewed
   useEffect(() => {
     if (loading || !unreadIncomingKey) return;
     unreadIncomingKey.split(',').filter(Boolean).forEach((id) => {
@@ -146,7 +143,6 @@ export default function ChatPanel({ mode, user }) {
     const senderName = user.display_name || user.full_name || user.email;
     const senderRole = mode === 'admin' ? 'admin' : 'stylist';
 
-    // Optimistic: render a temp message immediately with a pending state
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const tempMessage = {
       id: tempId,
@@ -177,10 +173,8 @@ export default function ChatPanel({ mode, user }) {
         media_type,
         salon_id: user.salon_id
       });
-      // Replace the temp message with the real record
       setMessages(prev => prev.map(m => m.id === tempId ? created : m));
     } catch (err) {
-      // Remove the temp message on failure
       setMessages(prev => prev.filter(m => m.id !== tempId));
       console.error('Failed to send message:', err);
     }
@@ -190,8 +184,6 @@ export default function ChatPanel({ mode, user }) {
     try {
       await base44.entities.Message.delete(messageId);
     } catch (err) {
-
-      // Message may have already been deleted via real-time sync — ignore
     }};
 
   const handleDeleteConversation = async () => {
@@ -214,21 +206,27 @@ export default function ChatPanel({ mode, user }) {
   if (mode === 'stylist') {
     return (
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex items-center gap-2 mb-3">
-          <MessageSquare className="w-5 h-5" />
-          <h2 className="font-heading text-xl font-semibold">Front Desk Chat</h2>
-        </div>
-        <Card className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 rounded-md">
+        <Card className="glass-card flex-1 min-h-0 flex flex-col overflow-hidden rounded-3xl">
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border/20">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Scissors className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="font-heading font-semibold text-sm block">Front Desk</span>
+              <p className="text-xs text-muted-foreground">Salon Administration</p>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto chat-scroll scroll-smooth p-4">
             {conversationMessages.length === 0 ?
-            <div className="text-center py-10 text-muted-foreground">
-                <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p>No messages yet. Say hi to the front desk!</p>
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-center px-6">
+                <MessagesSquare className="w-12 h-12 mb-3 opacity-30" />
+                <p className="text-sm font-medium">No messages yet</p>
+                <p className="text-xs mt-1">Say hi to the front desk!</p>
               </div> :
 
-            <div className="space-y-3">
+            <div className="space-y-2">
                 {conversationMessages.map((msg) =>
-              <div key={msg.id} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'} ${msg._pending ? 'opacity-60' : ''}`}>
+              <div key={msg.id} className={`msg-enter flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'} ${msg._pending ? 'opacity-60' : ''}`}>
                     <MessageBubble msg={msg} isOwn={msg.sender_id === user.id} canDownload={mode === 'admin'} />
                   </div>
               )}
@@ -238,12 +236,23 @@ export default function ChatPanel({ mode, user }) {
           </div>
           <ChatInput onSend={handleSend} />
         </Card>
-      </div>);
-
+      </div>
+    );
   }
 
-  const stylistsWithMessages = new Set(messages.filter((m) => m.thread_partner_id).map((m) => m.thread_partner_id));
-  const unreadByStylist = new Set(messages.filter((m) => !m.read && m.sender_role !== 'admin' && m.thread_partner_id).map((m) => m.thread_partner_id));
+  const lastMessageByStylist = {};
+  const unreadCountByStylist = {};
+  messages.forEach(m => {
+    if (!m.thread_partner_id) return;
+    const pid = m.thread_partner_id;
+    if (!lastMessageByStylist[pid] || new Date(m.created_date) > new Date(lastMessageByStylist[pid].created_date)) {
+      lastMessageByStylist[pid] = m;
+    }
+    if (!m.read && m.sender_role !== 'admin') {
+      unreadCountByStylist[pid] = (unreadCountByStylist[pid] || 0) + 1;
+    }
+  });
+
   const filteredStylists = stylists.filter((s) => {
     if (deletedConversations.has(s.id)) return false;
     if (!searchQuery.trim()) return true;
@@ -251,27 +260,31 @@ export default function ChatPanel({ mode, user }) {
     return (s.full_name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q);
   });
 
+  const selectedStylist = stylists.find((s) => s.id === selectedPartnerId);
+  const selectedStylistName = selectedStylist?.display_name || selectedStylist?.full_name || selectedStylist?.email || 'Stylist';
+
   return (
-    <div className="space-y-3 flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col flex-1 min-h-0 gap-3">
       <div className="flex items-center gap-2">
         <MessageSquare className="w-5 h-5" />
         <h2 className="font-heading text-xl font-semibold">Stylist Chat</h2>
       </div>
       {stylists.length === 0 ?
-      <div className="text-center py-20 text-muted-foreground">
-          <User className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No stylists registered yet. Invite stylists from your dashboard.</p>
+      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-center px-6">
+          <User className="w-12 h-12 mb-3 opacity-30" />
+          <p className="text-sm font-medium">No stylists yet</p>
+          <p className="text-xs mt-1">Invite stylists from your dashboard to start chatting.</p>
         </div> :
 
-      <div className="grid grid-cols-1 grid-rows-1 md:grid-cols-[250px_1fr] gap-4 flex-1 min-h-0">
-          <Card className={`overflow-hidden flex-col min-h-0 ${mobileChatActive ? 'hidden' : 'flex'} md:flex`}>
-            <div className="p-2 border-b">
+      <div className="grid grid-cols-1 grid-rows-1 md:grid-cols-[280px_1fr] gap-4 flex-1 min-h-0">
+          <Card className={`glass-card overflow-hidden flex-col min-h-0 rounded-3xl ${mobileChatActive ? 'hidden' : 'flex'} md:flex`}>
+            <div className="p-3 border-b border-border/20">
               <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search stylists..." className="h-8 pl-7 text-sm" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search stylists..." className="h-9 pl-8 text-sm rounded-xl bg-muted/30 border-border/20" />
               </div>
             </div>
-            <div className="overflow-y-auto flex-1 p-2 space-y-1">
+            <div className="overflow-y-auto chat-scroll flex-1 p-2 space-y-0.5">
               {filteredStylists.length === 0 ?
             <p className="text-center text-sm text-muted-foreground py-4">No stylists found</p> :
             null}
@@ -280,42 +293,54 @@ export default function ChatPanel({ mode, user }) {
                   key={s.id}
                   stylist={s}
                   isSelected={selectedPartnerId === s.id}
-                  hasUnread={unreadByStylist.has(s.id)}
+                  unreadCount={unreadCountByStylist[s.id] || 0}
+                  lastMessage={lastMessageByStylist[s.id]?.body}
+                  lastMessageTime={lastMessageByStylist[s.id]?.created_date}
                   onSelect={() => { setSelectedPartnerId(s.id); openChat(); }}
                   onDelete={() => { setSelectedPartnerId(s.id); setShowDeleteConvConfirm(true); }}
                 />
               ))}
             </div>
           </Card>
-          <Card className={`flex-col overflow-hidden min-h-0 ${mobileChatActive ? 'flex' : 'hidden'} md:flex`}>
+          <Card className={`glass-card flex-col overflow-hidden min-h-0 rounded-3xl ${mobileChatActive ? 'flex' : 'hidden'} md:flex`}>
             {selectedPartnerId ?
           <>
-                <div className="flex items-center gap-2 px-4 py-2 border-b">
-                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 shrink-0 min-h-[44px] min-w-[44px] touch-target" onClick={() => closeChat()}>
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-border/20">
+                  <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 shrink-0 min-h-[44px] min-w-[44px] touch-target" onClick={() => closeChat()}>
                      <ArrowLeft className="w-4 h-4" />
                   </Button>
-                  <span className="text-sm font-medium truncate flex-1">
-                    {stylists.find((s) => s.id === selectedPartnerId)?.display_name || stylists.find((s) => s.id === selectedPartnerId)?.full_name || stylists.find((s) => s.id === selectedPartnerId)?.email || 'Stylist'}
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConvConfirm(true)} className="text-destructive hover:text-destructive h-8 min-h-[44px] touch-target">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
+                    {selectedStylist?.profile_picture_url ? (
+                      <UIImage src={selectedStylist.profile_picture_url} fittingType="fill" className="w-10 h-10" />
+                    ) : (
+                      <User className="w-5 h-5 text-primary" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold truncate block">{selectedStylistName}</span>
+                    <span className="text-xs text-muted-foreground capitalize">{selectedStylist?.role || 'stylist'}</span>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConvConfirm(true)} className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 min-h-[44px] touch-target">
                     <Trash2 className="w-3.5 h-3.5 mr-1" />
-                    Delete Chat
+                    <span className="hidden sm:inline">Delete</span>
                   </Button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="flex-1 overflow-y-auto chat-scroll scroll-smooth p-4">
                   {conversationMessages.length === 0 ?
-              <div className="text-center py-10 text-muted-foreground">
-                      <p>No messages yet. Start the conversation!</p>
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-center px-6">
+                      <MessagesSquare className="w-12 h-12 mb-3 opacity-30" />
+                      <p className="text-sm font-medium">No messages yet</p>
+                      <p className="text-xs mt-1">Start the conversation!</p>
                     </div> :
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                       {conversationMessages.map((msg) =>
-                <div key={msg.id} className={`group flex items-center gap-1.5 ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'} ${msg._pending ? 'opacity-60' : ''}`}>
+                <div key={msg.id} className={`msg-enter group flex items-end gap-1.5 ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'} ${msg._pending ? 'opacity-60' : ''}`}>
                           <MessageBubble msg={msg} isOwn={msg.sender_role === 'admin'} canDownload={mode === 'admin'} />
                           <button
                           onClick={() => handleDeleteMessage(msg.id)}
                           className="md:opacity-0 md:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg touch-target">
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                 )}
@@ -326,7 +351,11 @@ export default function ChatPanel({ mode, user }) {
                 <ChatInput onSend={handleSend} />
               </> :
 
-          <div className="flex items-center justify-center text-muted-foreground">Select a stylist to chat</div>
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-center px-6">
+                <MessagesSquare className="w-16 h-16 mb-4 opacity-20" />
+                <p className="text-sm font-medium">Select a conversation</p>
+                <p className="text-xs mt-1">Choose a stylist to start chatting.</p>
+              </div>
           }
           </Card>
         </div>
@@ -347,6 +376,6 @@ export default function ChatPanel({ mode, user }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>);
-
+    </div>
+  );
 }

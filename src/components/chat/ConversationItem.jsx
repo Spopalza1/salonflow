@@ -6,7 +6,21 @@ import { Image as UIImage } from '@/components/ui/image';
 const REVEAL_WIDTH = 80;
 const HOLD_DURATION = 500;
 
-export default function ConversationItem({ stylist, isSelected, hasUnread, onSelect, onDelete }) {
+const formatConvTime = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'now';
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d`;
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
+export default function ConversationItem({ stylist, isSelected, unreadCount = 0, lastMessage, lastMessageTime, onSelect, onDelete }) {
   const [offset, setOffset] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const containerRef = useRef(null);
@@ -18,13 +32,13 @@ export default function ConversationItem({ stylist, isSelected, hasUnread, onSel
   const movedRef = useRef(false);
 
   const name = stylist.display_name || stylist.full_name || stylist.email;
+  const hasUnread = unreadCount > 0;
 
   const close = useCallback(() => {
     setOffset(0);
     setRevealed(false);
   }, []);
 
-  // Click outside to close when revealed (desktop press-and-hold)
   useEffect(() => {
     if (!revealed) return;
     const handlePointerDown = (e) => {
@@ -70,7 +84,6 @@ export default function ConversationItem({ stylist, isSelected, hasUnread, onSel
   };
 
   const startHold = (e) => {
-    // Only for mouse (desktop)
     if (e.pointerType === 'touch' || e.type === 'touchstart') return;
     movedRef.current = false;
     holdTimer.current = setTimeout(() => {
@@ -104,8 +117,7 @@ export default function ConversationItem({ stylist, isSelected, hasUnread, onSel
   };
 
   return (
-    <div ref={containerRef} className="relative overflow-hidden rounded-lg">
-      {/* Delete action behind */}
+    <div ref={containerRef} className="relative overflow-hidden rounded-xl">
       <div className="absolute inset-y-0 right-0 flex items-center justify-center" style={{ width: REVEAL_WIDTH }}>
         <Button
           variant="destructive"
@@ -117,7 +129,6 @@ export default function ConversationItem({ stylist, isSelected, hasUnread, onSel
         </Button>
       </div>
 
-      {/* Foreground content */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -128,21 +139,35 @@ export default function ConversationItem({ stylist, isSelected, hasUnread, onSel
         onPointerMove={() => { movedRef.current = true; cancelHold(); }}
         onClick={handleClick}
         style={{ transform: `translateX(${offset}px)`, transition: dragging.current ? 'none' : 'transform 0.2s ease' }}
-        className={`relative w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 cursor-pointer select-none ${
-          isSelected ? 'bg-primary text-primary-foreground' : 'bg-transparent hover:bg-muted'
+        className={`relative w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 cursor-pointer select-none transition-colors ${
+          isSelected ? 'bg-primary/10' : 'bg-transparent hover:bg-muted/40'
         }`}
       >
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-          {stylist.profile_picture_url ? (
-            <UIImage src={stylist.profile_picture_url} fittingType="fill" className="w-8 h-8" />
-          ) : (
-            <User className="w-4 h-4 text-primary" />
+        <div className="relative shrink-0">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+            {stylist.profile_picture_url ? (
+              <UIImage src={stylist.profile_picture_url} fittingType="fill" className="w-10 h-10" />
+            ) : (
+              <User className="w-5 h-5 text-primary" />
+            )}
+          </div>
+          {hasUnread && !isSelected && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
           )}
         </div>
-        <span className="text-sm font-medium truncate flex-1">{name}</span>
-        {hasUnread && !isSelected && (
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
-        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-sm font-medium truncate flex-1">{name}</span>
+            {lastMessageTime && (
+              <span className="text-[10px] text-muted-foreground shrink-0">{formatConvTime(lastMessageTime)}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground truncate flex-1">{lastMessage || 'No messages yet'}</p>
+          </div>
+        </div>
       </div>
     </div>
   );

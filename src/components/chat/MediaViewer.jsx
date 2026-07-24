@@ -37,12 +37,12 @@ export default function MediaViewer({ media, canDownload, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center" onClick={onClose}>
       <div className="absolute top-4 right-4 flex gap-2 z-10">
         {canDownload && (
           <button
             onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="w-10 h-10 rounded-full glass-toast text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
             title="Download"
           >
             <Download className="w-5 h-5" />
@@ -50,7 +50,7 @@ export default function MediaViewer({ media, canDownload, onClose }) {
         )}
         <button
           onClick={onClose}
-          className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+          className="w-10 h-10 rounded-full glass-toast text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
           title="Close"
         >
           <X className="w-5 h-5" />
@@ -58,10 +58,10 @@ export default function MediaViewer({ media, canDownload, onClose }) {
       </div>
       <div className="max-w-[90vw] max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
         {media.type === 'image' && (
-          <img src={media.url} alt="Photo" className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg" />
+          <img src={media.url} alt="Photo" className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl" />
         )}
         {media.type === 'video' && (
-          <video src={media.url} controls autoPlay className="max-w-[90vw] max-h-[90vh] rounded-lg" />
+          <video src={media.url} controls autoPlay className="max-w-[90vw] max-h-[90vh] rounded-xl" />
         )}
       </div>
     </div>

@@ -7,7 +7,6 @@ import MediaViewer from '@/components/chat/MediaViewer';
 const formatMessageTime = (dateStr) => {
   if (!dateStr) return '';
   const s = String(dateStr);
-  // If ISO string without timezone designation, treat as UTC
   let normalized = s;
   if (s.includes('T') && !s.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(s)) {
     normalized = s + 'Z';
@@ -28,12 +27,18 @@ export default function MessageBubble({ msg, isOwn, canDownload }) {
 
   return (
     <>
-      <div className={`max-w-[85%] rounded-2xl px-3 py-2 ${isOwn ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-muted rounded-bl-sm'}`}>
+      <div
+        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 shadow-sm transition-shadow ${
+          isOwn
+            ? 'bg-primary text-primary-foreground rounded-br-md'
+            : 'bg-muted/70 backdrop-blur-sm rounded-bl-md'
+        }`}
+      >
         {hasMedia && msg.media_type === 'image' && (
           <button onClick={openViewer} className="block mb-1 cursor-zoom-in">
             <Image
               src={msg.media_url}
-              className="rounded-lg max-h-64"
+              className="rounded-xl max-h-64"
               fittingType="fit"
             />
           </button>
@@ -43,9 +48,9 @@ export default function MessageBubble({ msg, isOwn, canDownload }) {
             <video
               src={`${msg.media_url}#t=0.1`}
               preload="metadata"
-              className="rounded-lg max-w-full max-h-64 pointer-events-none"
+              className="rounded-xl max-w-full max-h-64 pointer-events-none"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
               <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Play className="w-5 h-5 text-white ml-0.5" />
               </div>
@@ -55,8 +60,10 @@ export default function MessageBubble({ msg, isOwn, canDownload }) {
         {isAudio && (
           <VoiceMessagePlayer src={msg.media_url} isOwn={isOwn} />
         )}
-        {msg.body && !isAudio && <p className="text-sm whitespace-pre-wrap select-text">{msg.body}</p>}
-        <p className="text-[10px] opacity-60 mt-1 text-right">{formatMessageTime(msg.created_date)}</p>
+        {msg.body && !isAudio && <p className="text-sm whitespace-pre-wrap select-text leading-snug">{msg.body}</p>}
+        <p className={`text-[10px] mt-1 text-right ${isOwn ? 'text-primary-foreground/60' : 'text-muted-foreground/60'}`}>
+          {formatMessageTime(msg.created_date)}
+        </p>
       </div>
       {viewerMedia && (
         <MediaViewer media={viewerMedia} canDownload={canDownload} onClose={() => setViewerMedia(null)} />
