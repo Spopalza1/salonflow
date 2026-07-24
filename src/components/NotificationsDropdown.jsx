@@ -107,27 +107,40 @@ export default function NotificationsDropdown() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative min-h-[44px] min-w-[44px] touch-target">
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+            <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+      <PopoverContent
+        className="glass-panel w-[calc(100vw-2rem)] sm:w-80 max-w-80 p-0 rounded-3xl overflow-hidden duration-200 motion-reduce:duration-0"
+        align="end"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/20">
           <span className="font-heading font-semibold text-sm">Notifications</span>
           <div className="flex gap-1">
             {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={markAllRead}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs hover:bg-muted/40 focus-visible:ring-1 focus-visible:ring-ring"
+                onClick={markAllRead}
+              >
                 <CheckCheck className="w-3 h-3 mr-1" />
                 Mark all read
               </Button>
             )}
             {hasRead && (
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={clearRead}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-destructive bg-destructive/5 hover:bg-destructive/15 hover:text-destructive focus-visible:ring-1 focus-visible:ring-destructive/30 disabled:opacity-40 disabled:pointer-events-none"
+                onClick={clearRead}
+              >
                 <Trash2 className="w-3 h-3 mr-1" />
                 Clear
               </Button>
@@ -145,14 +158,17 @@ export default function NotificationsDropdown() {
               <div
                 key={n.id}
                 onClick={() => handleNotificationClick(n)}
-                className={`px-4 py-3 border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNotificationClick(n); } }}
+                className={`px-4 py-3 border-b border-border/15 last:border-0 cursor-pointer transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:bg-muted/30 ${!n.read ? 'bg-primary/[0.04]' : ''}`}
               >
-                <div className="flex items-start gap-2">
-                  <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.read ? 'bg-primary' : 'bg-transparent'}`} />
+                <div className="flex items-start gap-2.5">
+                  <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 transition-colors ${!n.read ? 'bg-primary' : 'bg-transparent'}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{n.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{formatTime(n.created_date)}</p>
+                    <p className="text-sm font-medium leading-snug">{n.title}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.body}</p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">{formatTime(n.created_date)}</p>
                   </div>
                 </div>
               </div>
