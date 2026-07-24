@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Trash2, User, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Image as UIImage } from '@/components/ui/image';
@@ -6,6 +6,9 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem } from '@/components/ui/context-menu';
 
 const REVEAL_WIDTH = 80;
+
+// Module-level: track the currently open swipe so only one can be open at a time
+let activeSwipeClose = null;
 
 const formatConvTime = (dateStr) => {
   if (!dateStr) return '';
@@ -31,6 +34,41 @@ export default function ConversationItem({ stylist, isSelected, unreadCount = 0,
 
   const name = stylist.display_name || stylist.full_name || stylist.email;
   const hasUnread = unreadCount > 0;
+
+  const closeSwipe = useCallback(() => setOffset(0), []);
+
+  // Click outside to close any open swipe
+  useEffect(() => {
+    if (offset === 0) return;
+    const handlePointerDown = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        closeSwipe();
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [offset, closeSwipe]);
+
+  // Only one swipe open at a time
+  useEffect(() => {
+    if (offset !== 0) {
+      if (activeSwipeClose && activeSwipeClose !== closeSwipe) {
+        activeSwipeClose();
+      }
+      activeSwipeClose = closeSwipe;
+    } else if (activeSwipeClose === closeSwipe) {
+      activeSwipeClose = null;
+    }
+  }, [offset, closeSwipe]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (activeSwipeClose === closeSwipe) {
+        activeSwipeClose = null;
+      }
+    };
+  }, [closeSwipe]);
 
   const handleTouchStart = (e) => {
     const touch = e.touches[0];
@@ -78,19 +116,21 @@ export default function ConversationItem({ stylist, isSelected, unreadCount = 0,
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div ref={containerRef} className="group relative overflow-hidden rounded-xl">
+          {/* Delete action — hidden behind opaque foreground, revealed only on swipe */}
           <div className="absolute inset-y-0 right-0 flex items-center justify-center" style={{ width: REVEAL_WIDTH }}>
             <Button variant="destructive" size="icon" className="h-full w-full rounded-none" onClick={handleRemoveClick}>
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
 
+          {/* Foreground content — opaque background completely covers the delete action */}
           <div
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onClick={handleClick}
             style={{ transform: `translateX(${offset}px)`, transition: dragging.current ? 'none' : 'transform 0.2s ease' }}
-            className={`relative w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 cursor-pointer select-none transition-colors ${isSelected ? 'bg-primary/10' : 'bg-transparent hover:bg-muted/40'}`}
+            className={`relative w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 cursor-pointer select-none transition-colors ${isSelected ? 'bg-muted' : 'bg-card hover:bg-accent'}`}
           >
             <div className="relative shrink-0">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">

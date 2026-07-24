@@ -33,9 +33,19 @@ export default function ChatPanel({ mode, user }) {
   const [pendingRemoveId, setPendingRemoveId] = useState(null);
   const [showPermanentDeleteConfirm, setShowPermanentDeleteConfirm] = useState(false);
 
-  const [hiddenConversations, setHiddenConversations] = useState(
-    () => hiddenConversationsCache || user?.hidden_conversations || user?.data?.hidden_conversations || []
-  );
+  // hiddenConversations: { [partnerId]: ISO timestamp when hidden }
+  // A conversation auto-restores when a message newer than the hide timestamp arrives.
+  const [hiddenConversations, setHiddenConversations] = useState(() => {
+    const stored = hiddenConversationsCache || user?.hidden_conversations || user?.data?.hidden_conversations;
+    if (Array.isArray(stored)) {
+      // Migrate from old array format: set hide time to now so only future messages restore
+      const obj = {};
+      const now = new Date().toISOString();
+      stored.forEach(id => { obj[id] = now; });
+      return obj;
+    }
+    return stored || {};
+  });
   const hiddenConversationsRef = useRef(hiddenConversations);
   useEffect(() => {
     hiddenConversationsRef.current = hiddenConversations;
@@ -51,6 +61,16 @@ export default function ChatPanel({ mode, user }) {
       console.error('Failed to persist hidden conversations:', err);
     }
   };
+
+  const unhideConversation = useCallback((partnerId) => {
+    setHiddenConversations(prev => {
+      if (!prev[partnerId]) return prev;
+      const next = { ...prev };
+      delete next[partnerId];
+      persistHidden(next);
+      return next;
+    });
+  }, []);
 
   const loadStylists = useCallback(async () => {
     if (mode !== 'admin' || !user?.salon_id) return;
@@ -88,6 +108,26 @@ export default function ChatPanel({ mode, user }) {
           data = await base44.entities.Message.filter({ salon_id: user.salon_id }, 'created_date', 500);
         }
         setMessages(data);
+
+        // Auto-restore hidden conversations that have messages newer than the hide timestamp
+        const currentHidden = hiddenConversationsRef.current;
+        const hiddenIds = Object.keys(currentHidden);
+        if (hiddenIds.length > 0) {
+          const toUnhide = [];
+          hiddenIds.forEach(pid => {
+            const hideTime = new Date(currentHidden[pid]).getTime();
+            const hasNewer = data.some(m =>
+              m.thread_partner_id === pid && new Date(m.created_date).getTime() > hideTime
+            );
+            if (hasNewer) toUnhide.push(pid);
+          });
+          if (toUnhide.length > 0) {
+            const nextHidden = { ...currentHidden };
+            toUnhide.forEach(pid => delete nextHidden[pid]);
+            setHiddenConversations(nextHidden);
+            persistHidden(nextHidden);
+          }
+        }
       } catch (err) {
         console.error('Failed to load messages:', err);
       } finally {
@@ -100,12 +140,14 @@ export default function ChatPanel({ mode, user }) {
       if (event.type === 'create') {
         if (!user?.salon_id || event.data.salon_id !== user.salon_id) return;
 
-        // Auto-restore hidden conversation when new message arrives
+        // Auto-restore hidden conversation when a new message arrives
         const partnerId = event.data.thread_partner_id;
-        if (partnerId && hiddenConversationsRef.current.includes(partnerId)) {
-          const newHidden = hiddenConversationsRef.current.filter(id => id !== partnerId);
-          setHiddenConversations(newHidden);
-          persistHidden(newHidden);
+        if (partnerId && hiddenConversationsRef.current[partnerId]) {
+          const hideTime = new Date(hiddenConversationsRef.current[partnerId]).getTime();
+          const msgTime = new Date(event.data.created_date).getTime();
+          if (msgTime > hideTime) {
+            unhideConversation(partnerId);
+          }
         }
 
         setMessages((prev) => {
@@ -125,7 +167,7 @@ export default function ChatPanel({ mode, user }) {
       }
     });
     return unsubscribe;
-  }, [mode, user?.id, user?.salon_id]);
+  }, [mode, user?.id, user?.salon_id, unhideConversation]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -161,6 +203,11 @@ export default function ChatPanel({ mode, user }) {
     }
     const senderName = user.display_name || user.full_name || user.email;
     const senderRole = mode === 'admin' ? 'admin' : 'stylist';
+
+    // Restore conversation if it was hidden (sender is starting a new chat)
+    if (hiddenConversationsRef.current[partnerId]) {
+      unhideConversation(partnerId);
+    }
 
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const tempMessage = {
@@ -210,8 +257,8 @@ export default function ChatPanel({ mode, user }) {
   const handleRemoveConversation = async (partnerId) => {
     if (!partnerId) return;
     setPendingRemoveId(null);
-    const prevHidden = [...hiddenConversations];
-    const newHidden = [...new Set([...prevHidden, partnerId])];
+    const prevHidden = { ...hiddenConversations };
+    const newHidden = { ...prevHidden, [partnerId]: new Date().toISOString() };
     setHiddenConversations(newHidden);
 
     if (selectedPartnerId === partnerId) {
@@ -258,7 +305,7 @@ export default function ChatPanel({ mode, user }) {
 
   // ─── Stylist mode ───
   if (mode === 'stylist') {
-    const isHidden = hiddenConversations.includes(user.id);
+    const isHidden = !!hiddenConversations[user.id];
     const showChat = selectedPartnerId && !isHidden;
 
     return (
@@ -325,9 +372,7 @@ export default function ChatPanel({ mode, user }) {
                 actionLabel="Open Chat"
                 onAction={() => {
                   if (isHidden) {
-                    const newHidden = hiddenConversations.filter(id => id !== user.id);
-                    setHiddenConversations(newHidden);
-                    persistHidden(newHidden);
+                    unhideConversation(user.id);
                   }
                   setSelectedPartnerId(user.id);
                 }}
@@ -371,8 +416,12 @@ export default function ChatPanel({ mode, user }) {
   });
 
   const filteredStylists = stylists.filter((s) => {
-    if (hiddenConversations.includes(s.id)) return false;
-    if (!searchQuery.trim()) return true;
+    // Without a search query, hide removed conversations
+    if (!searchQuery.trim()) {
+      if (hiddenConversations[s.id]) return false;
+      return true;
+    }
+    // When searching, show all matching stylists (including removed ones)
     const q = searchQuery.toLowerCase();
     return (s.full_name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q);
   });
@@ -414,7 +463,14 @@ export default function ChatPanel({ mode, user }) {
                   unreadCount={unreadCountByStylist[s.id] || 0}
                   lastMessage={lastMessageByStylist[s.id]?.body}
                   lastMessageTime={lastMessageByStylist[s.id]?.created_date}
-                  onSelect={() => { setSelectedPartnerId(s.id); openChat(); }}
+                  onSelect={() => {
+                    // Restore conversation if it was hidden
+                    if (hiddenConversations[s.id]) {
+                      unhideConversation(s.id);
+                    }
+                    setSelectedPartnerId(s.id);
+                    openChat();
+                  }}
                   onRemove={() => setPendingRemoveId(s.id)}
                 />
               ))}

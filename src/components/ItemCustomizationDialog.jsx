@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
   const [notes, setNotes] = useState('');
   const [preOrderMode, setPreOrderMode] = useState(false);
   const [arrivalTime, setArrivalTime] = useState('');
+  const notesRef = useRef(null);
 
   const itemKey = item?.id;
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
       setNotes('');
       setPreOrderMode(false);
       setArrivalTime('');
+      if (notesRef.current) notesRef.current.style.height = 'auto';
     }
   }, [itemKey, open]);
 
@@ -129,15 +131,21 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
     onConfirm(parts.join(' | '), totalPrice, preOrderMode ? arrivalTime : null);
   };
 
+  const handleNotesChange = (e) => {
+    setNotes(e.target.value);
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  };
+
   const renderGroup = (group) => {
     const type = group.input_type || 'options';
 
     if (type === 'number') {
-      // Multi-item mode: each item has its own name, unit label, and config
       if (group.number_items && group.number_items.length > 0) {
         const groupSel = selections[group.id] || {};
         return (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {group.number_items.map((item, i) => {
               const min = item.min ?? 0;
               const max = item.max;
@@ -153,29 +161,31 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
               };
 
               return (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-sm font-medium w-24 shrink-0">{item.name || `Item ${i + 1}`}</span>
-                  <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => setNumberItemValue(group.id, i, clamp(currentVal - step))}>
-                    <Minus className="w-4 h-4" />
-                  </Button>
-                  <Input
-                    type="number"
-                    value={currentVal}
-                    min={min}
-                    max={max}
-                    step={step}
-                    onChange={e => {
-                      const v = e.target.value === '' ? min : parseFloat(e.target.value);
-                      setNumberItemValue(group.id, i, isNaN(v) ? min : clamp(v));
-                    }}
-                    className="w-20 text-center"
-                  />
-                  <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => setNumberItemValue(group.id, i, clamp(currentVal + step))}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                  {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+                <div key={i} className="flex items-center gap-2.5 min-h-[52px]">
+                  <span className="text-sm font-medium flex-1 truncate">{item.name || `Item ${i + 1}`}</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button type="button" size="icon" variant="outline" className="h-11 w-11 shrink-0 rounded-xl" onClick={() => setNumberItemValue(group.id, i, clamp(currentVal - step))}>
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <Input
+                      type="number"
+                      value={currentVal}
+                      min={min}
+                      max={max}
+                      step={step}
+                      onChange={e => {
+                        const v = e.target.value === '' ? min : parseFloat(e.target.value);
+                        setNumberItemValue(group.id, i, isNaN(v) ? min : clamp(v));
+                      }}
+                      className="w-16 h-11 text-center"
+                    />
+                    <Button type="button" size="icon" variant="outline" className="h-11 w-11 shrink-0 rounded-xl" onClick={() => setNumberItemValue(group.id, i, clamp(currentVal + step))}>
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {unit && <span className="text-xs text-muted-foreground shrink-0 w-10">{unit}</span>}
                   {pricePerUnit > 0 && (
-                    <span className="text-sm text-muted-foreground ml-auto">+${(pricePerUnit * currentVal).toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground shrink-0 w-16 text-right">+${(pricePerUnit * currentVal).toFixed(2)}</span>
                   )}
                 </div>
               );
@@ -184,7 +194,6 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
         );
       }
 
-      // Single-item mode (backward compatible)
       const min = group.number_min ?? 0;
       const max = group.number_max;
       const step = group.number_step ?? 1;
@@ -199,26 +208,28 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
       };
 
       return (
-        <div className="flex items-center gap-3">
-          <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => setNumberValue(group.id, clamp(currentVal - step))}>
-            <Minus className="w-4 h-4" />
-          </Button>
-          <Input
-            type="number"
-            value={currentVal}
-            min={min}
-            max={max}
-            step={step}
-            onChange={e => {
-              const v = e.target.value === '' ? min : parseFloat(e.target.value);
-              setNumberValue(group.id, isNaN(v) ? min : clamp(v));
-            }}
-            className="w-20 text-center"
-          />
-          <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => setNumberValue(group.id, clamp(currentVal + step))}>
-            <Plus className="w-4 h-4" />
-          </Button>
-          {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+        <div className="flex items-center gap-2.5 min-h-[52px]">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button type="button" size="icon" variant="outline" className="h-11 w-11 shrink-0 rounded-xl" onClick={() => setNumberValue(group.id, clamp(currentVal - step))}>
+              <Minus className="w-4 h-4" />
+            </Button>
+            <Input
+              type="number"
+              value={currentVal}
+              min={min}
+              max={max}
+              step={step}
+              onChange={e => {
+                const v = e.target.value === '' ? min : parseFloat(e.target.value);
+                setNumberValue(group.id, isNaN(v) ? min : clamp(v));
+              }}
+              className="w-16 h-11 text-center"
+            />
+            <Button type="button" size="icon" variant="outline" className="h-11 w-11 shrink-0 rounded-xl" onClick={() => setNumberValue(group.id, clamp(currentVal + step))}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          {unit && <span className="text-sm text-muted-foreground shrink-0">{unit}</span>}
           {pricePerUnit > 0 && (
             <span className="text-sm text-muted-foreground ml-auto">+${(pricePerUnit * currentVal).toFixed(2)}</span>
           )}
@@ -229,33 +240,36 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
     if (type === 'yesno') {
       const val = selections[group.id];
       return (
-        <RadioGroup value={val || ''} onValueChange={v => setYesNoValue(group.id, v)}>
-          <label className="flex items-center justify-between gap-3 p-2 rounded-lg border cursor-pointer hover:bg-accent">
-            <div className="flex items-center gap-3">
-              <RadioGroupItem value="yes" id={`${group.id}-yes`} />
-              <span className="text-sm">{group.yes_label || 'Yes'}</span>
-            </div>
-            {(group.yes_price || 0) > 0 && <span className="text-sm text-muted-foreground">+${group.yes_price.toFixed(2)}</span>}
-          </label>
-          <label className="flex items-center justify-between gap-3 p-2 rounded-lg border cursor-pointer hover:bg-accent">
-            <div className="flex items-center gap-3">
-              <RadioGroupItem value="no" id={`${group.id}-no`} />
-              <span className="text-sm">{group.no_label || 'No'}</span>
-            </div>
-            {(group.no_price || 0) > 0 && <span className="text-sm text-muted-foreground">+${group.no_price.toFixed(2)}</span>}
-          </label>
+        <RadioGroup value={val || ''} onValueChange={v => setYesNoValue(group.id, v)} className="space-y-2.5">
+          {[
+            { value: 'yes', label: group.yes_label || 'Yes', price: group.yes_price || 0 },
+            { value: 'no', label: group.no_label || 'No', price: group.no_price || 0 },
+          ].map(opt => (
+            <label
+              key={opt.value}
+              className={`flex items-center justify-between gap-3 min-h-[52px] px-3.5 rounded-xl border cursor-pointer transition-colors hover:bg-accent/40 ${val === opt.value ? 'border-primary/30 bg-primary/5' : 'border-border/30'}`}
+            >
+              <div className="flex items-center gap-3">
+                <RadioGroupItem value={opt.value} id={`${group.id}-${opt.value}`} />
+                <span className="text-sm">{opt.label}</span>
+              </div>
+              {opt.price > 0 && <span className="text-sm text-muted-foreground">+${opt.price.toFixed(2)}</span>}
+            </label>
+          ))}
         </RadioGroup>
       );
     }
 
-    // Default: options type
     if (group.allow_multiple) {
       return (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {(group.options || []).map(opt => {
             const selected = (selections[group.id] || []).find(o => o.name === opt.name);
             return (
-              <label key={opt.name} className="flex items-center justify-between gap-3 p-2 rounded-lg border cursor-pointer hover:bg-accent">
+              <label
+                key={opt.name}
+                className={`flex items-center justify-between gap-3 min-h-[52px] px-3.5 rounded-xl border cursor-pointer transition-colors hover:bg-accent/40 ${selected ? 'border-primary/30 bg-primary/5' : 'border-border/30'}`}
+              >
                 <div className="flex items-center gap-3">
                   <Checkbox checked={!!selected} onCheckedChange={() => handleMultiToggle(group.id, opt)} />
                   <span className="text-sm">{opt.name}</span>
@@ -275,16 +289,23 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
           const opt = (group.options || []).find(o => o.name === val);
           if (opt) handleSingleSelect(group.id, opt);
         }}
+        className="space-y-2.5"
       >
-        {(group.options || []).map(opt => (
-          <label key={opt.name} className="flex items-center justify-between gap-3 p-2 rounded-lg border cursor-pointer hover:bg-accent">
-            <div className="flex items-center gap-3">
-              <RadioGroupItem value={opt.name} id={`${group.id}-${opt.name}`} />
-              <span className="text-sm">{opt.name}</span>
-            </div>
-            {opt.extra_price > 0 && <span className="text-sm text-muted-foreground">+${opt.extra_price.toFixed(2)}</span>}
-          </label>
-        ))}
+        {(group.options || []).map(opt => {
+          const selected = (selections[group.id] || [])[0]?.name === opt.name;
+          return (
+            <label
+              key={opt.name}
+              className={`flex items-center justify-between gap-3 min-h-[52px] px-3.5 rounded-xl border cursor-pointer transition-colors hover:bg-accent/40 ${selected ? 'border-primary/30 bg-primary/5' : 'border-border/30'}`}
+            >
+              <div className="flex items-center gap-3">
+                <RadioGroupItem value={opt.name} id={`${group.id}-${opt.name}`} />
+                <span className="text-sm">{opt.name}</span>
+              </div>
+              {opt.extra_price > 0 && <span className="text-sm text-muted-foreground">+${opt.extra_price.toFixed(2)}</span>}
+            </label>
+          );
+        })}
       </RadioGroup>
     );
   };
@@ -298,68 +319,91 @@ export default function ItemCustomizationDialog({ item, optionGroups, open, onOp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Customize {item.name}</span>
-            <Badge variant="secondary">${totalPrice.toFixed(2)}</Badge>
-          </DialogTitle>
-        </DialogHeader>
-        {item.description && (
-          <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-        )}
-        <div className="space-y-5">
+      <DialogContent
+        className="flex flex-col max-h-[90dvh] p-0 gap-0 overflow-hidden rounded-2xl sm:max-w-lg"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        {/* Sticky header */}
+        <div className="glass-header shrink-0 px-5 pt-5 pb-4 border-b border-border/30 z-10">
+          <DialogHeader className="space-y-0">
+            <DialogTitle className="flex items-center justify-between pr-10 text-base font-semibold">
+              <span className="truncate">Customize {item.name}</span>
+              <Badge variant="secondary" className="shrink-0">${totalPrice.toFixed(2)}</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          {item.description && (
+            <p className="text-sm text-muted-foreground leading-relaxed mt-3">{item.description}</p>
+          )}
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-7">
           {optionGroups.map(group => (
-            <div key={group.id} className="space-y-2">
-              <div className="flex items-center gap-2">
+            <div key={group.id} className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Label className="font-semibold text-sm">{group.name}</Label>
-                {group.required && <Badge variant="default" className="text-xs">Required</Badge>}
-                {group.input_type === 'options' && group.allow_multiple && <Badge variant="outline" className="text-xs">Choose multiple</Badge>}
+                {group.required ? (
+                  <Badge variant="default" className="text-xs">Required</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs">Optional</Badge>
+                )}
+                {group.input_type === 'options' && !group.allow_multiple && (
+                  <span className="text-xs text-muted-foreground">Choose one</span>
+                )}
+                {group.input_type === 'options' && group.allow_multiple && (
+                  <span className="text-xs text-muted-foreground">Choose multiple</span>
+                )}
               </div>
               {renderGroup(group)}
             </div>
           ))}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="cust-notes">Special Instructions</Label>
             <textarea
+              ref={notesRef}
               id="cust-notes"
-              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="w-full min-h-[48px] resize-none rounded-xl border border-border/30 bg-muted/20 px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-transparent transition-all"
               value={notes}
-              onChange={e => setNotes(e.target.value)}
+              onChange={handleNotesChange}
               placeholder="No sugar, extra hot, etc."
               rows={2}
             />
           </div>
         </div>
-        {preOrderMode && (
-          <div className="space-y-2">
-            <Label htmlFor="cust-arrival">Arrival Time</Label>
-            <Input
-              id="cust-arrival"
-              type="datetime-local"
-              value={arrivalTime}
-              min={minDateTime()}
-              onChange={(e) => setArrivalTime(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              The front desk will be alerted 10 minutes before your arrival.
-            </p>
-          </div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button
-            variant={preOrderMode ? "outline" : "secondary"}
-            onClick={() => setPreOrderMode(!preOrderMode)}
-          >
-            <Clock className="w-4 h-4 mr-1" /> {preOrderMode ? 'Standard Order' : 'Pre-Arrival'}
-          </Button>
-          <Button onClick={handleConfirm} disabled={!canConfirm || (preOrderMode && !arrivalTime)}>
-            {preOrderMode
-              ? `Confirm Pre-Arrival · $${totalPrice.toFixed(2)}`
-              : canConfirm ? `Add · $${totalPrice.toFixed(2)}` : 'Select required'}
-          </Button>
-        </DialogFooter>
+
+        {/* Sticky footer */}
+        <div className="glass-header shrink-0 px-5 pt-4 pb-5 border-t border-border/30 safe-area-bottom z-10">
+          {preOrderMode && (
+            <div className="space-y-2 mb-3">
+              <Label htmlFor="cust-arrival">Arrival Time</Label>
+              <Input
+                id="cust-arrival"
+                type="datetime-local"
+                value={arrivalTime}
+                min={minDateTime()}
+                onChange={(e) => setArrivalTime(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                The front desk will be alerted 10 minutes before your arrival.
+              </p>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button
+              variant={preOrderMode ? "outline" : "secondary"}
+              onClick={() => setPreOrderMode(!preOrderMode)}
+            >
+              <Clock className="w-4 h-4 mr-1" /> {preOrderMode ? 'Standard Order' : 'Pre-Arrival'}
+            </Button>
+            <Button onClick={handleConfirm} disabled={!canConfirm || (preOrderMode && !arrivalTime)}>
+              {preOrderMode
+                ? `Confirm Pre-Arrival · $${totalPrice.toFixed(2)}`
+                : canConfirm ? `Add · $${totalPrice.toFixed(2)}` : 'Select required'}
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
