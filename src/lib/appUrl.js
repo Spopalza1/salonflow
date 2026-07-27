@@ -46,9 +46,16 @@ export function getPublishedAppUrl() {
  * form for already printed QR codes.
  */
 export function buildGuestMenuUrl(salonId, baseUrl = getPublishedAppUrl()) {
-  const normalizedBase = normalizeUrl(baseUrl);
-  const url = new URL(normalizedBase || FALLBACK_PUBLISHED_APP_URL);
-  if (salonId) url.searchParams.set('salon_id', String(salonId).trim());
-  url.hash = '/guest';
-  return url.toString();
+  const normalizedBase =
+    normalizeUrl(baseUrl) || FALLBACK_PUBLISHED_APP_URL;
+
+  const route = `${normalizedBase}/#/guest`;
+
+  if (!salonId) {
+    return route;
+  }
+
+  return `${route}?salon_id=${encodeURIComponent(
+    String(salonId).trim(),
+  )}`;
 }
