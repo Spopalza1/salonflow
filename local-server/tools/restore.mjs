@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+const input = process.argv[2];
+if (!input || !fs.existsSync(input)) throw new Error('Usage: node local-server/tools/restore.mjs <backup.json>');
+JSON.parse(fs.readFileSync(input, 'utf8'));
+const dataDir = process.env.SALONFLOW_DATA_DIR || path.join(os.homedir(), '.salonflow');
+fs.mkdirSync(dataDir, { recursive: true });
+const destination = path.join(dataDir, 'salonflow.json');
+if (fs.existsSync(destination)) fs.copyFileSync(destination, `${destination}.before-restore`);
+fs.copyFileSync(input, destination);
+console.log(destination);

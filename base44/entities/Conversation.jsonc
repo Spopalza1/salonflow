@@ -1,0 +1,18 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "salon_id": { "type": "string" },
+    "type": { "type": "string", "enum": ["direct", "group"], "default": "direct" },
+    "legacy_partner_id": { "type": "string" },
+    "last_message_id": { "type": "string" },
+    "last_sequence": { "type": "number", "default": 0 }
+  },
+  "required": ["salon_id", "type"],
+  "rls": {
+    "create": { "data.salon_id": "{{user.data.salon_id}}" },
+    "read": { "data.salon_id": "{{user.data.salon_id}}" },
+    "update": { "data.salon_id": "{{user.data.salon_id}}" },
+    "delete": { "data.salon_id": "{{user.data.salon_id}}", "user_condition": { "role": "admin" } }
+  }
+}

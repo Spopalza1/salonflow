@@ -1,0 +1,45 @@
+{
+  "name": "SalonSetting",
+  "type": "object",
+  "properties": {
+    "salon_name": { "type": "string" },
+    "salon_id": { "type": "string" },
+    "timezone": { "type": "string", "default": "America/Toronto" },
+    "business_hours": { "type": "object", "additionalProperties": true },
+    "pre_arrival_enabled": { "type": "boolean", "default": true },
+    "pre_arrival_same_day_only": { "type": "boolean", "default": true },
+    "pre_arrival_minimum_preparation_minutes": { "type": "number", "default": 20 },
+    "pre_arrival_maximum_future_minutes": { "type": "number" },
+    "pre_arrival_cutoff_before_closing_minutes": { "type": "number", "default": 0 },
+    "pre_arrival_opening_delay_minutes": { "type": "number", "default": 0 },
+    "pre_arrival_use_business_hours": { "type": "boolean", "default": true },
+    "pre_arrival_instructions": { "type": "string" },
+    "guest_category_layout": {
+      "type": "string",
+      "enum": ["horizontal", "wrapped", "grid", "dropdown", "sticky"],
+      "default": "horizontal"
+    }
+  },
+  "required": [],
+  "rls": {
+    "create": {
+      "$and": [
+        { "data.salon_id": "{{user.data.salon_id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "read": true,
+    "update": {
+      "$and": [
+        { "data.salon_id": "{{user.data.salon_id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "delete": {
+      "$and": [
+        { "data.salon_id": "{{user.data.salon_id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    }
+  }
+}

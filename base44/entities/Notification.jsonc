@@ -1,0 +1,75 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "body": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": [
+        "order", "order_created", "order_update", "service", "service_request",
+        "service_note", "guest_message", "chat", "chat_message", "service_update",
+        "menu_request", "stylist_status", "appointment_update", "report_ready",
+        "payment_update", "system_update", "announcement", "general_alert"
+      ],
+      "default": "general_alert"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "normal", "high", "critical"],
+      "default": "normal"
+    },
+    "read": { "type": "boolean", "default": false },
+    "read_at": { "type": "string", "format": "date-time" },
+    "opened_at": { "type": "string", "format": "date-time" },
+    "dismissed_at": { "type": "string", "format": "date-time" },
+    "salon_id": { "type": "string" },
+    "recipient_user_id": { "type": "string" },
+    "sender_user_id": { "type": "string" },
+    "source_id": { "type": "string" },
+    "source_type": { "type": "string" },
+    "conversation_id": { "type": "string" },
+    "message_id": { "type": "string" },
+    "order_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "service_id": { "type": "string" },
+    "report_id": { "type": "string" },
+    "target_tab": { "type": "string" },
+    "target_route": { "type": "string" },
+    "target_parameters": { "type": "object", "additionalProperties": true },
+    "group_key": { "type": "string" },
+    "idempotency_key": { "type": "string" },
+    "target_role": {
+      "type": "string",
+      "enum": ["admin", "stylist", "user"],
+      "description": "Legacy compatibility only. Private notification ownership is recipient_user_id based."
+    }
+  },
+  "required": ["title", "body", "type", "salon_id", "recipient_user_id"],
+  "rls": {
+    "create": {
+      "$and": [
+        { "data.salon_id": "{{user.data.salon_id}}" },
+        { "data.recipient_user_id": "{{user.id}}" }
+      ]
+    },
+    "read": {
+      "$and": [
+        { "data.salon_id": "{{user.data.salon_id}}" },
+        { "data.recipient_user_id": "{{user.id}}" }
+      ]
+    },
+    "update": {
+      "$and": [
+        { "data.salon_id": "{{user.data.salon_id}}" },
+        { "data.recipient_user_id": "{{user.id}}" }
+      ]
+    },
+    "delete": {
+      "$and": [
+        { "data.salon_id": "{{user.data.salon_id}}" },
+        { "data.recipient_user_id": "{{user.id}}" }
+      ]
+    }
+  }
+}
