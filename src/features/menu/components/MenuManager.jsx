@@ -59,17 +59,26 @@ export default function MenuManager() {
 
   useEffect(() => {
     if (!salonId) return;
-    const load = async () => {
-      const [itemData, catData, settingsData] = await Promise.all([
-        base44.entities.MenuItem.filter({ salon_id: salonId }, 'display_order'),
-        base44.entities.MenuCategory.filter({ salon_id: salonId }, 'display_order'),
-        base44.entities.SalonSetting.filter({ salon_id: salonId }, '-created_date', 1)
-      ]);
-      setItems(itemData);
-      setCategories(catData);
-      setActiveCategoryId(prev => prev || catData[0]?.id || null);
-      setSalonSetting(settingsData[0] || null);
-      setLoading(false);
+    const load = async (isRetry = false) => {
+      try {
+        const [itemData, catData, settingsData] = await Promise.all([
+          base44.entities.MenuItem.filter({ salon_id: salonId }, 'display_order'),
+          base44.entities.MenuCategory.filter({ salon_id: salonId }, 'display_order'),
+          base44.entities.SalonSetting.filter({ salon_id: salonId }, '-created_date', 1)
+        ]);
+        setItems(itemData);
+        setCategories(catData);
+        setActiveCategoryId(prev => prev || catData[0]?.id || null);
+        setSalonSetting(settingsData[0] || null);
+      } catch (err) {
+        if (err.message?.includes('Rate limit') && !isRetry) {
+          setTimeout(() => load(true), 2000);
+          return;
+        }
+        toast({ title: 'Failed to load menu', description: err.message, variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
     };
     load();
 
